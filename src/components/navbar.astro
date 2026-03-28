@@ -1,0 +1,114 @@
+---
+---
+
+<!DOCTYPE html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="logo">
+        <a href="../init">Sistema de inventario</a>
+      </div>
+      <ul class="nav-links">
+        <li><a href="../inven">Base de datos</a></li>
+        <li><a href="../up_inven">Subir inventario</a></li>
+        <div id="admin-links" style="display: none; display:contents;">
+          <li><a href="../trabajadores">Trabajadores</a></li>
+          <li><a href="../up_trabajador"> Subir Trabajadores</a></li>
+        </div>
+        <li><a href="#" id="btn-logout">Cerrar sesión</a></li>
+      </ul>
+    </nav>
+
+    <style>
+      .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #1f2937; /* Tailwind gray-800 */
+        border-radius: 10px;
+        padding: 1rem 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      .logo a {
+        color: #ffffff;
+        text-decoration: none;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .nav-links {
+        list-style: none;
+        display: flex;
+        gap: 2rem;
+        margin: 0;
+        padding: 0;
+      }
+
+      .nav-links a {
+        color: #d1d5db; /* Tailwind gray-300 */
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color 0.2s ease-in-out;
+      }
+
+      .nav-links a:hover {
+        color: #60a5fa; /* Tailwind blue-400 */
+      }
+
+      @media (max-width: 768px) {
+        .navbar {
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .nav-links {
+          width: 100%;
+          justify-content: space-around;
+          gap: 1rem;
+        }
+      }
+    </style>
+    <script>
+      import { signOutUser, getUserRole, getSession } from "../lib/auth";
+
+      const btnLogout = document.getElementById("btn-logout");
+      if (btnLogout) {
+        btnLogout.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await signOutUser();
+            window.location.replace("/");
+          } catch (error) {
+            console.error("Error al cerrar sesión:", error);
+          }
+        });
+      }
+
+      async function checkRole() {
+        try {
+          const session = await getSession();
+          if (session && session.user) {
+            const role = await getUserRole(session.user.id);
+            const adminLinks = document.getElementById("admin-links");
+            if (role === 'admin' && adminLinks) {
+              adminLinks.style.display = 'contents';
+            } else if (adminLinks) {
+              adminLinks.style.display = 'none';
+            }
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      checkRole();
+    </script>
+  </body>
+</html>

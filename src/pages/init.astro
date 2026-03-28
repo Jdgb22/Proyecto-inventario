@@ -1,0 +1,23 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<Navbar />
+
+<h1>init</h1>
+
+<script>
+  import { getSession } from "../lib/auth";
+
+  async function checkAuth() {
+    try {
+      const session = await getSession();
+      if (!session) {
+        window.location.replace("/");
+      }
+    } catch (error) {
+      window.location.replace("/");
+    }
+  }
+  checkAuth();
+</script>

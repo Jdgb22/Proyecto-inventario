@@ -1,0 +1,264 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<Navbar />
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div style="margin: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Lista de Trabajadores</h2>
+        <button id="btn-toggle-form" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+          + Agregar Trabajador
+        </button>
+      </div>
+
+      <div id="form-container" style="display: none; background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <h3 id="form-title" style="margin-top: 0;">Subir Nuevo Trabajador</h3>
+        <form id="form-trabajador" style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+          <input type="hidden" name="id" id="worker-id" />
+          <input type="text" name="nombre" id="worker-nombre" placeholder="Nombre completo" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
+          <input type="text" name="documento" id="worker-documento" placeholder="Documento o Cédula" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
+          <input type="text" name="telefono" id="worker-telefono" placeholder="Teléfono" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
+          <input type="text" name="cargo" id="worker-cargo" placeholder="Cargo" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
+          <input type="number" name="salario_base" id="worker-salario" placeholder="Salario base" step="0.01" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
+          <button type="submit" id="btn-submit" style="padding: 10px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;">Guardar Trabajador</button>
+        </form>
+        <p id="msg" style="font-weight: bold; margin-bottom: 0;"></p>
+      </div>
+      
+      <ul id="lista-trabajadores" style="list-style-type: none; padding: 0;">
+        <li>Cargando datos...</li>
+      </ul>
+    </div>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getTrabajadores, addTrabajador, updateTrabajador, deleteTrabajador } from "../lib/workers";
+
+      async function checkAuthAndRole() {
+        try {
+          const session = await getSession();
+          if (!session) {
+            window.location.replace("/");
+            return;
+          }
+          const role = await getUserRole(session.user.id);
+          if (role !== 'admin') {
+            window.location.replace("/init");
+            return; // Detener ejecución si redirige
+          }
+          
+          // Si es admin, cargar trabajadores
+          loadWorkers();
+        } catch (error) {
+          window.location.replace("/");
+        }
+      }
+      checkAuthAndRole();
+
+      async function loadWorkers() {
+        const lista = document.getElementById("lista-trabajadores");
+        if (!lista) return;
+
+        try {
+          const data = await getTrabajadores();
+          
+          // Limpiar la lista
+          lista.innerHTML = "";
+          
+          if (data.length === 0) {
+            lista.innerHTML = "<li>No hay trabajadores registrados en la base de datos.</li>";
+            return;
+          }
+          
+          // Generar los elementos de la lista
+          data.forEach(t => {
+            const li = document.createElement("li");
+            
+            // Estilos para que tome todo el renglón como una tarjeta/fila ancha
+            li.style.width = "100%";
+            li.style.boxSizing = "border-box";
+            li.style.marginBottom = "12px";
+            li.style.padding = "16px";
+            li.style.backgroundColor = "#ffffff";
+            li.style.border = "1px solid #e5e7eb";
+            li.style.borderRadius = "8px";
+            li.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+            li.style.display = "flex";
+            li.style.flexDirection = "column";
+            li.style.gap = "8px";
+
+            li.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
+                <span style="font-size: 1.1rem; color: #111827;"><strong>${t.nombre}</strong></span>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <span style="color: #6b7280; font-size: 0.9rem; font-family: monospace;">C.C. ${t.documento}</span>
+                  <button class="btn-edit-worker" 
+                    data-id="${t.id}" 
+                    data-nombre="${t.nombre}" 
+                    data-documento="${t.documento}" 
+                    data-telefono="${t.telefono || ''}" 
+                    data-cargo="${t.cargo || ''}" 
+                    data-salario="${t.salario_base || ''}"
+                    style="padding: 4px 8px; background-color: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                    Editar
+                  </button>
+                  <button class="btn-delete-worker" 
+                    data-id="${t.id}" 
+                    style="padding: 4px 8px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                    Eliminar
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #4b5563; font-size: 0.95rem;">
+                <span><strong>Cargo:</strong> ${t.cargo || 'Sin definir'}</span>
+                <span><strong>Tel:</strong> ${t.telefono || 'N/A'}</span>
+                <span style="color: #059669; font-weight: bold;">Salario: $${t.salario_base ? Number(t.salario_base).toLocaleString('es-CO') : '0.00'}</span>
+              </div>
+            `;
+            lista.appendChild(li);
+          });
+
+          // Agregar event listeners a botones Eliminar
+          document.querySelectorAll('.btn-delete-worker').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const target = e.currentTarget as HTMLButtonElement;
+              const id = target.dataset.id || "";
+              
+              if (confirm("¿Estás seguro de que deseas eliminar este trabajador? Todo su registro de datos y pagos asociados serán eliminados permanentemente.")) {
+                try {
+                  await deleteTrabajador(id);
+                  loadWorkers(); // Recargar lista al eliminar
+                } catch (error: any) {
+                  alert("Error al eliminar trabajador: " + error.message);
+                }
+              }
+            });
+          });
+
+          // Agregar event listeners a botones Editar
+          document.querySelectorAll('.btn-edit-worker').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const target = e.currentTarget as HTMLButtonElement;
+              const id = target.dataset.id || "";
+              
+              const formContainer = document.getElementById("form-container");
+              const btnToggle = document.getElementById("btn-toggle-form");
+              
+              // Llenar formulario
+              (document.getElementById("worker-id") as HTMLInputElement).value = id;
+              (document.getElementById("worker-nombre") as HTMLInputElement).value = target.dataset.nombre || "";
+              (document.getElementById("worker-documento") as HTMLInputElement).value = target.dataset.documento || "";
+              (document.getElementById("worker-telefono") as HTMLInputElement).value = target.dataset.telefono || "";
+              (document.getElementById("worker-cargo") as HTMLInputElement).value = target.dataset.cargo || "";
+              (document.getElementById("worker-salario") as HTMLInputElement).value = target.dataset.salario || "";
+
+              // Desplegar formulario si está oculto
+              if (formContainer && formContainer.style.display === "none" && btnToggle) {
+                btnToggle.click();
+              }
+
+              // Cambiar título
+              if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Editar Trabajador";
+              if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Actualizar Trabajador";
+              
+              // Scroll hasta el formulario
+              formContainer?.scrollIntoView({ behavior: 'smooth' });
+            });
+          });
+
+        } catch (error: any) {
+          lista.innerHTML = `<li style="color: red;">Error al cargar datos: ${error.message}</li>`;
+        }
+      }
+
+      // Lógica para desplegar el formulario
+      const btnToggle = document.getElementById("btn-toggle-form");
+      const formContainer = document.getElementById("form-container");
+
+      if (btnToggle && formContainer) {
+        btnToggle.addEventListener("click", () => {
+          if (formContainer.style.display === "none") {
+            formContainer.style.display = "block";
+            btnToggle.textContent = "- Ocultar Formulario";
+            btnToggle.style.backgroundColor = "#ef4444"; // rojo
+          } else {
+            formContainer.style.display = "none";
+            btnToggle.textContent = "+ Agregar Trabajador";
+            btnToggle.style.backgroundColor = "#4CAF50"; // verde
+            
+            // Limpiar datos ocultos
+            const form = document.getElementById("form-trabajador") as HTMLFormElement;
+            if (form) form.reset();
+            (document.getElementById("worker-id") as HTMLInputElement).value = "";
+            if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Subir Nuevo Trabajador";
+            if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Guardar Trabajador";
+          }
+        });
+      }
+
+      // Lógica para guardar el formulario
+      const form = document.getElementById("form-trabajador") as HTMLFormElement;
+      const msg = document.getElementById("msg");
+
+      if (form && msg) {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+          const workerId = formData.get("id") as string;
+          
+          try {
+            const dataToSave = {
+              nombre: formData.get("nombre") as string,
+              documento: formData.get("documento") as string,
+              telefono: (formData.get("telefono") as string) || undefined,
+              cargo: (formData.get("cargo") as string) || undefined,
+              salario_base: formData.get("salario_base") ? parseFloat(formData.get("salario_base") as string) : undefined
+            };
+
+            if (workerId) {
+              await updateTrabajador(workerId, dataToSave);
+              msg.textContent = "¡Trabajador actualizado exitosamente!";
+            } else {
+              await addTrabajador(dataToSave);
+              msg.textContent = "¡Trabajador guardado exitosamente!";
+            }
+            
+            msg.style.color = "green";
+            form.reset();
+            (document.getElementById("worker-id") as HTMLInputElement).value = "";
+            if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Subir Nuevo Trabajador";
+            if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Guardar Trabajador";
+
+            // Recargar la lista automáticamente
+            loadWorkers();
+            
+            // Ocultar formulario tras guardar exitosamente
+            setTimeout(() => { 
+              msg.textContent = ""; 
+              if (formContainer) {
+                formContainer.style.display = "none";
+                if(btnToggle) {
+                  btnToggle.textContent = "+ Agregar Trabajador";
+                  btnToggle.style.backgroundColor = "#4CAF50";
+                }
+              }
+            }, 2000);
+          } catch (error: any) {
+            msg.textContent = "Error al guardar: " + error.message;
+            msg.style.color = "red";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
