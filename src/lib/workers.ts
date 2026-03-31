@@ -7,6 +7,11 @@ export interface Trabajador {
   telefono?: string;
   cargo?: string;
   salario_base?: number;
+  // Campos opcionales para historial por negocio y mes.
+  // Si la tabla `trabajadores` aún no tiene estas columnas,
+  // el frontend hará fallback a la lógica antigua.
+  negocio?: string;
+  mes?: string; // Idealmente "YYYY-MM"
 }
 
 export interface PagoTrabajador {
@@ -31,6 +36,24 @@ export async function getTrabajadores() {
     throw error;
   }
   return data;
+}
+
+export async function getTrabajadoresFiltrados(negocio?: string, mes?: string) {
+  try {
+    let query = supabase.from("trabajadores").select("*");
+    if (negocio) query = query.eq("negocio", negocio);
+    if (mes) query = query.eq("mes", mes);
+    const { data, error } = await query.order("nombre", { ascending: true });
+
+    if (error) {
+      console.warn("getTrabajadoresFiltrados fallback:", error.message);
+      return await getTrabajadores();
+    }
+    return data;
+  } catch (error) {
+    console.warn("getTrabajadoresFiltrados fallback (catch):", error);
+    return await getTrabajadores();
+  }
 }
 
 export async function addTrabajador(trabajador: Trabajador) {

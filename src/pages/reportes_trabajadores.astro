@@ -1,0 +1,294 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!DOCTYPE html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reportes Trabajadores</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
+      main { max-width: 1100px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      h1 { color: #111827; margin-top: 0; }
+      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-top: 16px; }
+      .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+      label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; }
+      input, select { padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
+      button { padding: 10px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+      button:disabled { background-color: #94a3b8; cursor: not-allowed; }
+      .charts { display: grid; grid-template-columns: 1fr; gap: 20px; }
+      @media (min-width: 900px) { .charts { grid-template-columns: 1fr 1fr; } }
+      .chart-wrap { height: 360px; }
+      canvas { width: 100% !important; height: 100% !important; }
+      .msg { color: #6b7280; margin-top: 12px; font-style: italic; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+      th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+      th { background-color: #f1f5f9; color: #475569; }
+      td code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+
+    <main>
+      <h1>Reportes de Trabajadores por Negocio y Mes</h1>
+
+      <div class="card">
+        <div class="filters">
+          <label style="min-width: 260px;">
+            Negocio
+            <select id="rep-trab-negocio">
+              <option value="">Cargando...</option>
+            </select>
+          </label>
+
+          <label style="min-width: 200px;">
+            Desde (mes)
+            <input id="rep-trab-mes-desde" type="month" />
+          </label>
+
+          <label style="min-width: 200px;">
+            Hasta (mes)
+            <input id="rep-trab-mes-hasta" type="month" />
+          </label>
+
+          <button id="btn-trab-aplicar">Aplicar</button>
+        </div>
+
+        <div id="rep-trab-msg" class="msg" style="display:none;"></div>
+      </div>
+
+      <div class="charts">
+        <div class="card chart-wrap">
+          <h3 style="margin:0 0 10px 0;">Total de nómina (salario base) por mes</h3>
+          <canvas id="chart-trab-salario"></canvas>
+        </div>
+
+        <div class="card chart-wrap">
+          <h3 style="margin:0 0 10px 0;">Cantidad de trabajadores por mes</h3>
+          <canvas id="chart-trab-cantidad"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px 0;">Totales mensuales</h3>
+        <div id="tabla-trab-mensual"></div>
+      </div>
+    </main>
+
+    <script>
+      import { getSession } from "../lib/auth";
+      import { getTrabajadores } from "../lib/workers";
+
+      let trabajadores: any[] = [];
+      let chartSalario: any = null;
+      let chartCantidad: any = null;
+
+      const msgEl = document.getElementById("rep-trab-msg");
+      const negocioSelect = document.getElementById("rep-trab-negocio");
+      const mesDesdeInput = document.getElementById("rep-trab-mes-desde");
+      const mesHastaInput = document.getElementById("rep-trab-mes-hasta");
+      const btnAplicar = document.getElementById("btn-trab-aplicar");
+      const tablaEl = document.getElementById("tabla-trab-mensual");
+
+      const normalizeMes = (value: any) => {
+        const str = String(value ?? "").trim();
+        if (!str) return "";
+        if (/^\d{4}-\d{2}$/.test(str)) return str;
+        if (str.length >= 7) return str.slice(0, 7);
+        return "";
+      };
+
+      const normalizeNegocio = (row: any) => {
+        const negocio = (row?.negocio ?? row?.negocio_id ?? row?.sucursal ?? row?.nombre_negocio ?? "").toString().trim();
+        return negocio || "General";
+      };
+
+      const showMsg = (text: string) => {
+        if (!msgEl) return;
+        msgEl.textContent = text;
+        msgEl.style.display = "block";
+      };
+
+      const hideMsg = () => {
+        if (!msgEl) return;
+        msgEl.textContent = "";
+        msgEl.style.display = "none";
+      };
+
+      async function checkAuth() {
+        const session = await getSession();
+        if (!session) window.location.replace("/");
+      }
+      checkAuth();
+
+      async function load() {
+        hideMsg();
+        if (!negocioSelect || !mesDesdeInput || !mesHastaInput || !btnAplicar) return;
+
+        trabajadores = await getTrabajadores();
+        if (!trabajadores || trabajadores.length === 0) {
+          showMsg("No hay datos en `trabajadores` todavía.");
+          return;
+        }
+
+        const negocios = Array.from(new Set(trabajadores.map((r) => normalizeNegocio(r)))).sort((a, b) => a.localeCompare(b));
+        negocioSelect.innerHTML = negocios.map((n) => `<option value="${n}">${n}</option>`).join("");
+
+        const meses = trabajadores
+          .map((r) => normalizeMes(r.mes ?? r.fecha_mes ?? r.fecha ?? r.created_at))
+          .filter((m) => m);
+
+        if (meses.length === 0) {
+          showMsg("No encontré campo `mes`/`fecha` en los trabajadores. Para graficar se necesita guardar trabajadores por mes.");
+          return;
+        }
+
+        const minMes = meses.slice().sort()[0];
+        const maxMes = meses.slice().sort()[meses.length - 1];
+        (mesDesdeInput as HTMLInputElement).value = minMes;
+        (mesHastaInput as HTMLInputElement).value = maxMes;
+        (negocioSelect as HTMLSelectElement).value = negocios[0];
+        await aplicar();
+      }
+
+      function destruirCharts() {
+        try { chartSalario?.destroy?.(); } catch {}
+        try { chartCantidad?.destroy?.(); } catch {}
+        chartSalario = null;
+        chartCantidad = null;
+      }
+
+      async function aplicar() {
+        if (!trabajadores || trabajadores.length === 0) return;
+        if (!negocioSelect || !mesDesdeInput || !mesHastaInput) return;
+
+        destruirCharts();
+        tablaEl!.innerHTML = "";
+        hideMsg();
+
+        const negocio = (negocioSelect as HTMLSelectElement).value;
+        const mesDesde = (mesDesdeInput as HTMLInputElement).value;
+        const mesHasta = (mesHastaInput as HTMLInputElement).value;
+
+        if (!negocio || !mesDesde || !mesHasta) {
+          showMsg("Selecciona negocio y rango de meses.");
+          return;
+        }
+
+        const grupos: Record<string, { cantidad: number; salarioTotal: number }> = {};
+
+        for (const row of trabajadores) {
+          const rowNegocio = normalizeNegocio(row);
+          if (rowNegocio !== negocio) continue;
+
+          const mesKey = normalizeMes(row.mes ?? row.fecha_mes ?? row.fecha ?? row.created_at);
+          if (!mesKey) continue;
+          if (mesKey < mesDesde || mesKey > mesHasta) continue;
+
+          const salarioBase = Number(row.salario_base ?? 0) || 0;
+          if (!grupos[mesKey]) grupos[mesKey] = { cantidad: 0, salarioTotal: 0 };
+          grupos[mesKey].cantidad += 1;
+          grupos[mesKey].salarioTotal += salarioBase;
+        }
+
+        const mesesOrdenados = Object.keys(grupos).sort();
+        if (mesesOrdenados.length === 0) {
+          showMsg("No hay registros para ese negocio y rango de meses.");
+          return;
+        }
+
+        const salarios = mesesOrdenados.map((m) => grupos[m].salarioTotal);
+        const cantidades = mesesOrdenados.map((m) => grupos[m].cantidad);
+
+        tablaEl!.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Cantidad</th>
+                <th>Salario total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${mesesOrdenados
+                .map((m) => {
+                  const g = grupos[m];
+                  return `
+                    <tr>
+                      <td><code>${m}</code></td>
+                      <td>${Math.round(g.cantidad).toLocaleString("es-CO")}</td>
+                      <td>$${g.salarioTotal.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    </tr>
+                  `;
+                })
+                .join("")}
+            </tbody>
+          </table>
+        `;
+
+        const ChartRef = (window).Chart;
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+            tooltip: { mode: "index", intersect: false }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true }
+          }
+        };
+
+        const ctxSalario = (document.getElementById("chart-trab-salario") as HTMLCanvasElement).getContext("2d");
+        const ctxCantidad = (document.getElementById("chart-trab-cantidad") as HTMLCanvasElement).getContext("2d");
+
+        chartSalario = new ChartRef(ctxSalario, {
+          type: "line",
+          data: {
+            labels: mesesOrdenados,
+            datasets: [
+              {
+                label: "Salario total",
+                data: salarios,
+                borderColor: "#f59e0b",
+                backgroundColor: "rgba(245, 158, 11, 0.18)",
+                tension: 0.25,
+                fill: true
+              }
+            ]
+          },
+          options: commonOptions
+        });
+
+        chartCantidad = new ChartRef(ctxCantidad, {
+          type: "bar",
+          data: {
+            labels: mesesOrdenados,
+            datasets: [
+              {
+                label: "Trabajadores",
+                data: cantidades,
+                backgroundColor: "rgba(16, 185, 129, 0.25)",
+                borderColor: "#10b981",
+                borderWidth: 1
+              }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      btnAplicar?.addEventListener("click", () => aplicar());
+
+      load();
+    </script>
+  </body>
+</html>
+

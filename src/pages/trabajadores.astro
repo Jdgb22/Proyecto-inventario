@@ -119,10 +119,14 @@ import Navbar from "../components/navbar.astro";
                   </button>
                 </div>
               </div>
-              <div style="display: flex; justify-content: space-between; color: #4b5563; font-size: 0.95rem;">
+              <div style="display: flex; justify-content: space-between; color: #4b5563; font-size: 0.95rem; gap: 10px; flex-wrap: wrap;">
                 <span><strong>Cargo:</strong> ${t.cargo || 'Sin definir'}</span>
                 <span><strong>Tel:</strong> ${t.telefono || 'N/A'}</span>
                 <span style="color: #059669; font-weight: bold;">Salario: $${t.salario_base ? Number(t.salario_base).toLocaleString('es-CO') : '0.00'}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #6b7280; font-size: 0.9rem; gap: 10px; flex-wrap: wrap; margin-top: 6px;">
+                <span><strong>Negocio:</strong> ${t.negocio || 'General'}</span>
+                <span><strong>Mes:</strong> ${t.mes || '-'}</span>
               </div>
             `;
             lista.appendChild(li);

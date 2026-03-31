@@ -8,10 +8,339 @@ import Navbar from "../components/navbar.astro";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Subir Inventario</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
+      main { max-width: 1000px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      h1 { color: #111827; margin-top: 0; }
+      .upload-container { border: 2px dashed #cbd5e1; padding: 40px; text-align: center; border-radius: 8px; margin-bottom: 20px; transition: backgound 0.2s; background: #f8fafc; }
+      .upload-container:hover { border-color: #3b82f6; background-color: #eff6ff; }
+      #file-input { display: none; }
+      .btn { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 1rem; }
+      .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+      .btn-success { background: #10b981; }
+      .table-container { overflow-x: auto; margin-top: 20px; display: none; }
+      table { width: 100%; border-collapse: collapse; text-align: left; }
+      th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+      th { background-color: #f1f5f9; font-weight: 600; color: #475569; }
+      .status-new { color: #047857; background: #d1fae5; padding: 4px 8px; border-radius: 9999px; font-size: 0.85rem; font-weight: bold; }
+      .status-update { color: #b45309; background: #fef3c7; padding: 4px 8px; border-radius: 9999px; font-size: 0.85rem; font-weight: bold; }
+      .status-error { color: #b91c1c; background: #fee2e2; padding: 4px 8px; border-radius: 9999px; font-size: 0.85rem; font-weight: bold; }
+      #loading-msg { color: #4b5563; font-style: italic; margin-top: 10px; display: none; }
+      .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+      #result-msg { font-weight: bold; }
+      .format-info { font-size: 0.9rem; color: #64748b; margin-top: 10px; }
+    </style>
   </head>
   <body>
     <Navbar />
     
-    
+    <main>
+      <h1>Carga Masiva de Inventario</h1>
+
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 240px;">
+          Negocio
+          <input id="inv-negocio" type="text" placeholder="Ej: Centro, Norte, Sucursal 1" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 200px;">
+          Mes
+          <input id="inv-mes" type="month" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+        </label>
+      </div>
+      
+      <div class="upload-container" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <svg style="width:48px; height:48px; color:#94a3b8; margin: 0 auto; margin-bottom: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+        <p style="font-size: 1.1rem; color: #334155; margin:0;"><strong>Haz clic o arrastra un archivo aquí</strong></p>
+        <p class="format-info">Soporta: .xlsx, .xls, .csv</p>
+        <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
+      </div>
+
+      <p id="loading-msg">Procesando y verificando con la base de datos...</p>
+
+      <div class="table-container" id="preview-container">
+        <h2>Vista Previa de Carga</h2>
+        <table id="preview-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Código</th>
+              <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody id="preview-body">
+          </tbody>
+        </table>
+        <div class="actions">
+          <p id="result-msg"></p>
+          <button id="btn-confirm" class="btn btn-success">Confirmar Carga</button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      import * as XLSX from "xlsx";
+      import { getInventarioFiltrado, getInventario, addInventario, updateInventario } from "../lib/inventory";
+      import { getSession } from "../lib/auth";
+
+      let inventarioActual: any[] = [];
+      let datosAProcesar: any[] = [];
+      let negocioSeleccionado = "";
+      let mesSeleccionado = "";
+
+      async function checkAuth() {
+        const session = await getSession();
+        if (!session) {
+          window.location.replace("/");
+        }
+      }
+      checkAuth();
+
+      const fileInput = document.getElementById("file-input") as HTMLInputElement;
+      const dropZone = document.getElementById("drop-zone");
+      const loadingMsg = document.getElementById("loading-msg");
+      const previewContainer = document.getElementById("preview-container");
+      const previewBody = document.getElementById("preview-body");
+      const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
+      const resultMsg = document.getElementById("result-msg");
+      const negocioInput = document.getElementById("inv-negocio") as HTMLInputElement;
+      const mesInput = document.getElementById("inv-mes") as HTMLInputElement;
+
+      dropZone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#3b82f6";
+        dropZone.style.backgroundColor = "#eff6ff";
+      });
+
+      dropZone?.addEventListener("dragleave", () => {
+        dropZone.style.borderColor = "#cbd5e1";
+        dropZone.style.backgroundColor = "#f8fafc";
+      });
+
+      dropZone?.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#cbd5e1";
+        dropZone.style.backgroundColor = "#f8fafc";
+        if (e.dataTransfer?.files.length && e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput?.addEventListener("change", (e) => {
+        const target = e.target as HTMLInputElement;
+        if (target.files && target.files.length > 0) {
+          handleFile(target.files[0]);
+        }
+      });
+
+      async function handleFile(file: File) {
+        if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
+          alert("Por favor sube un archivo con formato válido (.xlsx, .xls, .csv).");
+          return;
+        }
+
+        negocioSeleccionado = (negocioInput?.value || "").trim();
+        mesSeleccionado = (mesInput?.value || "").trim();
+        if (!negocioSeleccionado) {
+          alert("Por favor ingresa el Negocio.");
+          return;
+        }
+        if (!mesSeleccionado) {
+          alert("Por favor ingresa el Mes (selecciona el mes).");
+          return;
+        }
+
+        loadingMsg!.style.display = "block";
+        previewContainer!.style.display = "none";
+        btnConfirm.disabled = false;
+        resultMsg!.textContent = "";
+        datosAProcesar = [];
+
+        try {
+          // Si ya tienes columnas `negocio` y `mes` en Supabase, esto filtrará por esos valores.
+          // Si no existen, `getInventarioFiltrado` hace fallback a `getInventario()`.
+          inventarioActual = await getInventarioFiltrado(negocioSeleccionado, mesSeleccionado);
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target?.result as ArrayBuffer);
+            const workbook = XLSX.read(data, { type: "array" });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            
+            procesarJSON(json);
+          };
+          reader.readAsArrayBuffer(file);
+        } catch (error: any) {
+          alert("Error de conexión: " + error.message);
+          loadingMsg!.style.display = "none";
+        }
+      }
+
+      function procesarJSON(data: any[]) {
+        previewBody!.innerHTML = "";
+
+        const hasNegocio = inventarioActual.some((item) => item && Object.prototype.hasOwnProperty.call(item, "negocio"));
+        const hasMes = inventarioActual.some((item) => item && Object.prototype.hasOwnProperty.call(item, "mes"));
+
+        const normalizarMes = (value: any) => {
+          const str = String(value ?? "").trim();
+          if (!str) return "";
+          if (/^\d{4}-\d{2}$/.test(str)) return str;
+          return str.slice(0, 7); // soporta YYYY-MM-DD -> YYYY-MM
+        };
+        
+        datosAProcesar = data.map((row: any) => {
+          // Normalizar llaves a minúsculas para evitar problemas de case sensitiveness
+          const normalizedRow: any = {};
+          Object.keys(row).forEach(key => {
+            normalizedRow[key.toLowerCase().trim()] = row[key];
+          });
+
+          const nombre = normalizedRow["nombre"] || "";
+          const codigo = String(normalizedRow["codigo"] || "").trim();
+          const cantidad = parseInt(normalizedRow["cantidad"]) || 0;
+          const precio = parseFloat(normalizedRow["precio"]) || 0;
+          const categoria = normalizedRow["categoria"] || "";
+
+          let estadoText = "";
+          let estadoClass = "";
+          let dbId = null;
+          let isValid = (nombre !== "" && codigo !== "");
+
+          if (!isValid) {
+            estadoText = "Faltan datos obligatorios";
+            estadoClass = "status-error";
+          } else {
+            const existingItem = (hasNegocio && hasMes)
+              ? inventarioActual.find((item) => {
+                  return (
+                    String(item.codigo).trim() === codigo &&
+                    String(item.negocio ?? "").trim() === negocioSeleccionado &&
+                    normalizarMes(item.mes) === normalizarMes(mesSeleccionado)
+                  );
+                })
+              : inventarioActual.find(item => String(item.codigo).trim() === codigo);
+
+            if (existingItem) {
+              estadoText = "Actualizar producto";
+              estadoClass = "status-update";
+              dbId = existingItem.id;
+            } else {
+              estadoText = "Nuevo producto";
+              estadoClass = "status-new";
+            }
+          }
+
+          return {
+            dbId,
+            nombre,
+            codigo,
+            cantidad,
+            precio,
+            categoria,
+            isValid,
+            estadoText,
+            estadoClass
+          };
+        });
+
+        datosAProcesar.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${item.nombre}</td>
+            <td><code>${item.codigo}</code></td>
+            <td>${item.cantidad}</td>
+            <td>$${item.precio.toLocaleString('es-CO')}</td>
+            <td><span class="${item.estadoClass}">${item.estadoText}</span></td>
+          `;
+          previewBody!.appendChild(tr);
+        });
+
+        loadingMsg!.style.display = "none";
+        if (datosAProcesar.length > 0) {
+            previewContainer!.style.display = "block";
+        } else {
+            alert("No se encontraron registros válidos en el archivo.");
+        }
+      }
+
+      btnConfirm?.addEventListener("click", async () => {
+        const itemsValidos = datosAProcesar.filter(item => item.isValid);
+        
+        if (itemsValidos.length === 0) {
+          alert("No hay productos válidos para guardar.");
+          return;
+        }
+
+        btnConfirm.disabled = true;
+        resultMsg!.textContent = "Guardando...";
+        resultMsg!.style.color = "#3b82f6";
+
+        let guardados = 0;
+        let errores = 0;
+
+        for (const item of itemsValidos) {
+          try {
+            const dataBase = {
+              nombre: item.nombre,
+              codigo: item.codigo,
+              cantidad: item.cantidad,
+              precio: item.precio || undefined,
+              categoria: item.categoria || undefined
+            };
+
+            // Intentamos guardar con historial (negocio + mes). Si tu tabla todavía no tiene
+            // esos campos, hacemos fallback automático a la estructura anterior.
+            const dataToSave = {
+              ...dataBase,
+              negocio: negocioSeleccionado,
+              mes: mesSeleccionado,
+            };
+
+            const isMissingColumnError = (error: any) => {
+              const msg = String(error?.message || error || "").toLowerCase();
+              return msg.includes("column") && msg.includes("does not exist");
+            };
+
+            if (item.dbId) {
+              try {
+                await updateInventario(item.dbId, dataToSave);
+              } catch (error: any) {
+                if (isMissingColumnError(error)) {
+                  await updateInventario(item.dbId, dataBase);
+                } else {
+                  throw error;
+                }
+              }
+            } else {
+              try {
+                await addInventario(dataToSave as any);
+              } catch (error: any) {
+                if (isMissingColumnError(error)) {
+                  await addInventario(dataBase as any);
+                } else {
+                  throw error;
+                }
+              }
+            }
+            guardados++;
+          } catch (error) {
+            console.error("Error al procesar", item.codigo, error);
+            errores++;
+          }
+        }
+
+        resultMsg!.textContent = `✅ Finalizado: ${guardados} exitosos, ${errores} errores.`;
+        resultMsg!.style.color = "#047857";
+        btnConfirm.textContent = "Carga Completada";
+        
+        setTimeout(() => {
+          window.location.replace("/reportes");
+        }, 2500);
+      });
+    </script>
   </body>
 </html>

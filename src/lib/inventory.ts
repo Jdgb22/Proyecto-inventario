@@ -7,6 +7,10 @@ export interface Inventario {
   cantidad: number;
   precio?: number;
   categoria?: string;
+  // Campos opcionales para manejar historial por negocio y mes.
+  // Si tu tabla actual no los tiene, el frontend hará fallback automático.
+  negocio?: string;
+  mes?: string; // Idealmente "YYYY-MM"
 }
 
 export async function getInventario() {
@@ -20,6 +24,25 @@ export async function getInventario() {
     throw error;
   }
   return data;
+}
+
+export async function getInventarioFiltrado(negocio?: string, mes?: string) {
+  try {
+    let query = supabase.from("inventario").select("*");
+    if (negocio) query = query.eq("negocio", negocio);
+    if (mes) query = query.eq("mes", mes);
+    const { data, error } = await query.order("nombre", { ascending: true });
+
+    if (error) {
+      // Si la tabla no tiene esas columnas todavía, devolvemos la consulta completa.
+      console.warn("getInventarioFiltrado fallback:", error.message);
+      return await getInventario();
+    }
+    return data;
+  } catch (error) {
+    console.warn("getInventarioFiltrado fallback (catch):", error);
+    return await getInventario();
+  }
 }
 
 export async function addInventario(item: Inventario) {
