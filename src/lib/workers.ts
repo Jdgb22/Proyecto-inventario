@@ -12,6 +12,8 @@ export interface Trabajador {
   // el frontend hará fallback a la lógica antigua.
   negocio?: string;
   mes?: string; // Idealmente "YYYY-MM"
+  horas_extras?: number;
+  deuda?: number;
 }
 
 export interface PagoTrabajador {

@@ -35,12 +35,24 @@ import Navbar from "../components/navbar.astro";
     <Navbar />
     
     <main>
-      <h1>Carga Masiva de Trabajadores</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
+        <h1>Carga Masiva de Trabajadores</h1>
+        <button id="btn-template" class="btn" style="background: #64748b; margin-top: 0; font-size: 0.85rem;">
+          <svg style="width:16px; height:16px; vertical-align: middle; margin-right: 5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Descargar Plantilla Excel
+        </button>
+      </div>
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 240px;">
           Negocio
-          <input id="worker-negocio" type="text" placeholder="Ej: Centro, Norte, Sucursal 1" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+          <div style="display: flex; gap: 4px;">
+            <select id="worker-negocio-select" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; flex: 1;">
+              <option value="">Cargando negocios...</option>
+            </select>
+            <input id="worker-negocio-nuevo" type="text" placeholder="Nombre de nuevo negocio" style="display: none; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; flex: 1;"/>
+            <button id="btn-toggle-negocio" type="button" style="padding: 10px; background: #e5e7eb; border: none; border-radius: 8px; cursor: pointer; font-size: 0.75rem;" title="Nuevo negocio">➕</button>
+          </div>
         </label>
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 200px;">
           Mes
@@ -67,6 +79,8 @@ import Navbar from "../components/navbar.astro";
               <th>Teléfono</th>
               <th>Cargo</th>
               <th>Salario Base</th>
+              <th>Horas Extras</th>
+              <th>Deuda</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -83,6 +97,7 @@ import Navbar from "../components/navbar.astro";
     <script>
       import * as XLSX from "xlsx";
       import { getTrabajadoresFiltrados, getTrabajadores, addTrabajador, updateTrabajador } from "../lib/workers";
+      import { getInventario } from "../lib/inventory";
       import { getSession } from "../lib/auth";
 
       let trabajadoresActuales: any[] = [];
@@ -105,24 +120,93 @@ import Navbar from "../components/navbar.astro";
       const previewBody = document.getElementById("preview-body");
       const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
       const resultMsg = document.getElementById("result-msg");
-      const negocioInput = document.getElementById("worker-negocio") as HTMLInputElement;
+      const negocioSelect = document.getElementById("worker-negocio-select") as HTMLSelectElement;
+      const negocioNuevoInput = document.getElementById("worker-negocio-nuevo") as HTMLInputElement;
+      const btnToggleNegocio = document.getElementById("btn-toggle-negocio");
       const mesInput = document.getElementById("worker-mes") as HTMLInputElement;
+      const btnTemplate = document.getElementById("btn-template");
+
+      btnTemplate?.addEventListener("click", () => {
+        const headers = [
+          ["Nombre", "Documento", "Teléfono", "Cargo", "Salario Base", "Horas Extras", "Deuda"],
+          ["Juan Perez", "10203040", "3001234567", "Operario", 1300000, 5, 0],
+          ["Maria Lopez", "50607080", "3109876543", "Supervisor", 2500000, 0, 50000]
+        ];
+        
+        const worksheet = XLSX.utils.aoa_to_sheet(headers);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla Trabajadores");
+        
+        // Generar archivo y descargar
+        XLSX.writeFile(workbook, "plantilla_trabajadores.xlsx");
+      });
+
+      // --- Lógica de Negocios Dinámicos ---
+      let isNuevonegocio = false;
+
+      async function loadNegocios() {
+        try {
+          const [trab, inv] = await Promise.all([getTrabajadores(), getInventario()]);
+          
+          const normalize = (n: string) => String(n || "").trim();
+          const uniqueNegocios = Array.from(new Set([
+            ...trab.map(t => normalize((t as any).negocio)),
+            ...inv.map(i => normalize((i as any).negocio))
+          ])).filter(n => n && n !== "General").sort();
+
+          negocioSelect.innerHTML = uniqueNegocios.length > 0 
+            ? uniqueNegocios.map(n => `<option value="${n}">${n}</option>`).join("") 
+            : `<option value="">Sin negocios registrados</option>`;
+          
+          // Si no hay ninguno, forzar modo nuevo negocio
+          if (uniqueNegocios.length === 0) {
+            toggleNegocioMode(true);
+          }
+        } catch (error) {
+          console.error("Error cargando negocios:", error);
+          negocioSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        }
+      }
+
+      function toggleNegocioMode(forceNew?: boolean) {
+        isNuevonegocio = forceNew !== undefined ? forceNew : !isNuevonegocio;
+        if (isNuevonegocio) {
+          negocioSelect.style.display = "none";
+          negocioNuevoInput.style.display = "block";
+          btnToggleNegocio!.textContent = "🔙";
+          btnToggleNegocio!.title = "Volver a la lista";
+        } else {
+          negocioSelect.style.display = "block";
+          negocioNuevoInput.style.display = "none";
+          btnToggleNegocio!.textContent = "➕";
+          btnToggleNegocio!.title = "Nuevo negocio";
+        }
+      }
+
+      btnToggleNegocio?.addEventListener("click", () => toggleNegocioMode());
+      loadNegocios();
 
       dropZone?.addEventListener("dragover", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#3b82f6";
-        dropZone.style.backgroundColor = "#eff6ff";
+        if (dropZone) {
+          dropZone.style.borderColor = "#3b82f6";
+          dropZone.style.backgroundColor = "#eff6ff";
+        }
       });
 
       dropZone?.addEventListener("dragleave", () => {
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#f8fafc";
+        if (dropZone) {
+          dropZone.style.borderColor = "#cbd5e1";
+          dropZone.style.backgroundColor = "#f8fafc";
+        }
       });
 
       dropZone?.addEventListener("drop", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#f8fafc";
+        if (dropZone) {
+          dropZone.style.borderColor = "#cbd5e1";
+          dropZone.style.backgroundColor = "#f8fafc";
+        }
         if (e.dataTransfer?.files.length && e.dataTransfer.files.length > 0) {
           handleFile(e.dataTransfer.files[0]);
         }
@@ -141,10 +225,17 @@ import Navbar from "../components/navbar.astro";
           return;
         }
 
-        negocioSeleccionado = (negocioInput?.value || "").trim();
+        // Obtener el negocio ya sea del select o del input de nuevo negocio
+        if (isNuevonegocio) {
+          negocioSeleccionado = (negocioNuevoInput?.value || "").trim();
+        } else {
+          negocioSeleccionado = (negocioSelect?.value || "").trim();
+        }
+
         mesSeleccionado = (mesInput?.value || "").trim();
+
         if (!negocioSeleccionado) {
-          alert("Por favor ingresa el Negocio.");
+          alert("Por favor selecione o ingrese el Negocio.");
           return;
         }
         if (!mesSeleccionado) {
@@ -173,9 +264,17 @@ import Navbar from "../components/navbar.astro";
             
             procesarJSON(json);
           };
+
+          reader.onerror = (err) => {
+            console.error("Error al leer el archivo:", err);
+            alert("No se pudo leer el archivo. Intenta de nuevo.");
+            loadingMsg!.style.display = "none";
+          };
+
           reader.readAsArrayBuffer(file);
         } catch (error: any) {
-          alert("Error de conexión: " + error.message);
+          console.error("Error en handleFile:", error);
+          alert("Error crítico: " + error.message);
           loadingMsg!.style.display = "none";
         }
       }
@@ -205,6 +304,8 @@ import Navbar from "../components/navbar.astro";
           const telefono = String(normalizedRow["teléfono"] || normalizedRow["telefono"] || "").trim();
           const cargo = String(normalizedRow["cargo"] || "").trim();
           const salario_base = parseFloat(normalizedRow["salario_base"]) || parseFloat(normalizedRow["salario base"]) || 0;
+          const horas_extras = parseFloat(normalizedRow["horas_extras"]) || parseFloat(normalizedRow["horas extras"]) || parseFloat(normalizedRow["extras"]) || 0;
+          const deuda = parseFloat(normalizedRow["deuda"]) || parseFloat(normalizedRow["deudas"]) || 0;
 
           let estadoText = "";
           let estadoClass = "";
@@ -242,6 +343,8 @@ import Navbar from "../components/navbar.astro";
             telefono,
             cargo,
             salario_base,
+            horas_extras,
+            deuda,
             isValid,
             estadoText,
             estadoClass
@@ -256,6 +359,8 @@ import Navbar from "../components/navbar.astro";
             <td>${item.telefono}</td>
             <td>${item.cargo}</td>
             <td>$${item.salario_base.toLocaleString('es-CO')}</td>
+            <td>${item.horas_extras}</td>
+            <td>$${item.deuda.toLocaleString('es-CO')}</td>
             <td><span class="${item.estadoClass}">${item.estadoText}</span></td>
           `;
           previewBody!.appendChild(tr);
@@ -291,7 +396,9 @@ import Navbar from "../components/navbar.astro";
               documento: item.documento,
               telefono: item.telefono || undefined,
               cargo: item.cargo || undefined,
-              salario_base: item.salario_base || undefined
+              salario_base: item.salario_base || undefined,
+              horas_extras: item.horas_extras || 0,
+              deuda: item.deuda || 0
             };
 
             const dataToSave = {
