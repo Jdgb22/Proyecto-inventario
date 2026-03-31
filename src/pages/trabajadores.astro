@@ -52,9 +52,10 @@ import Navbar from "../components/navbar.astro";
             return;
           }
           const role = await getUserRole(session.user.id);
+          // Solo permitir acceso al administrador
           if (role !== 'admin') {
             window.location.replace("/init");
-            return; // Detener ejecución si redirige
+            return; 
           }
           
           // Si es admin, cargar trabajadores

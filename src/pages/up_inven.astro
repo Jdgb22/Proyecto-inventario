@@ -35,12 +35,19 @@ import Navbar from "../components/navbar.astro";
     <Navbar />
     
     <main>
-      <h1>Carga Masiva de Inventario</h1>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 10px;">
+        <h1>Carga Masiva de Inventario</h1>
+        <button id="btn-template" class="btn" style="background: #64748b; margin-top: 0; font-size: 0.85rem;">
+          <svg style="width:16px; height:16px; vertical-align: middle; margin-right: 5px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Descargar Plantilla Excel
+        </button>
+      </div>
 
       <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 240px;">
           Negocio
-          <input id="inv-negocio" type="text" placeholder="Ej: Centro, Norte, Sucursal 1" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+          <input id="inv-negocio" type="text" list="negocios-list" placeholder="Selecciona o escribe el negocio" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+          <datalist id="negocios-list"></datalist>
         </label>
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 200px;">
           Mes
@@ -65,7 +72,6 @@ import Navbar from "../components/navbar.astro";
               <th>Nombre</th>
               <th>Código</th>
               <th>Cantidad</th>
-              <th>Precio</th>
               <th>Estado</th>
             </tr>
           </thead>
@@ -82,17 +88,29 @@ import Navbar from "../components/navbar.astro";
     <script>
       import * as XLSX from "xlsx";
       import { getInventarioFiltrado, getInventario, addInventario, updateInventario } from "../lib/inventory";
+      import { getTrabajadores } from "../lib/workers";
+      import { getNegocios } from "../lib/negocios";
       import { getSession } from "../lib/auth";
+
+      // Intentar cargar XLSX de forma global o desde el import
+      const XLSX_LIB = (window as any).XLSX || XLSX;
 
       let inventarioActual: any[] = [];
       let datosAProcesar: any[] = [];
       let negocioSeleccionado = "";
       let mesSeleccionado = "";
 
+      // Verificar si la librería está lista
+      console.log("XLSX Lib Status:", !!XLSX_LIB);
+
       async function checkAuth() {
-        const session = await getSession();
-        if (!session) {
-          window.location.replace("/");
+        try {
+          const session = await getSession();
+          if (!session) {
+            window.location.replace("/");
+          }
+        } catch (e) {
+          console.warn("Auth check failed:", e);
         }
       }
       checkAuth();
@@ -105,23 +123,86 @@ import Navbar from "../components/navbar.astro";
       const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
       const resultMsg = document.getElementById("result-msg");
       const negocioInput = document.getElementById("inv-negocio") as HTMLInputElement;
+      const negociosDatalist = document.getElementById("negocios-list");
       const mesInput = document.getElementById("inv-mes") as HTMLInputElement;
+      const btnTemplate = document.getElementById("btn-template");
+
+      btnTemplate?.addEventListener("click", () => {
+        try {
+          const headers = [
+            ["Nombre", "Codigo", "Cantidad", "Categoria"],
+            ["Clavos x libra", "CLA-001", 10, "Ferreteria"],
+            ["Martillo Pro", "MAR-002", 5, "Herramientas"]
+          ];
+          
+          const worksheet = XLSX_LIB.utils.aoa_to_sheet(headers);
+          const workbook = XLSX_LIB.utils.book_new();
+          XLSX_LIB.utils.book_append_sheet(workbook, worksheet, "Plantilla Inventario");
+          
+          XLSX_LIB.writeFile(workbook, "plantilla_inventario.xlsx");
+        } catch (err) {
+          console.error("Error al generar plantilla:", err);
+          alert("Error al generar el archivo Excel.");
+        }
+      });
+
+      // --- Lógica de Negocios Dinámicos ---
+      async function loadNegocios() {
+        try {
+          // Consultar la tabla oficial de negocios
+          const negociosOficiales = await getNegocios().catch(() => []);
+          
+          const [trab, inv] = await Promise.all([
+            getTrabajadores().catch(() => []), 
+            getInventario().catch(() => [])
+          ]);
+          
+          const normalize = (n: any) => String(n || "").trim();
+          
+          // Combinar ambos conjuntos de datos
+          const combinedNames = [
+            ...negociosOficiales.map(n => normalize(n.nombre)),
+            ...trab.map(t => normalize((t as any).negocio)),
+            ...inv.map(i => normalize((i as any).negocio))
+          ];
+
+          const uniqueNegocios = Array.from(new Set(combinedNames))
+            .filter(n => n && n !== "General" && n !== "undefined" && n !== "null")
+            .sort();
+
+          if (negociosDatalist) {
+            negociosDatalist.innerHTML = uniqueNegocios.length > 0 
+              ? uniqueNegocios.map(n => `<option value="${n}">${n}</option>`).join("") 
+              : "";
+          }
+        } catch (error) {
+          console.error("Error cargando negocios:", error);
+        }
+      }
+
+      loadNegocios();
 
       dropZone?.addEventListener("dragover", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#3b82f6";
-        dropZone.style.backgroundColor = "#eff6ff";
+        if (dropZone) {
+          dropZone.style.borderColor = "#3b82f6";
+          dropZone.style.backgroundColor = "#eff6ff";
+        }
       });
 
       dropZone?.addEventListener("dragleave", () => {
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#f8fafc";
+        if (dropZone) {
+          dropZone.style.borderColor = "#cbd5e1";
+          dropZone.style.backgroundColor = "#f8fafc";
+        }
       });
 
       dropZone?.addEventListener("drop", (e) => {
         e.preventDefault();
-        dropZone.style.borderColor = "#cbd5e1";
-        dropZone.style.backgroundColor = "#f8fafc";
+        if (dropZone) {
+          dropZone.style.borderColor = "#cbd5e1";
+          dropZone.style.backgroundColor = "#f8fafc";
+        }
         if (e.dataTransfer?.files.length && e.dataTransfer.files.length > 0) {
           handleFile(e.dataTransfer.files[0]);
         }
@@ -140,10 +221,13 @@ import Navbar from "../components/navbar.astro";
           return;
         }
 
+        // Obtener el negocio desde el input único
         negocioSeleccionado = (negocioInput?.value || "").trim();
+
         mesSeleccionado = (mesInput?.value || "").trim();
+
         if (!negocioSeleccionado) {
-          alert("Por favor ingresa el Negocio.");
+          alert("Por favor selecione o ingrese el Negocio.");
           return;
         }
         if (!mesSeleccionado) {
@@ -163,15 +247,39 @@ import Navbar from "../components/navbar.astro";
           inventarioActual = await getInventarioFiltrado(negocioSeleccionado, mesSeleccionado);
           
           const reader = new FileReader();
-          reader.onload = (e) => {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: "array" });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-            
-            procesarJSON(json);
+          reader.onload = (e: any) => {
+            try {
+              console.log("Iniciando lectura de array buffer (inv)...");
+              const arrayBuffer = e.target?.result as ArrayBuffer;
+              const data = new Uint8Array(arrayBuffer);
+              console.log("ArrayBuffer cargado, tamaño:", data.length);
+              
+              const workbook = XLSX_LIB.read(data, { type: "array" });
+              console.log("Libro de Excel leído correctamente. Hojas:", workbook.SheetNames);
+              
+              if (!workbook.SheetNames.length) {
+                throw new Error("El archivo Excel no tiene hojas.");
+              }
+
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const json = XLSX_LIB.utils.sheet_to_json(worksheet, { defval: "" });
+              console.log("Conversión a JSON exitosa. Registros:", json.length);
+              
+              procesarJSON(json);
+            } catch (err: any) {
+              console.error("Error detallado al procesar el Excel (inv):", err);
+              alert("Error técnico al procesar el Excel: " + (err.message || err));
+              if (loadingMsg) loadingMsg.style.display = "none";
+            }
           };
+
+          reader.onerror = (err) => {
+            console.error("Error en FileReader (inv):", err);
+            alert("No se pudo leer el archivo físico.");
+            if (loadingMsg) loadingMsg.style.display = "none";
+          };
+
           reader.readAsArrayBuffer(file);
         } catch (error: any) {
           alert("Error de conexión: " + error.message);
@@ -202,7 +310,6 @@ import Navbar from "../components/navbar.astro";
           const nombre = normalizedRow["nombre"] || "";
           const codigo = String(normalizedRow["codigo"] || "").trim();
           const cantidad = parseInt(normalizedRow["cantidad"]) || 0;
-          const precio = parseFloat(normalizedRow["precio"]) || 0;
           const categoria = normalizedRow["categoria"] || "";
 
           let estadoText = "";
@@ -239,7 +346,6 @@ import Navbar from "../components/navbar.astro";
             nombre,
             codigo,
             cantidad,
-            precio,
             categoria,
             isValid,
             estadoText,
@@ -253,7 +359,6 @@ import Navbar from "../components/navbar.astro";
             <td>${item.nombre}</td>
             <td><code>${item.codigo}</code></td>
             <td>${item.cantidad}</td>
-            <td>$${item.precio.toLocaleString('es-CO')}</td>
             <td><span class="${item.estadoClass}">${item.estadoText}</span></td>
           `;
           previewBody!.appendChild(tr);
@@ -284,11 +389,10 @@ import Navbar from "../components/navbar.astro";
 
         for (const item of itemsValidos) {
           try {
-            const dataBase = {
+            const dataBase: any = {
               nombre: item.nombre,
               codigo: item.codigo,
               cantidad: item.cantidad,
-              precio: item.precio || undefined,
               categoria: item.categoria || undefined
             };
 

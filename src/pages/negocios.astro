@@ -1,0 +1,210 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!DOCTYPE html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Negocios</title>
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
+      main { max-width: 800px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      h1 { color: #111827; margin-top: 0; }
+      .form-container { background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e5e7eb; }
+      .form-group { display: flex; gap: 10px; margin-top: 10px; }
+      input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
+      .btn { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+      .btn:hover { background: #2563eb; }
+      .btn-danger { background: #ef4444; }
+      .btn-danger:hover { background: #dc2626; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      th, td { padding: 15px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+      th { background-color: #f8fafc; font-weight: 600; color: #475569; }
+      tr:hover { background-color: #f1f5f9; }
+      .empty-state { text-align: center; color: #64748b; padding: 40px; font-style: italic; }
+      #msg { font-weight: bold; margin-top: 10px; }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+    
+    <main>
+      <h1>Maestro de Negocios</h1>
+      <p style="color: #4b5563; margin-bottom: 25px;">Administra los locales o sucursales del sistema. Los cambios aquí afectarán a las opciones de carga masiva.</p>
+
+      <div class="form-container">
+        <h2 style="font-size: 1.1rem; margin-top: 0;">Añadir Nuevo Negocio</h2>
+        <form id="form-negocio" class="form-group">
+          <input type="text" id="negocio-nombre" placeholder="Nombre del negocio (ej: Sucursal Norte)" required />
+          <button type="submit" class="btn">Añadir </button>
+        </form>
+        <button id="btn-sync" class="btn" style="background: #64748b; margin-top: 10px; width: 100%; font-size: 0.85rem;">
+          🔄 Sincronizar negocios desde datos existentes
+        </button>
+        <p id="msg"></p>
+      </div>
+
+      <div id="loading" style="text-align: center; padding: 20px; color: #64748b;">Cargando negocios...</div>
+      
+      <table id="table-negocios" style="display: none;">
+        <thead>
+          <tr>
+            <th>Nombre del Negocio</th>
+            <th>Fecha de Creación</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="list-negocios">
+        </tbody>
+      </table>
+
+      <div id="empty" style="display: none;" class="empty-state">
+        No hay negocios registrados. ¡Crea el primero arriba!
+      </div>
+    </main>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getNegocios, addNegocio, deleteNegocio, migrateNegocios } from "../lib/negocios";
+      import { getTrabajadores } from "../lib/workers";
+      import { getInventario } from "../lib/inventory";
+
+      async function init() {
+        // Redirección de seguridad
+        const session = await getSession();
+        if (!session) {
+          window.location.replace("/");
+          return;
+        }
+
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin") {
+          alert("Acceso denegado: Solo administradores");
+          window.location.replace("/init");
+          return;
+        }
+
+        loadData();
+      }
+
+      async function loadData() {
+        const loading = document.getElementById("loading");
+        const table = document.getElementById("table-negocios");
+        const list = document.getElementById("list-negocios");
+        const empty = document.getElementById("empty");
+
+        try {
+          const data = await getNegocios();
+          loading!.style.display = "none";
+          
+          if (data.length === 0) {
+            table!.style.display = "none";
+            empty!.style.display = "block";
+            return;
+          }
+
+          empty!.style.display = "none";
+          table!.style.display = "table";
+          list!.innerHTML = "";
+
+          data.forEach((n: any) => {
+            const tr = document.createElement("tr");
+            const dateStr = new Date(n.created_at).toLocaleDateString();
+            
+            tr.innerHTML = `
+              <td><strong>${n.nombre}</strong></td>
+              <td>${dateStr}</td>
+              <td style="text-align: right;">
+                <button class="btn btn-danger btn-delete" data-id="${n.id}" data-nombre="${n.nombre}">Eliminar</button>
+              </td>
+            `;
+            list!.appendChild(tr);
+          });
+
+          // Eventos para eliminar
+          document.querySelectorAll(".btn-delete").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+              const target = e.currentTarget as HTMLButtonElement;
+              const id = target.dataset.id!;
+              const nombre = target.dataset.nombre!;
+
+              if (confirm(`¿Estás seguro de eliminar "${nombre}"? \n\nEsto borrará el nombre de las sugerencias, pero LOS DATOS de trabajadores e inventario actuales vinculados a este nombre deberán borrarse manualmente para una limpieza completa.`)) {
+                try {
+                  await deleteNegocio(id);
+                  loadData();
+                } catch (err: any) {
+                  alert("Error al eliminar: " + err.message);
+                }
+              }
+            });
+          });
+
+        } catch (error: any) {
+          console.error(error);
+          loading!.innerHTML = `<span style="color: red;">Error: No se pudo conectar a la tabla de negocios. Asegúrate de que la tabla 'negocios' exista en Supabase.</span>`;
+        }
+      }
+
+      const form = document.getElementById("form-negocio") as HTMLFormElement;
+      const msg = document.getElementById("msg");
+
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nombreInput = document.getElementById("negocio-nombre") as HTMLInputElement;
+        const nombre = nombreInput.value.trim();
+
+        if (!nombre) return;
+
+        try {
+          msg!.textContent = "Añadiendo...";
+          msg!.style.color = "#3b82f6";
+          await addNegocio(nombre);
+          msg!.textContent = "¡Negocio añadido exitosamente!";
+          msg!.style.color = "green";
+          nombreInput.value = "";
+          loadData();
+        } catch (error: any) {
+          console.error(error);
+          msg!.textContent = "Error: El nombre ya existe o hay un problema de conexión.";
+          msg!.style.color = "red";
+        }
+      });
+
+      // Lógica de Sincronización
+      const btnSync = document.getElementById("btn-sync");
+      btnSync?.addEventListener("click", async () => {
+        if (!confirm("Esto buscará nombres de negocios usados previamente en trabajadores e inventario y los añadirá a esta lista oficial. ¿Continuar?")) return;
+        
+        try {
+          msg!.textContent = "Sincronizando datos antiguos...";
+          msg!.style.color = "#3b82f6";
+
+          const [trab, inv] = await Promise.all([
+            getTrabajadores().catch(() => []), 
+            getInventario().catch(() => [])
+          ]);
+          
+          const normalize = (n: any) => String(n || "").trim();
+          const uniqueNames = Array.from(new Set([
+            ...trab.map(t => normalize((t as any).negocio)),
+            ...inv.map(i => normalize((i as any).negocio))
+          ])).filter(n => n && n !== "General" && n !== "undefined" && n !== "null");
+
+          await migrateNegocios(uniqueNames);
+          
+          msg!.textContent = "¡Sincronización completada!";
+          msg!.style.color = "green";
+          loadData();
+        } catch (error: any) {
+          console.error(error);
+          msg!.textContent = "Error durante la sincronización.";
+          msg!.style.color = "red";
+        }
+      });
+
+      init();
+    </script>
+  </body>
+</html>

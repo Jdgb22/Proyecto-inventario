@@ -46,13 +46,8 @@ import Navbar from "../components/navbar.astro";
       <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;">
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 240px;">
           Negocio
-          <div style="display: flex; gap: 4px;">
-            <select id="worker-negocio-select" style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; flex: 1;">
-              <option value="">Cargando negocios...</option>
-            </select>
-            <input id="worker-negocio-nuevo" type="text" placeholder="Nombre de nuevo negocio" style="display: none; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; flex: 1;"/>
-            <button id="btn-toggle-negocio" type="button" style="padding: 10px; background: #e5e7eb; border: none; border-radius: 8px; cursor: pointer; font-size: 0.75rem;" title="Nuevo negocio">➕</button>
-          </div>
+          <input id="worker-negocio" type="text" list="negocios-list" placeholder="Selecciona o escribe el negocio" required style="padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px;"/>
+          <datalist id="negocios-list"></datalist>
         </label>
         <label style="display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; min-width: 200px;">
           Mes
@@ -78,7 +73,6 @@ import Navbar from "../components/navbar.astro";
               <th>Documento</th>
               <th>Teléfono</th>
               <th>Cargo</th>
-              <th>Salario Base</th>
               <th>Horas Extras</th>
               <th>Deuda</th>
               <th>Estado</th>
@@ -98,17 +92,28 @@ import Navbar from "../components/navbar.astro";
       import * as XLSX from "xlsx";
       import { getTrabajadoresFiltrados, getTrabajadores, addTrabajador, updateTrabajador } from "../lib/workers";
       import { getInventario } from "../lib/inventory";
+      import { getNegocios } from "../lib/negocios";
       import { getSession } from "../lib/auth";
+
+      // Intentar cargar XLSX de forma global o desde el import
+      const XLSX_LIB = (window as any).XLSX || XLSX;
 
       let trabajadoresActuales: any[] = [];
       let datosAProcesar: any[] = [];
       let negocioSeleccionado = "";
       let mesSeleccionado = "";
 
+      // Verificar si la librería está lista
+      console.log("XLSX Lib Status:", !!XLSX_LIB);
+
       async function checkAuth() {
-        const session = await getSession();
-        if (!session) {
-          window.location.replace("/");
+        try {
+          const session = await getSession();
+          if (!session) {
+            window.location.replace("/");
+          }
+        } catch (e) {
+          console.warn("Auth check failed:", e);
         }
       }
       checkAuth();
@@ -120,70 +125,65 @@ import Navbar from "../components/navbar.astro";
       const previewBody = document.getElementById("preview-body");
       const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
       const resultMsg = document.getElementById("result-msg");
-      const negocioSelect = document.getElementById("worker-negocio-select") as HTMLSelectElement;
-      const negocioNuevoInput = document.getElementById("worker-negocio-nuevo") as HTMLInputElement;
-      const btnToggleNegocio = document.getElementById("btn-toggle-negocio");
+      const negocioInput = document.getElementById("worker-negocio") as HTMLInputElement;
+      const negociosDatalist = document.getElementById("negocios-list");
       const mesInput = document.getElementById("worker-mes") as HTMLInputElement;
       const btnTemplate = document.getElementById("btn-template");
 
       btnTemplate?.addEventListener("click", () => {
-        const headers = [
-          ["Nombre", "Documento", "Teléfono", "Cargo", "Salario Base", "Horas Extras", "Deuda"],
-          ["Juan Perez", "10203040", "3001234567", "Operario", 1300000, 5, 0],
-          ["Maria Lopez", "50607080", "3109876543", "Supervisor", 2500000, 0, 50000]
-        ];
-        
-        const worksheet = XLSX.utils.aoa_to_sheet(headers);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Plantilla Trabajadores");
-        
-        // Generar archivo y descargar
-        XLSX.writeFile(workbook, "plantilla_trabajadores.xlsx");
+        try {
+          const headers = [
+            ["Nombre", "Documento", "Teléfono", "Cargo", "Horas Extras", "Deuda"],
+            ["Juan Perez", "10203040", "3001234567", "Operario", 5, 0],
+            ["Maria Lopez", "50607080", "3109876543", "Supervisor", 0, 50000]
+          ];
+          
+          const worksheet = XLSX_LIB.utils.aoa_to_sheet(headers);
+          const workbook = XLSX_LIB.utils.book_new();
+          XLSX_LIB.utils.book_append_sheet(workbook, worksheet, "Plantilla Trabajadores");
+          
+          XLSX_LIB.writeFile(workbook, "plantilla_trabajadores.xlsx");
+        } catch (err) {
+          console.error("Error al generar plantilla:", err);
+          alert("Error al generar el archivo Excel.");
+        }
       });
 
       // --- Lógica de Negocios Dinámicos ---
-      let isNuevonegocio = false;
-
       async function loadNegocios() {
         try {
-          const [trab, inv] = await Promise.all([getTrabajadores(), getInventario()]);
+          // Consultar la tabla oficial de negocios
+          const negociosOficiales = await getNegocios().catch(() => []);
           
-          const normalize = (n: string) => String(n || "").trim();
-          const uniqueNegocios = Array.from(new Set([
+          // Consultar negocios actuales en los datos por si acaso
+          const [trab, inv] = await Promise.all([
+            getTrabajadores().catch(() => []), 
+            getInventario().catch(() => [])
+          ]);
+          
+          const normalize = (n: any) => String(n || "").trim();
+          
+          // Combinar ambos conjuntos de datos
+          const combinedNames = [
+            ...negociosOficiales.map(n => normalize(n.nombre)),
             ...trab.map(t => normalize((t as any).negocio)),
             ...inv.map(i => normalize((i as any).negocio))
-          ])).filter(n => n && n !== "General").sort();
+          ];
 
-          negocioSelect.innerHTML = uniqueNegocios.length > 0 
-            ? uniqueNegocios.map(n => `<option value="${n}">${n}</option>`).join("") 
-            : `<option value="">Sin negocios registrados</option>`;
-          
-          // Si no hay ninguno, forzar modo nuevo negocio
-          if (uniqueNegocios.length === 0) {
-            toggleNegocioMode(true);
+          const uniqueNegocios = Array.from(new Set(combinedNames))
+            .filter(n => n && n !== "General" && n !== "undefined" && n !== "null")
+            .sort();
+
+          if (negociosDatalist) {
+            negociosDatalist.innerHTML = uniqueNegocios.length > 0 
+              ? uniqueNegocios.map(n => `<option value="${n}">${n}</option>`).join("") 
+              : "";
           }
         } catch (error) {
           console.error("Error cargando negocios:", error);
-          negocioSelect.innerHTML = `<option value="">Error al cargar</option>`;
         }
       }
 
-      function toggleNegocioMode(forceNew?: boolean) {
-        isNuevonegocio = forceNew !== undefined ? forceNew : !isNuevonegocio;
-        if (isNuevonegocio) {
-          negocioSelect.style.display = "none";
-          negocioNuevoInput.style.display = "block";
-          btnToggleNegocio!.textContent = "🔙";
-          btnToggleNegocio!.title = "Volver a la lista";
-        } else {
-          negocioSelect.style.display = "block";
-          negocioNuevoInput.style.display = "none";
-          btnToggleNegocio!.textContent = "➕";
-          btnToggleNegocio!.title = "Nuevo negocio";
-        }
-      }
-
-      btnToggleNegocio?.addEventListener("click", () => toggleNegocioMode());
       loadNegocios();
 
       dropZone?.addEventListener("dragover", (e) => {
@@ -225,12 +225,8 @@ import Navbar from "../components/navbar.astro";
           return;
         }
 
-        // Obtener el negocio ya sea del select o del input de nuevo negocio
-        if (isNuevonegocio) {
-          negocioSeleccionado = (negocioNuevoInput?.value || "").trim();
-        } else {
-          negocioSeleccionado = (negocioSelect?.value || "").trim();
-        }
+        // Obtener el negocio directamente del input compartido
+        negocioSeleccionado = (negocioInput?.value || "").trim();
 
         mesSeleccionado = (mesInput?.value || "").trim();
 
@@ -255,20 +251,37 @@ import Navbar from "../components/navbar.astro";
           trabajadoresActuales = await getTrabajadoresFiltrados(negocioSeleccionado, mesSeleccionado);
           
           const reader = new FileReader();
-          reader.onload = (e) => {
-            const data = new Uint8Array(e.target?.result as ArrayBuffer);
-            const workbook = XLSX.read(data, { type: "array" });
-            const firstSheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[firstSheetName];
-            const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-            
-            procesarJSON(json);
+          reader.onload = (e: any) => {
+            try {
+              console.log("Iniciando lectura de array buffer...");
+              const arrayBuffer = e.target?.result as ArrayBuffer;
+              const data = new Uint8Array(arrayBuffer);
+              console.log("ArrayBuffer cargado, tamaño:", data.length);
+              
+              const workbook = XLSX_LIB.read(data, { type: "array" });
+              console.log("Libro de Excel leído correctamente. Hojas:", workbook.SheetNames);
+              
+              if (!workbook.SheetNames.length) {
+                throw new Error("El archivo Excel no tiene hojas.");
+              }
+
+              const firstSheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[firstSheetName];
+              const json = XLSX_LIB.utils.sheet_to_json(worksheet, { defval: "" });
+              console.log("Conversión a JSON exitosa. Registros:", json.length);
+              
+              procesarJSON(json);
+            } catch (err: any) {
+              console.error("Error detallado al procesar el Excel:", err);
+              alert("Error técnico al procesar el Excel: " + (err.message || err));
+              if (loadingMsg) loadingMsg.style.display = "none";
+            }
           };
 
           reader.onerror = (err) => {
-            console.error("Error al leer el archivo:", err);
-            alert("No se pudo leer el archivo. Intenta de nuevo.");
-            loadingMsg!.style.display = "none";
+            console.error("Error en FileReader:", err);
+            alert("No se pudo leer el archivo físico.");
+            if (loadingMsg) loadingMsg.style.display = "none";
           };
 
           reader.readAsArrayBuffer(file);
@@ -303,7 +316,6 @@ import Navbar from "../components/navbar.astro";
           const documento = String(normalizedRow["documento"] || "").trim();
           const telefono = String(normalizedRow["teléfono"] || normalizedRow["telefono"] || "").trim();
           const cargo = String(normalizedRow["cargo"] || "").trim();
-          const salario_base = parseFloat(normalizedRow["salario_base"]) || parseFloat(normalizedRow["salario base"]) || 0;
           const horas_extras = parseFloat(normalizedRow["horas_extras"]) || parseFloat(normalizedRow["horas extras"]) || parseFloat(normalizedRow["extras"]) || 0;
           const deuda = parseFloat(normalizedRow["deuda"]) || parseFloat(normalizedRow["deudas"]) || 0;
 
@@ -342,7 +354,6 @@ import Navbar from "../components/navbar.astro";
             documento,
             telefono,
             cargo,
-            salario_base,
             horas_extras,
             deuda,
             isValid,
@@ -351,20 +362,19 @@ import Navbar from "../components/navbar.astro";
           };
         });
 
-        datosAProcesar.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${item.nombre}</td>
-            <td><code>${item.documento}</code></td>
-            <td>${item.telefono}</td>
-            <td>${item.cargo}</td>
-            <td>$${item.salario_base.toLocaleString('es-CO')}</td>
-            <td>${item.horas_extras}</td>
-            <td>$${item.deuda.toLocaleString('es-CO')}</td>
-            <td><span class="${item.estadoClass}">${item.estadoText}</span></td>
-          `;
-          previewBody!.appendChild(tr);
-        });
+          datosAProcesar.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${item.nombre}</td>
+              <td><code>${item.documento}</code></td>
+              <td>${item.telefono}</td>
+              <td>${item.cargo}</td>
+              <td>${item.horas_extras}</td>
+              <td>$${item.deuda.toLocaleString('es-CO')}</td>
+              <td><span class="${item.estadoClass}">${item.estadoText}</span></td>
+            `;
+            previewBody!.appendChild(tr);
+          });
 
         loadingMsg!.style.display = "none";
         if (datosAProcesar.length > 0) {
@@ -391,12 +401,11 @@ import Navbar from "../components/navbar.astro";
 
         for (const item of itemsValidos) {
           try {
-            const dataBase = {
+            const dataBase: any = {
               nombre: item.nombre,
               documento: item.documento,
               telefono: item.telefono || undefined,
               cargo: item.cargo || undefined,
-              salario_base: item.salario_base || undefined,
               horas_extras: item.horas_extras || 0,
               deuda: item.deuda || 0
             };
