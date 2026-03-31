@@ -82,7 +82,7 @@ import Navbar from "../components/navbar.astro";
     </main>
 
     <script>
-      import { getSession } from "../lib/auth";
+      import { getSession, getUserRole } from "../lib/auth";
       import { getTrabajadores } from "../lib/workers";
 
       let trabajadores: any[] = [];
@@ -121,11 +121,21 @@ import Navbar from "../components/navbar.astro";
         msgEl.style.display = "none";
       };
 
-      async function checkAuth() {
+      async function checkAccess() {
         const session = await getSession();
-        if (!session) window.location.replace("/");
+        if (!session) {
+          window.location.replace("/");
+          return false;
+        }
+
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin") {
+          // Solo admin puede ver reportes.
+          window.location.replace("/inven");
+          return false;
+        }
+        return true;
       }
-      checkAuth();
 
       async function load() {
         hideMsg();
@@ -232,7 +242,7 @@ import Navbar from "../components/navbar.astro";
           </table>
         `;
 
-        const ChartRef = (window).Chart;
+        const ChartRef = (window as any).Chart;
         const commonOptions = {
           responsive: true,
           maintainAspectRatio: false,
@@ -287,7 +297,13 @@ import Navbar from "../components/navbar.astro";
 
       btnAplicar?.addEventListener("click", () => aplicar());
 
-      load();
+      async function init() {
+        const ok = await checkAccess();
+        if (!ok) return;
+        await load();
+      }
+
+      init();
     </script>
   </body>
 </html>
