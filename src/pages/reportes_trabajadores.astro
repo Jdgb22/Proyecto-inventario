@@ -17,12 +17,66 @@ import Navbar from "../components/navbar.astro";
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
-      .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
-      
-      h1 { font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 24px; letter-spacing: -0.02em; }
-      
-      .main-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        margin: 0;
+        color: #1e293b;
+        background-color: #fffbeb;
+        background-image:
+          radial-gradient(ellipse 70% 45% at 80% -10%, rgba(245, 158, 11, 0.18), transparent),
+          linear-gradient(180deg, #fff7ed 0%, #fafafa 40%, #f4f4f5 100%);
+        min-height: 100vh;
+      }
+      .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 48px; }
+
+      .report-hero {
+        background: linear-gradient(125deg, #9a3412 0%, #c2410c 38%, #ea580c 100%);
+        color: #fff;
+        border-radius: 24px;
+        padding: 32px 36px;
+        margin-bottom: 28px;
+        box-shadow: 0 20px 40px -12px rgba(194, 65, 12, 0.42);
+        position: relative;
+        overflow: hidden;
+      }
+      .report-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h40V0H0v40z' fill='none'/%3E%3Cpath d='M20 0v40M0 20h40' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/%3E%3C/svg%3E");
+        pointer-events: none;
+      }
+      .report-hero__inner { position: relative; z-index: 1; max-width: 620px; }
+      .report-hero__badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #ffedd5;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+      }
+      .report-hero h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .report-hero__desc {
+        margin: 0;
+        font-size: 0.98rem;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.55;
+        font-weight: 500;
+      }
+      .report-hero__desc strong { color: #fff; font-weight: 700; }
+
+      .main-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; box-shadow: 0 10px 30px -8px rgba(234, 88, 12, 0.12); margin-bottom: 32px; }
       .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
       label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
       input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; background: #f9fafb; transition: all 0.2s; }
@@ -35,11 +89,11 @@ import Navbar from "../components/navbar.astro";
       .charts-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
       @media (min-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
       
-      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; height: 400px; }
+      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; height: 400px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06); }
       .chart-card h3 { font-size: 1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; color: #374151; }
       .chart-wrap { height: 320px; position: relative; }
 
-      .table-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; overflow: hidden; }
+      .table-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; overflow: hidden; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06); }
       .table-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; }
       
       table { width: 100%; border-collapse: collapse; }
@@ -56,7 +110,15 @@ import Navbar from "../components/navbar.astro";
     <Navbar />
 
     <div class="container">
-      <h1>Análisis de Nómina Mensual</h1>
+      <header class="report-hero">
+        <div class="report-hero__inner">
+          <span class="report-hero__badge">Análisis · Nómina</span>
+          <h1>Reportes de personal y nómina</h1>
+          <p class="report-hero__desc">
+            Gráficos y resúmenes por periodo. Para dar de alta o editar personas, <strong>Base de datos → Trabajadores</strong>.
+          </p>
+        </div>
+      </header>
 
       <div class="main-card">
         <div class="filters">

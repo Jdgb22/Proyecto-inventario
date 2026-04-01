@@ -84,16 +84,91 @@ import Navbar from "../components/navbar.astro";
       .btn-delete:hover { background: #fee2e2; transform: scale(1.05); }
 
       #msg { text-align: center; font-weight: 700; margin-top: 10px; }
+
+      .context-hint {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: -16px 0 24px 0;
+        font-weight: 600;
+      }
+      .context-hint strong { color: #0f172a; }
+
+      .page-hero {
+        background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 50%, #f8fafc 100%);
+        border: 1px solid #e0f2fe;
+        border-radius: 24px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+      .page-hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 180px;
+        height: 100%;
+        background: radial-gradient(ellipse at top right, rgba(14, 165, 233, 0.12), transparent 70%);
+        pointer-events: none;
+      }
+      .page-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #0369a1;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #bae6fd;
+        padding: 6px 12px;
+        border-radius: 999px;
+        margin-bottom: 12px;
+      }
+      .page-hero__badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #06b6d4;
+        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
+      }
+      .page-hero__title {
+        margin: 0 0 8px 0;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+      .page-hero__desc {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #64748b;
+        line-height: 1.55;
+        max-width: 52ch;
+      }
     </style>
   </head>
   <body>
     <Navbar />
     
     <div class="container">
+      <header class="page-hero">
+        <span class="page-hero__badge">Base de datos · Operación</span>
+        <h2 class="page-hero__title">Inventario por sede y mes</h2>
+        <p class="page-hero__desc">
+          Aquí consultas y registras <strong>existencias reales</strong> (filas en la base). Los gráficos y totales agregados están en <strong>Análisis → Reportes inventario</strong>.
+        </p>
+      </header>
+
       <div class="header-flex">
         <h1>Inventario Mensual</h1>
         <button id="btn-toggle-form" class="btn-toggle">+ Registrar Stock</button>
       </div>
+
+      <p id="context-inv" class="context-hint" style="display: none;"></p>
 
       <div id="form-container" class="form-card" style="display: none;">
         <form id="form-stock">
@@ -173,10 +248,23 @@ import Navbar from "../components/navbar.astro";
         const lista = document.getElementById("lista-inventario")!;
         const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
         const fMes = (document.getElementById("filter-mes") as HTMLInputElement).value;
+        const hint = document.getElementById("context-inv")!;
+
+        if (!fNeg || !fMes) {
+          hint.style.display = "none";
+          lista.innerHTML = `<li style="text-align: center; padding: 60px; color: #94a3b8;">Selecciona sede y mes para ver el inventario de ese negocio.</li>`;
+          return;
+        }
+
+        hint.innerHTML = `Mostrando inventario de: <strong>${fNeg}</strong> · mes <strong>${fMes}</strong>`;
+        hint.style.display = "block";
 
         try {
           const data = await getStockFiltrado(fNeg, fMes);
-          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay registros para este periodo.</li>`;
+          (document.getElementById("s-negocio") as HTMLSelectElement).value = fNeg;
+          (document.getElementById("s-mes") as HTMLInputElement).value = fMes;
+
+          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay registros para este negocio en este mes.</li>`;
           
           data.forEach(item => {
             const li = document.createElement("li");

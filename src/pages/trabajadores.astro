@@ -61,14 +61,119 @@ import Navbar from "../components/navbar.astro";
       .btn-delete:hover { background: #fee2e2; transform: scale(1.05); }
 
       #msg { text-align: center; font-weight: 700; margin-top: 10px; }
+
+      .filter-section {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 32px;
+        display: flex;
+        gap: 16px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .btn-search {
+        padding: 12px 24px;
+        background: #475569;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all 0.2s;
+      }
+      .btn-search:hover { background: #1e293b; }
+      .context-hint {
+        font-size: 0.95rem;
+        color: #64748b;
+        margin: -16px 0 24px 0;
+        font-weight: 600;
+      }
+      .context-hint strong { color: #0f172a; }
+
+      .page-hero {
+        background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 45%, #f8fafc 100%);
+        border: 1px solid #e9d5ff;
+        border-radius: 24px;
+        padding: 28px 32px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+      .page-hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 100%;
+        background: radial-gradient(ellipse at top right, rgba(124, 58, 237, 0.1), transparent 70%);
+        pointer-events: none;
+      }
+      .page-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #6d28d9;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #ddd6fe;
+        padding: 6px 12px;
+        border-radius: 999px;
+        margin-bottom: 12px;
+      }
+      .page-hero__badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.25);
+      }
+      .page-hero__title {
+        margin: 0 0 8px 0;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+      .page-hero__desc {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #64748b;
+        line-height: 1.55;
+        max-width: 54ch;
+      }
     </style>
   </head>
   <body>
     <Navbar />
     <div class="container">
+      <header class="page-hero">
+        <span class="page-hero__badge">Base de datos · Personal</span>
+        <h2 class="page-hero__title">Trabajadores por sede</h2>
+        <p class="page-hero__desc">
+          Listado y altas de <strong>personas y salarios</strong> por negocio. Para tendencias y gráficos de nómina usa <strong>Análisis → Reportes nómina</strong>.
+        </p>
+      </header>
+
       <div class="header-flex">
         <h1>Gestión de Trabajadores</h1>
         <button id="btn-toggle-form" class="btn-toggle">+ Registrar Personal</button>
+      </div>
+
+      <p id="context-trab" class="context-hint" style="display: none;"></p>
+
+      <div class="filter-section">
+        <div class="form-group" style="flex: 1; min-width: 200px;">
+          <label>Ver base de datos de la sede</label>
+          <select id="filter-negocio"></select>
+        </div>
+        <button id="btn-search" type="button" class="btn-search">Actualizar</button>
       </div>
 
       <div id="form-container" class="form-card" style="display: none;">
@@ -107,8 +212,12 @@ import Navbar from "../components/navbar.astro";
 
     <script>
       import { getSession } from "../lib/auth";
-      import { getTrabajadores, addTrabajador, deleteTrabajador } from "../lib/workers";
+      import { getTrabajadoresFiltrados, addTrabajador, deleteTrabajador } from "../lib/workers";
       import { getNegocios } from "../lib/negocios";
+
+      function sedeDe(t: any): string {
+        return String(t?.negocio ?? t?.sede ?? "").trim();
+      }
 
       async function init() {
         const session = await getSession();
@@ -119,24 +228,44 @@ import Navbar from "../components/navbar.astro";
 
       async function loadNegocios() {
         const negs = await getNegocios();
-        document.getElementById("t-sede")!.innerHTML = negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+        const opts = negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+        (document.getElementById("t-sede") as HTMLSelectElement).innerHTML = opts;
+        (document.getElementById("filter-negocio") as HTMLSelectElement).innerHTML = opts;
       }
 
       async function loadData() {
         const lista = document.getElementById("lista-trabajadores")!;
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        const hint = document.getElementById("context-trab")!;
+
+        if (!fNeg) {
+          hint.style.display = "none";
+          lista.innerHTML = `<li style="text-align: center; padding: 60px; color: #94a3b8;">Configura al menos un negocio en la tabla <code>negocios</code> para filtrar personal por sede.</li>`;
+          return;
+        }
+
+        hint.innerHTML = `Mostrando personal de: <strong>${fNeg}</strong>`;
+        hint.style.display = "block";
+
         try {
-          const data = await getTrabajadores();
-          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay personal registrado.</li>`;
+          (document.getElementById("t-sede") as HTMLSelectElement).value = fNeg;
+
+          let data = await getTrabajadoresFiltrados(fNeg);
+          data = (data || []).filter((t: any) => sedeDe(t) === fNeg);
+
+          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay personal en esta sede.</li>`;
           
           data.forEach(item => {
             const li = document.createElement("li");
             li.className = "worker-card";
+            const doc = item.identificacion ?? item.documento ?? "";
+            const sedeLabel = sedeDe(item) || "—";
             li.innerHTML = `
               <div class="card-info">
                 <span class="worker-name">${item.nombre}</span>
-                <span class="worker-id">ID: ${item.identificacion}</span>
+                <span class="worker-id">ID: ${doc}</span>
                 <div class="worker-meta">
-                  <span>${item.cargo}</span> • <span>${item.sede}</span>
+                  <span>${item.cargo || "—"}</span> • <span>${sedeLabel}</span>
                 </div>
                 <span class="salary-tag">$${Number(item.salario_base || 0).toLocaleString()}</span>
               </div>
@@ -158,6 +287,8 @@ import Navbar from "../components/navbar.astro";
           });
         } catch (e) { console.error(e); }
       }
+
+      document.getElementById("btn-search")?.addEventListener("click", loadData);
 
       const toggleBtn = document.getElementById("btn-toggle-form")!;
       const cont = document.getElementById("form-container")!;

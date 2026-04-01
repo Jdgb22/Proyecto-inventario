@@ -16,31 +16,101 @@ import Navbar from "../components/navbar.astro";
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
-      .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
-      
-      h1 { font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 24px; letter-spacing: -0.02em; }
-      
-      .filters-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        margin: 0;
+        color: #1e293b;
+        background-color: #faf5ff;
+        background-image:
+          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 58, 237, 0.15), transparent),
+          linear-gradient(180deg, #f5f3ff 0%, #fafafa 35%, #f4f4f5 100%);
+        min-height: 100vh;
+      }
+      .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px 48px; }
+
+      .report-hero {
+        background: linear-gradient(125deg, #4c1d95 0%, #6d28d9 40%, #7c3aed 100%);
+        color: #fff;
+        border-radius: 24px;
+        padding: 32px 36px;
+        margin-bottom: 28px;
+        box-shadow: 0 20px 40px -12px rgba(91, 33, 182, 0.45);
+        position: relative;
+        overflow: hidden;
+      }
+      .report-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        opacity: 0.9;
+        pointer-events: none;
+      }
+      .report-hero__inner { position: relative; z-index: 1; max-width: 640px; }
+      .report-hero__badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #e9d5ff;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+      }
+      .report-hero h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .report-hero__desc {
+        margin: 0;
+        font-size: 0.98rem;
+        color: rgba(255, 255, 255, 0.88);
+        line-height: 1.55;
+        font-weight: 500;
+      }
+      .report-hero__desc strong { color: #fff; font-weight: 700; }
+
+      .filters-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; box-shadow: 0 10px 30px -8px rgba(124, 58, 237, 0.12); margin-bottom: 32px; }
       .filters { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
       label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
       input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 1rem; width: 100%; transition: all 0.2s; background: #f9fafb; }
       input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
       
-      .btn { padding: 12px 32px; background-color: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; transition: all 0.2s; }
-      .btn:hover { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+      .btn {
+        padding: 12px 32px;
+        background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 1rem;
+        transition: all 0.2s;
+        box-shadow: 0 8px 20px -6px rgba(124, 58, 237, 0.45);
+      }
+      .btn:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.5);
+      }
 
       .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .stat-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .stat-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #ede9fe; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06); }
       .stat-card h4 { margin: 0; color: #6b7280; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 800; }
       .stat-card .value { font-size: 1.8rem; font-weight: 800; color: #111827; }
 
       .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; }
+      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06); }
       .chart-container { height: 320px; position: relative; margin-top: 16px; }
       .chart-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0; }
 
-      .results-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; overflow: hidden; }
+      .results-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; overflow: hidden; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06); }
       .results-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 20px; }
       
       table { width: 100%; border-collapse: collapse; }
@@ -54,7 +124,15 @@ import Navbar from "../components/navbar.astro";
     <Navbar />
 
     <div class="container">
-      <h1>Reportes de Inventario</h1>
+      <header class="report-hero">
+        <div class="report-hero__inner">
+          <span class="report-hero__badge">Análisis · Solo lectura</span>
+          <h1>Reportes de inventario</h1>
+          <p class="report-hero__desc">
+            Visualiza <strong>valorización, categorías y ranking</strong> a partir de los datos ya cargados. Para editar filas o stock, usa <strong>Base de datos → Inventario</strong>.
+          </p>
+        </div>
+      </header>
 
       <div class="filters-card">
         <div class="filters">
