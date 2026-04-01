@@ -7,318 +7,241 @@ import Navbar from "../components/navbar.astro";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reportes</title>
-
-    <!-- Gráficos sin dependencias extra -->
+    <title>Reportes de Inventario Mensual</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-      body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
-      main { max-width: 1100px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-      h1 { color: #111827; margin-top: 0; }
-      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-top: 16px; }
-      .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-      label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; }
-      input, select { padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
-      button { padding: 10px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-      button:disabled { background-color: #94a3b8; cursor: not-allowed; }
-      .charts { display: grid; grid-template-columns: 1fr; gap: 20px; }
-      @media (min-width: 900px) { .charts { grid-template-columns: 1fr 1fr; } }
-      .chart-wrap { height: 360px; }
-      canvas { width: 100% !important; height: 100% !important; }
-      .msg { color: #6b7280; margin-top: 12px; font-style: italic; }
-      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-      th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-      th { background-color: #f1f5f9; color: #475569; }
-      td code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      body { font-family: 'Inter', system-ui, sans-serif; background-color: #f1f5f9; margin: 0; color: #1e293b; }
+      main { max-width: 1200px; margin: 40px auto; padding: 24px; }
+      h1 { color: #0f172a; margin-top: 0; margin-bottom: 28px; font-weight: 800; }
+      .card { background: white; padding: 28px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); margin-bottom: 28px; }
+      .filters { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
+      label { display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: #475569; font-size: 0.875rem; }
+      input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; width: 100%; transition: border-color 0.2s; }
+      input:focus, select:focus { outline: none; border-color: #3b82f6; }
+      button { padding: 12px 32px; background-color: #3b82f6; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: background 0.2s; }
+      button:hover { background-color: #2563eb; }
+      .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
+      .stat-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
+      .stat-card h4 { margin: 0; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+      .stat-card .value { font-size: 1.75rem; font-weight: 800; color: #1e293b; }
+      .chart-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; height: 100%; }
+      .chart-container { height: 350px; position: relative; }
+      table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+      th { color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
   </head>
   <body>
     <Navbar />
 
     <main>
-      <h1>Reportes por Negocio y Mes</h1>
+      <h1>Reportes de Inventario</h1>
 
       <div class="card">
         <div class="filters">
-          <label style="min-width: 260px;">
-            Negocio
-            <select id="rep-negocio">
-              <option value="">Cargando...</option>
+          <label style="flex: 1.5; min-width: 280px;">
+            Sede / Negocio
+            <select id="report-negocio">
+              <option value="">Cargando sedes...</option>
             </select>
           </label>
 
-          <label style="min-width: 200px;">
-            Desde (mes)
-            <input id="rep-mes-desde" type="month" />
+          <label style="flex: 1; min-width: 180px;">
+            Mes / Periodo
+            <input id="report-mes" type="month" />
           </label>
 
-          <label style="min-width: 200px;">
-            Hasta (mes)
-            <input id="rep-mes-hasta" type="month" />
-          </label>
-
-          <button id="btn-aplicar">Aplicar</button>
-        </div>
-
-        <div id="rep-msg" class="msg" style="display:none;"></div>
-      </div>
-
-      <div class="charts">
-        <div class="card chart-wrap">
-          <h3 style="margin:0 0 10px 0;">Valor total por mes</h3>
-          <canvas id="chart-valor"></canvas>
-        </div>
-
-        <div class="card chart-wrap">
-          <h3 style="margin:0 0 10px 0;">Cantidad total por mes</h3>
-          <canvas id="chart-cantidad"></canvas>
+          <button id="btn-generate">Generar Reporte Mensual</button>
         </div>
       </div>
 
-      <div class="card">
-        <h3 style="margin:0 0 10px 0;">Totales mensuales</h3>
-        <div id="tabla-mensual"></div>
+      <div id="no-data-msg" style="padding: 60px; text-align: center; color: #94a3b8; font-style: italic;">
+        Ingresa los parámetros para generar el reporte de existencias.
+      </div>
+
+      <div id="report-content" style="display: none;">
+        <div class="stats-container">
+          <div class="stat-card" style="border-left: 5px solid #3b82f6;">
+            <h4>Lineas de Producto</h4>
+            <div id="val-total-prods" class="value">0</div>
+          </div>
+          <div class="stat-card" style="border-left: 5px solid #10b981;">
+            <h4>Stock Total (Unidades)</h4>
+            <div id="val-total-units" class="value">0</div>
+          </div>
+          <div class="stat-card" style="border-left: 5px solid #059669;">
+            <h4>Valorización Total</h4>
+            <div id="val-total-money" class="value">$0</div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 32px;">
+          <div class="chart-card">
+            <h3 style="margin-top: 0; margin-bottom: 20px;">Distribución por Valor (Categoría)</h3>
+            <div class="chart-container">
+              <canvas id="chart-pie-cats"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Top 5 Productos más Valiosos</h2>
+            <div class="chart-container">
+              <canvas id="chart-bar-top"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top: 0; margin-bottom: 12px;">Resultados Detallados</h3>
+          <div id="report-table-div" style="overflow-x: auto;"></div>
+        </div>
       </div>
     </main>
 
     <script>
-      import { getSession, getUserRole } from "../lib/auth";
-      import { getInventario } from "../lib/inventory";
+      import { getMasterProductos, getStockFiltrado } from "../lib/inventory";
+      import { getNegocios } from "../lib/negocios";
 
-      let inventario: any[] = [];
-      let chartValor: any = null;
-      let chartCantidad: any = null;
+      let chartInstPie: any = null;
+      let chartInstBar: any = null;
+      let cacheMaster: any[] = [];
 
-      const msgEl = document.getElementById("rep-msg");
-      const negocioSelect = document.getElementById("rep-negocio");
-      const mesDesdeInput = document.getElementById("rep-mes-desde");
-      const mesHastaInput = document.getElementById("rep-mes-hasta");
-      const btnAplicar = document.getElementById("btn-aplicar");
-      const tablaEl = document.getElementById("tabla-mensual");
+      const negocioSelect = document.getElementById("report-negocio") as HTMLSelectElement;
+      const mesInput = document.getElementById("report-mes") as HTMLInputElement;
 
-      const normalizeMes = (value: any) => {
-        const str = String(value ?? "").trim();
-        if (!str) return "";
-        if (/^\d{4}-\d{2}$/.test(str)) return str;
-        // soporta YYYY-MM-DD o ISO (YYYY-MM-...)
-        if (str.length >= 7) return str.slice(0, 7);
-        return "";
-      };
+      async function init() {
+        const now = new Date();
+        mesInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-      const normalizeNegocio = (row: any) => {
-        const negocio = (row?.negocio ?? row?.negocio_id ?? row?.sucursal ?? row?.nombre_negocio ?? "").toString().trim();
-        return negocio || "General";
-      };
-
-      const showMsg = (text: string) => {
-        if (!msgEl) return;
-        msgEl.textContent = text;
-        msgEl.style.display = "block";
-      };
-
-      const hideMsg = () => {
-        if (!msgEl) return;
-        msgEl.textContent = "";
-        msgEl.style.display = "none";
-      };
-
-      async function checkAccess() {
-        const session = await getSession();
-        if (!session) {
-          window.location.replace("/");
-          return false;
-        }
-        const role = await getUserRole(session.user.id);
-        if (role !== "admin") {
-          // Solo admin puede ver reportes.
-          window.location.replace("/inven");
-          return false;
-        }
-        return true;
+        try {
+          cacheMaster = await getMasterProductos();
+          const negocios = await getNegocios();
+          if (negocioSelect) {
+            negocioSelect.innerHTML = negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+          }
+        } catch (e) { console.error(e); }
       }
 
-      async function load() {
-        hideMsg();
-        if (!negocioSelect || !mesDesdeInput || !mesHastaInput || !btnAplicar) return;
+      async function runReport() {
+        const nVal = negocioSelect.value;
+        const mVal = mesInput.value;
+        const msgEl = document.getElementById("no-data-msg");
+        const contEl = document.getElementById("report-content");
 
-        inventario = await getInventario();
-        if (!inventario || inventario.length === 0) {
-          showMsg("No hay datos en `inventario` todavía.");
-          return;
+        if (!nVal || !mVal) return;
+
+        try {
+          const stockData = await getStockFiltrado(nVal, mVal);
+          
+          if (stockData.length === 0) {
+            msgEl!.innerHTML = `No se encontraron datos de inventario para <strong>${nVal}</strong> en <strong>${mVal}</strong>.`;
+            msgEl!.style.display = "block";
+            contEl!.style.display = "none";
+            return;
+          }
+
+          msgEl!.style.display = "none";
+          contEl!.style.display = "block";
+
+          // Unir Stock con Maestro para tener Precios y Nombres Actuales
+          const finalReport = stockData.map(s => {
+              const master = cacheMaster.find(m => m.codigo === s.codigo);
+              const p = master ? master.precio : 0;
+              return {
+                  codigo: s.codigo,
+                  nombre: master ? master.nombre : s.nombre,
+                  categoria: master ? (master.categoria || 'Sin Categoría') : 'S/C',
+                  precio: p,
+                  cantidad: s.cantidad || 0,
+                  total: (s.cantidad || 0) * p
+              };
+          });
+
+          renderCharts(finalReport);
+        } catch (e: any) {
+          msgEl!.textContent = "Error: " + e.message;
         }
-
-        const negocios = Array.from(
-          new Set(inventario.map((r) => normalizeNegocio(r)))
-        ).sort((a, b) => a.localeCompare(b));
-
-        negocioSelect.innerHTML = negocios.map((n) => `<option value="${n}">${n}</option>`).join("");
-
-        // Si existe un campo mes/fecha, usamos ese rango.
-        const meses = inventario
-          .map((r) => normalizeMes(r.mes ?? r.fecha_mes ?? r.fecha ?? r.created_at))
-          .filter((m) => m);
-
-        if (meses.length === 0) {
-          showMsg("No encontré campo `mes`/`fecha` en los registros. Para graficar se necesita guardar inventario por mes.");
-          return;
-        }
-
-        const minMes = meses.slice().sort()[0];
-        const maxMes = meses.slice().sort()[meses.length - 1];
-
-        (mesDesdeInput as HTMLInputElement).value = minMes;
-        (mesHastaInput as HTMLInputElement).value = maxMes;
-
-        (negocioSelect as HTMLSelectElement).value = negocios[0];
-        await aplicar();
       }
 
-      function destruirCharts() {
-        try { chartValor?.destroy?.(); } catch {}
-        try { chartCantidad?.destroy?.(); } catch {}
-        chartValor = null;
-        chartCantidad = null;
-      }
+      function renderCharts(data: any[]) {
+        if (chartInstPie) chartInstPie.destroy();
+        if (chartInstBar) chartInstBar.destroy();
 
-      async function aplicar() {
-        if (!inventario || inventario.length === 0) return;
-        if (!negocioSelect || !mesDesdeInput || !mesHastaInput) return;
+        let totalMoney = 0;
+        let totalUnits = 0;
+        const catValueMap: Record<string, number> = {};
+        
+        data.forEach(item => {
+           totalMoney += item.total;
+           totalUnits += item.cantidad;
+           catValueMap[item.categoria] = (catValueMap[item.categoria] || 0) + item.total;
+        });
 
-        destruirCharts();
-        tablaEl!.innerHTML = "";
-        hideMsg();
+        document.getElementById("val-total-prods")!.textContent = data.length.toLocaleString();
+        document.getElementById("val-total-units")!.textContent = totalUnits.toLocaleString();
+        document.getElementById("val-total-money")!.textContent = `$${totalMoney.toLocaleString('es-CO')}`;
 
-        const negocio = (negocioSelect as HTMLSelectElement).value;
-        const mesDesde = (mesDesdeInput as HTMLInputElement).value;
-        const mesHasta = (mesHastaInput as HTMLInputElement).value;
+        const ChartJs = (window as any).Chart;
 
-        if (!negocio || !mesDesde || !mesHasta) {
-          showMsg("Selecciona negocio y rango de meses.");
-          return;
-        }
+        // Pie Chart: Categorías
+        chartInstPie = new ChartJs(document.getElementById("chart-pie-cats"), {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(catValueMap),
+            datasets: [{
+              data: Object.values(catValueMap),
+              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'],
+              borderWidth: 0
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        });
 
-        const grupos: Record<string, { cantidad: number; valor: number }> = {};
+        // Bar Chart: Top 5
+        const top5 = [...data].sort((a,b) => b.total - a.total).slice(0, 5);
+        chartInstBar = new ChartJs(document.getElementById("chart-bar-top"), {
+          type: 'bar',
+          data: {
+            labels: top5.map(i => i.nombre),
+            datasets: [{
+              label: 'Valor en Pesos',
+              data: top5.map(i => i.total),
+              backgroundColor: '#3b82f6',
+              borderRadius: 8
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+        });
 
-        for (const row of inventario) {
-          const rowNegocio = normalizeNegocio(row);
-          if (rowNegocio !== negocio) continue;
-
-          const mesKey = normalizeMes(row.mes ?? row.fecha_mes ?? row.fecha ?? row.created_at);
-          if (!mesKey) continue;
-
-          if (mesKey < mesDesde || mesKey > mesHasta) continue;
-
-          const cantidad = Number(row.cantidad ?? 0) || 0;
-          const precio = Number(row.precio ?? 0) || 0;
-          const valor = cantidad * precio;
-
-          if (!grupos[mesKey]) grupos[mesKey] = { cantidad: 0, valor: 0 };
-          grupos[mesKey].cantidad += cantidad;
-          grupos[mesKey].valor += valor;
-        }
-
-        const mesesOrdenados = Object.keys(grupos).sort();
-        if (mesesOrdenados.length === 0) {
-          showMsg("No hay registros para ese negocio y rango de meses.");
-          return;
-        }
-
-        const valores = mesesOrdenados.map((m) => grupos[m].valor);
-        const cantidades = mesesOrdenados.map((m) => grupos[m].cantidad);
-
-        // Tabla
-        tablaEl!.innerHTML = `
+        // Tabla Detallada
+        const tableDiv = document.getElementById("report-table-div");
+        tableDiv!.innerHTML = `
           <table>
             <thead>
               <tr>
-                <th>Mes</th>
-                <th>Cantidad total</th>
-                <th>Valor total</th>
+                <th>Cód.</th>
+                <th>Nombre del Producto</th>
+                <th>Existencia</th>
+                <th>Cotización</th>
+                <th>Valorización Mes</th>
               </tr>
             </thead>
             <tbody>
-              ${mesesOrdenados
-                .map((m) => {
-                  const g = grupos[m];
-                  return `
-                    <tr>
-                      <td><code>${m}</code></td>
-                      <td>${Math.round(g.cantidad).toLocaleString("es-CO")}</td>
-                      <td>$${g.valor.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  `;
-                })
-                .join("")}
+              ${data.map(i => `
+                <tr>
+                  <td><code>${i.codigo}</code></td>
+                  <td><strong>${i.nombre}</strong><br/><small style="color:#64748b;">${i.categoria}</small></td>
+                  <td>${i.cantidad} und.</td>
+                  <td>$${Number(i.precio).toLocaleString()}</td>
+                  <td><strong>$${i.total.toLocaleString('es-CO')}</strong></td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         `;
-
-        const ChartRef = (window as any).Chart;
-        const commonOptions = {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true },
-            tooltip: { mode: "index", intersect: false }
-          },
-          scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true }
-          }
-        };
-
-        const ctxValor = (document.getElementById("chart-valor") as HTMLCanvasElement).getContext("2d");
-        const ctxCantidad = (document.getElementById("chart-cantidad") as HTMLCanvasElement).getContext("2d");
-
-        chartValor = new ChartRef(ctxValor, {
-          type: "line",
-          data: {
-            labels: mesesOrdenados,
-            datasets: [
-              {
-                label: "Valor total",
-                data: valores,
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59, 130, 246, 0.15)",
-                tension: 0.25,
-                fill: true
-              }
-            ]
-          },
-          options: commonOptions
-        });
-
-        chartCantidad = new ChartRef(ctxCantidad, {
-          type: "bar",
-          data: {
-            labels: mesesOrdenados,
-            datasets: [
-              {
-                label: "Cantidad total",
-                data: cantidades,
-                backgroundColor: "rgba(16, 185, 129, 0.25)",
-                borderColor: "#10b981",
-                borderWidth: 1
-              }
-            ]
-          },
-          options: commonOptions
-        });
       }
 
-      btnAplicar?.addEventListener("click", () => {
-        aplicar();
-      });
-
-      async function init() {
-        const ok = await checkAccess();
-        if (!ok) return;
-        await load();
-      }
-
+      document.getElementById("btn-generate")?.addEventListener("click", runReport);
       init();
     </script>
   </body>
 </html>
-

@@ -7,229 +7,272 @@ import Navbar from "../components/navbar.astro";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Base de Datos Inventario</title>
+    <title>Gestión de Inventario Mensual</title>
   </head>
   <body>
     <Navbar />
 
     <div style="margin: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Inventario</h2>
-        <button id="btn-toggle-form" style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-          + Agregar Producto
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
+        <h2>Inventario Mensual</h2>
+        
+        <div style="display: flex; gap: 10px; align-items: flex-end; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Filtrar Sede:
+            <select id="filter-negocio" style="display: block; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;"></select>
+          </label>
+          <label style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Mes:
+            <input type="month" id="filter-mes" style="display: block; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; margin-top: 4px;" />
+          </label>
+          <button id="btn-refresh" style="padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Ver Registros</button>
+        </div>
+        
+        <button id="btn-toggle-form" style="padding: 12px 24px; background-color: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700;">
+          + Registrar Inventario
         </button>
       </div>
 
-      <div id="form-container" style="display: none; background: #f3f4f6; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
-        <h3 id="form-title" style="margin-top: 0;">Registrar Nuevo Producto</h3>
-        <form id="form-inventario" style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
+      <div id="form-container" style="display: none; background: #fff; padding: 24px; border-radius: 16px; margin-bottom: 30px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+        <h3 id="form-title" style="margin-top: 0; margin-bottom: 20px;">Registrar Entrada</h3>
+        <form id="form-inven" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 600px;">
           <input type="hidden" name="id" id="inv-id" />
-          <input type="text" name="nombre" id="inv-nombre" placeholder="Nombre del producto" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
-          <input type="text" name="codigo" id="inv-codigo" placeholder="Código o SKU" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
-          <input type="number" name="cantidad" id="inv-cantidad" placeholder="Cantidad en stock" required style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
-          <input type="number" name="precio" id="inv-precio" placeholder="Precio unitario" step="0.01" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
-          <input type="text" name="categoria" id="inv-categoria" placeholder="Categoría" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px;"/>
-          <button type="submit" id="btn-submit" style="padding: 10px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;">Guardar Producto</button>
+          
+          <div style="grid-column: span 2;">
+            <label style="font-weight: 600; font-size: 0.9rem;">Producto:</label>
+            <select id="inv-producto" name="codigo" required style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px;">
+              <option value="">Cargando catálogo...</option>
+            </select>
+            <p style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">* Se tomarán Precio y Categoría de la Base de Datos general.</p>
+          </div>
+
+          <div>
+            <label style="font-weight: 600; font-size: 0.9rem;">Mes de Registro:</label>
+            <input type="month" name="mes" id="inv-mes" required style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px;"/>
+          </div>
+
+          <div>
+            <label style="font-weight: 600; font-size: 0.9rem;">Sede:</label>
+            <select id="inv-negocio" name="negocio" required style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px;"></select>
+          </div>
+
+          <div style="grid-column: span 2;">
+            <label style="font-weight: 600; font-size: 0.9rem;">Cantidad Contada:</label>
+            <input type="number" name="cantidad" id="inv-cantidad" placeholder="0" required style="width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 5px;"/>
+          </div>
+
+          <div style="grid-column: span 2;">
+            <button type="submit" id="btn-submit" style="width: 100%; padding: 14px; background-color: #059669; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; margin-top: 5px;">
+              Guardar en Inventario Mensual
+            </button>
+          </div>
         </form>
-        <p id="msg" style="font-weight: bold; margin-bottom: 0;"></p>
+        <p id="msg" style="font-weight: bold; margin-top: 15px;"></p>
       </div>
       
-      <ul id="lista-inventario" style="list-style-type: none; padding: 0;">
-        <li>Cargando datos...</li>
-      </ul>
+      <div id="results-area">
+        <h4 id="list-title" style="margin: 0 0 15px 0; color: #475569; font-weight: 600;">Registros del Mes</h4>
+        <div id="lista-inven" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Items will be injected here -->
+          <p style="color: #94a3b8; font-style: italic;">Usa los filtros de arriba para ver los registros.</p>
+        </div>
+      </div>
     </div>
 
     <script>
       import { getSession } from "../lib/auth";
-      import { getInventario, addInventario, updateInventario, deleteInventario } from "../lib/inventory";
+      import { getMasterProductos, getStockFiltrado, getStockEntry, addInventario, updateInventario, deleteInventario } from "../lib/inventory";
+      import { getNegocios } from "../lib/negocios";
 
-      async function checkAuth() {
+      const now = new Date();
+      const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      let masterCache: any[] = [];
+
+      async function init() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return; }
+        
+        const filterMes = document.getElementById("filter-mes") as HTMLInputElement;
+        const invMes = document.getElementById("inv-mes") as HTMLInputElement;
+        filterMes.value = defaultMonth;
+        invMes.value = defaultMonth;
+
+        await loadFilters();
+        loadData();
+      }
+
+      async function loadFilters() {
         try {
-          const session = await getSession();
-          if (!session) {
-            window.location.replace("/");
-            return;
-          }
-          loadInventory();
-        } catch (error) {
-          window.location.replace("/");
+          const negocios = await getNegocios();
+          masterCache = await getMasterProductos();
+
+          const fNeg = document.getElementById("filter-negocio") as HTMLSelectElement;
+          const iNeg = document.getElementById("inv-negocio") as HTMLSelectElement;
+          const iProd = document.getElementById("inv-producto") as HTMLSelectElement;
+
+          const negOpts = negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+          fNeg.innerHTML = negOpts;
+          iNeg.innerHTML = negOpts;
+
+          iProd.innerHTML = masterCache.length > 0 
+            ? masterCache.map(p => `<option value="${p.codigo}">${p.nombre} (${p.codigo})</option>`).join("")
+            : '<option value="">Primero carga la Base de Datos Maestro</option>';
+
+        } catch (e) {
+          console.error("Error loading filters:", e);
         }
       }
-      checkAuth();
 
-      async function loadInventory() {
-        const lista = document.getElementById("lista-inventario");
-        if (!lista) return;
+      async function loadData() {
+        const listContainer = document.getElementById("lista-inven")!;
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        const fMes = (document.getElementById("filter-mes") as HTMLInputElement).value;
+
+        if (!fNeg || !fMes) return;
 
         try {
-          const data = await getInventario();
-          lista.innerHTML = "";
-          
+          const data = await getStockFiltrado(fNeg, fMes);
+          listContainer.innerHTML = "";
+
           if (data.length === 0) {
-            lista.innerHTML = "<li>No hay productos registrados en el inventario.</li>";
+            listContainer.innerHTML = `<div style="padding: 40px; text-align: center; background: #fff; border: 2px dashed #e2e8f0; border-radius: 12px; color: #94a3b8;">No hay registros para <strong>${fNeg}</strong> en <strong>${fMes}</strong>.</div>`;
             return;
           }
-          
-          data.forEach(item => {
-            const li = document.createElement("li");
-            li.style.width = "100%";
-            li.style.boxSizing = "border-box";
-            li.style.marginBottom = "12px";
-            li.style.padding = "16px";
-            li.style.backgroundColor = "#ffffff";
-            li.style.border = "1px solid #e5e7eb";
-            li.style.borderRadius = "8px";
-            li.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
-            li.style.display = "flex";
-            li.style.flexDirection = "column";
-            li.style.gap = "8px";
 
-            li.innerHTML = `
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px;">
-                <span style="font-size: 1.1rem; color: #111827;"><strong>${item.nombre}</strong></span>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                  <span style="color: #6b7280; font-size: 0.9rem; font-family: monospace;">Ref: ${item.codigo}</span>
-                  <button class="btn-edit-inv" 
-                    data-id="${item.id}" 
-                    data-nombre="${item.nombre}" 
-                    data-codigo="${item.codigo}" 
-                    data-cantidad="${item.cantidad}" 
-                    data-precio="${item.precio || ''}" 
-                    data-categoria="${item.categoria || ''}"
-                    style="padding: 4px 8px; background-color: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-                    Editar
-                  </button>
-                  <button class="btn-delete-inv" 
-                    data-id="${item.id}" 
-                    style="padding: 4px 8px; background-color: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-                    Eliminar
-                  </button>
-                </div>
+          data.forEach(item => {
+            const master = masterCache.find(m => m.codigo === item.codigo) || { nombre: "Producto Desconocido", precio: 0 };
+            
+            const card = document.createElement("div");
+            card.style.display = "flex";
+            card.style.justifyContent = "space-between";
+            card.style.alignItems = "center";
+            card.style.padding = "20px";
+            card.style.background = "#fff";
+            card.style.borderRadius = "12px";
+            card.style.border = "1px solid #e2e8f0";
+            card.style.boxShadow = "0 1px 2px 0 rgb(0 0 0 / 0.05)";
+
+            card.innerHTML = `
+              <div style="flex: 1;">
+                <span style="display: block; font-weight: 700; color: #1e293b; font-size: 1.125rem;">${master.nombre}</span>
+                <span style="font-size: 0.875rem; color: #64748b; font-family: monospace;">COD: ${item.codigo}</span>
               </div>
-              <div style="display: flex; justify-content: space-between; color: #4b5563; font-size: 0.95rem;">
-                <span><strong>Stock:</strong> ${item.cantidad} und.</span>
-                <span><strong>Categoría:</strong> ${item.categoria || 'General'}</span>
-                <span style="color: #059669; font-weight: bold;">Precio: $${item.precio ? Number(item.precio).toLocaleString('es-CO') : '0.00'}</span>
+              <div style="text-align: right; margin-right: 24px;">
+                <span style="display: block; font-size: 1.5rem; font-weight: 800; color: #0f172a;">${item.cantidad}</span>
+                <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600;">Unidades</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-edit" 
+                  data-id="${item.id}" 
+                  data-codigo="${item.codigo}" 
+                  data-cantidad="${item.cantidad}" 
+                  data-negocio="${item.negocio}" 
+                  data-mes="${item.mes}"
+                  style="padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">Editar</button>
+                <button class="btn-delete" 
+                  data-id="${item.id}"
+                  style="padding: 8px 12px; background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">Eliminar</button>
               </div>
             `;
-            lista.appendChild(li);
+            listContainer.appendChild(card);
           });
 
-          document.querySelectorAll('.btn-delete-inv').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              const target = e.currentTarget as HTMLButtonElement;
-              const id = target.dataset.id || "";
-              if (confirm("¿Estás seguro de que deseas eliminar este producto del inventario?")) {
-                try {
-                  await deleteInventario(id);
-                  loadInventory(); 
-                } catch (error: any) {
-                  alert("Error al eliminar: " + error.message);
-                }
-              }
-            });
-          });
-
-          document.querySelectorAll('.btn-edit-inv').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              const target = e.currentTarget as HTMLButtonElement;
-              const formContainer = document.getElementById("form-container");
-              const btnToggle = document.getElementById("btn-toggle-form");
+          // Handlers
+          document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e: any) => {
+              const d = e.target.dataset;
+              (document.getElementById("inv-id") as HTMLInputElement).value = d.id;
+              (document.getElementById("inv-producto") as HTMLSelectElement).value = d.codigo;
+              (document.getElementById("inv-negocio") as HTMLSelectElement).value = d.negocio;
+              (document.getElementById("inv-mes") as HTMLInputElement).value = d.mes;
+              (document.getElementById("inv-cantidad") as HTMLInputElement).value = d.cantidad;
               
-              (document.getElementById("inv-id") as HTMLInputElement).value = target.dataset.id || "";
-              (document.getElementById("inv-nombre") as HTMLInputElement).value = target.dataset.nombre || "";
-              (document.getElementById("inv-codigo") as HTMLInputElement).value = target.dataset.codigo || "";
-              (document.getElementById("inv-cantidad") as HTMLInputElement).value = target.dataset.cantidad || "";
-              (document.getElementById("inv-precio") as HTMLInputElement).value = target.dataset.precio || "";
-              (document.getElementById("inv-categoria") as HTMLInputElement).value = target.dataset.categoria || "";
-
-              if (formContainer && formContainer.style.display === "none" && btnToggle) {
-                btnToggle.click();
-              }
-              if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Editar Producto";
-              if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Actualizar Producto";
-              formContainer?.scrollIntoView({ behavior: 'smooth' });
+              const formC = document.getElementById("form-container");
+              if (formC) formC.style.display = "block";
+              (document.getElementById("btn-toggle-form") as HTMLButtonElement).textContent = "- Cancelar Edición";
+              document.getElementById("form-title")!.textContent = "Editar Entrada de Inventario";
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             });
           });
 
-        } catch (error: any) {
-          lista.innerHTML = `<li style="color: red;">Error al cargar datos: ${error.message}</li>`;
+          document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async (e: any) => {
+              if (confirm("¿Eliminar este registro del inventario mensual?")) {
+                await deleteInventario(e.target.dataset.id);
+                loadData();
+              }
+            });
+          });
+
+        } catch (e: any) {
+          listContainer.innerHTML = `<p style="color: red;">Error: ${e.message}</p>`;
         }
       }
 
       const btnToggle = document.getElementById("btn-toggle-form");
       const formContainer = document.getElementById("form-container");
 
-      if (btnToggle && formContainer) {
-        btnToggle.addEventListener("click", () => {
-          if (formContainer.style.display === "none") {
-            formContainer.style.display = "block";
-            btnToggle.textContent = "- Ocultar Formulario";
-            btnToggle.style.backgroundColor = "#ef4444"; 
+      btnToggle?.addEventListener("click", () => {
+        if (formContainer?.style.display === "none") {
+          formContainer.style.display = "block";
+          btnToggle.textContent = "- Cancelar";
+        } else {
+          formContainer!.style.display = "none";
+          btnToggle!.textContent = "+ Registrar Inventario";
+          (document.getElementById("form-inven") as HTMLFormElement).reset();
+          (document.getElementById("inv-id") as HTMLInputElement).value = "";
+          (document.getElementById("inv-mes") as HTMLInputElement).value = defaultMonth;
+          document.getElementById("form-title")!.textContent = "Registrar Entrada";
+        }
+      });
+
+      document.getElementById("btn-refresh")?.addEventListener("click", loadData);
+
+      const form = document.getElementById("form-inven") as HTMLFormElement;
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById("msg")!;
+        const fd = new FormData(form);
+        const id = fd.get("id") as string;
+        const codigo = fd.get("codigo") as string;
+        const master = masterCache.find(p => p.codigo === codigo);
+
+        const payload = {
+          nombre: master ? master.nombre : "Sin nombre",
+          codigo: codigo,
+          negocio: fd.get("negocio") as string,
+          mes: fd.get("mes") as string,
+          cantidad: parseInt(fd.get("cantidad") as string) || 0
+        };
+
+        try {
+          if (id) {
+            await updateInventario(id, payload);
           } else {
-            formContainer.style.display = "none";
-            btnToggle.textContent = "+ Agregar Producto";
-            btnToggle.style.backgroundColor = "#4CAF50"; 
-            
-            const form = document.getElementById("form-inventario") as HTMLFormElement;
-            if (form) form.reset();
-            (document.getElementById("inv-id") as HTMLInputElement).value = "";
-            if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Registrar Nuevo Producto";
-            if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Guardar Producto";
-          }
-        });
-      }
-
-      const form = document.getElementById("form-inventario") as HTMLFormElement;
-      const msg = document.getElementById("msg");
-
-      if (form && msg) {
-        form.addEventListener("submit", async (e) => {
-          e.preventDefault();
-          const formData = new FormData(form);
-          const invId = formData.get("id") as string;
-          
-          try {
-            const dataToSave = {
-              nombre: formData.get("nombre") as string,
-              codigo: formData.get("codigo") as string,
-              cantidad: parseInt(formData.get("cantidad") as string),
-              precio: formData.get("precio") ? parseFloat(formData.get("precio") as string) : undefined,
-              categoria: (formData.get("categoria") as string) || undefined
-            };
-
-            if (invId) {
-              await updateInventario(invId, dataToSave);
-              msg.textContent = "¡Producto actualizado exitosamente!";
+            // Verificar duplicados para el mismo mes/sede
+            const existing = await getStockEntry(payload.codigo, payload.negocio, payload.mes);
+            if (existing) {
+              if (confirm("Este producto ya tiene un registro para este mes/sede. ¿Deseas sumar la nueva cantidad?")) {
+                await updateInventario(existing.id, { cantidad: existing.cantidad + payload.cantidad });
+              } else return;
             } else {
-              await addInventario(dataToSave);
-              msg.textContent = "¡Producto guardado exitosamente!";
+              await addInventario(payload);
             }
-            
-            msg.style.color = "green";
-            form.reset();
-            (document.getElementById("inv-id") as HTMLInputElement).value = "";
-            if (document.getElementById("form-title")) document.getElementById("form-title")!.textContent = "Registrar Nuevo Producto";
-            if (document.getElementById("btn-submit")) document.getElementById("btn-submit")!.textContent = "Guardar Producto";
-
-            loadInventory();
-            
-            setTimeout(() => { 
-              msg.textContent = ""; 
-              if (formContainer) {
-                formContainer.style.display = "none";
-                if(btnToggle) {
-                  btnToggle.textContent = "+ Agregar Producto";
-                  btnToggle.style.backgroundColor = "#4CAF50";
-                }
-              }
-            }, 2000);
-          } catch (error: any) {
-            msg.textContent = "Error al guardar: " + error.message;
-            msg.style.color = "red";
           }
-        });
-      }
+          
+          msg.textContent = "✓ Registro guardado correctamente.";
+          msg.style.color = "#059669";
+          form.reset();
+          loadData();
+          setTimeout(() => { 
+            msg.textContent = ""; 
+            btnToggle?.click();
+          }, 1500);
+        } catch (e: any) {
+          msg.textContent = "Error: " + e.message;
+          msg.style.color = "#ef4444";
+        }
+      });
+
+      init();
     </script>
   </body>
 </html>
