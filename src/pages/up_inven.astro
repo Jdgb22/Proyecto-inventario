@@ -8,85 +8,110 @@ import Navbar from "../components/navbar.astro";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carga Masiva de Inventario</title>
+    
+    <!-- Premium Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <style>
-      body { font-family: 'Inter', -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
-      main { max-width: 1000px; margin: 40px auto; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-      h1 { color: #111827; margin-top: 0; margin-bottom: 24px; font-weight: 800; letter-spacing: -0.025em; }
-      .upload-container { border: 2px dashed #cbd5e1; padding: 48px; text-align: center; border-radius: 12px; margin-bottom: 24px; transition: all 0.2s; background: #f8fafc; cursor: pointer; }
-      .upload-container:hover { border-color: #3b82f6; background-color: #eff6ff; }
+      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
+      .container { padding: 24px; max-width: 1000px; margin: 0 auto; }
+      
+      h1 { font-size: 1.8rem; font-weight: 800; color: #111827; margin-top: 0; margin-bottom: 24px; letter-spacing: -0.025em; }
+      
+      .main-card { background: white; padding: 32px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
+      
+      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
+      .form-group { display: flex; flex-direction: column; gap: 8px; }
+      label { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 1rem; background: #f9fafb; transition: all 0.2s; }
+      input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
+      
+      .info-banner { background-color: #eff6ff; border: 1px solid #dbeafe; color: #1e40af; padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.6; display: flex; align-items: flex-start; gap: 12px; }
+
+      .upload-zone { border: 2px dashed #cbd5e1; padding: 60px 40px; text-align: center; border-radius: 16px; background: #f8fafc; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-bottom: 32px; }
+      .upload-zone:hover { border-color: #3b82f6; background-color: #eff6ff; transform: translateY(-2px); }
+      .upload-icon { width: 64px; height: 64px; color: #94a3b8; margin: 0 auto 16px; }
       #file-input { display: none; }
-      .btn { padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.2s; }
-      .btn:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); }
-      .btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+      .btn { padding: 14px 28px; background: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+      .btn:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+      .btn:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.7; }
       .btn-success { background: #10b981; }
-      .btn-success:hover { background: #059669; }
-      .table-container { overflow-x: auto; margin-top: 24px; display: none; }
-      table { width: 100%; border-collapse: collapse; text-align: left; }
-      th, td { padding: 14px; border-bottom: 1px solid #e2e8f0; }
-      th { background-color: #f1f5f9; font-weight: 700; color: #475569; font-size: 0.85rem; text-transform: uppercase; }
-      .status-new { color: #065f46; background: #d1fae5; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-      .status-update { color: #92400e; background: #fef3c7; padding: 4px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-      #loading-msg { color: #64748b; font-style: italic; margin-top: 12px; display: none; }
-      .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
-      .info-banner { background-color: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.5; }
+      .btn-success:hover { background: #059669; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+
+      .preview-container { display: none; margin-top: 32px; animation: fadeIn 0.4s ease-out; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+      .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+      .preview-card-list { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding-right: 8px; }
+      .preview-card { background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: grid; grid-template-columns: 1fr 2fr 1fr 1fr 1fr; align-items: center; gap: 16px; font-size: 0.9rem; }
+      
+      .sku-tag { font-family: monospace; font-weight: 700; color: #475569; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; }
+      .name-tag { font-weight: 600; color: #1e293b; }
+      .price-tag { color: #059669; font-weight: 700; }
+      .qty-tag { font-weight: 800; color: #1e293b; }
+      .status-tag { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; text-align: center; }
+      .status-new { background: #d1fae5; color: #065f46; }
+      .status-update { background: #fef3c7; color: #92400e; }
+
+      .actions-bar { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 2px solid #f1f5f9; }
+      #loading-msg { text-align: center; color: #64748b; font-weight: 600; margin-top: 20px; display: none; }
     </style>
   </head>
   <body>
     <Navbar />
     
-    <main>
-      <h1>Cargar Inventario del Mes</h1>
+    <div class="container">
+      <h1>Cargar Inventario Masivo</h1>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-        <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; color: #374151;">
-          Sede de Registro:
-          <select id="inv-negocio" style="padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"></select>
-        </label>
-        <label style="display: flex; flex-direction: column; gap: 8px; font-weight: 600; color: #374151;">
-          Mes de Registro:
-          <input id="inv-mes" type="month" required style="padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 1rem;"/>
-        </label>
-      </div>
-
-      <div class="info-banner">
-        <strong>⚡ Sincronización Inteligente:</strong> Al subir el archivo, el sistema actualizará los nombres y precios en la <strong>Base de Datos</strong> general y registrará la <strong>Cantidad</strong> en el inventario del mes para la sede seleccionada.
-      </div>
-
-      <div class="upload-container" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <svg style="width:56px; height:56px; color:#cbd5e1; margin: 0 auto 12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        <p style="font-size: 1.125rem; color: #1e293b; margin:0;"><strong>Haz clic o arrastra tu archivo Excel</strong></p>
-        <p style="font-size: 0.875rem; color: #64748b; margin-top: 6px;">Columnas requeridas: Código, Nombre, Cantidad, Precio.</p>
-        <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
-      </div>
-
-      <p id="loading-msg">Procesando archivo... un momento.</p>
-
-      <div class="table-container" id="preview-container">
-        <h2 style="margin-bottom: 16px;">Confirmación de Carga</h2>
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-          <table id="preview-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Precio (Base Datos)</th>
-                <th>Cantidad (Mes)</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody id="preview-body"></tbody>
-          </table>
+      <div class="main-card">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Sede Destino</label>
+                <select id="inv-negocio" required></select>
+            </div>
+            <div class="form-group">
+                <label>Mes de Registro</label>
+                <input id="inv-mes" type="month" required />
+            </div>
         </div>
-        <div class="actions">
-          <p id="result-msg" style="font-weight: 700;"></p>
-          <button id="btn-confirm" class="btn btn-success">Sincronizar Inventario</button>
+
+        <div class="info-banner">
+          <span style="font-size: 1.5rem;">💡</span>
+          <div>
+            <strong>Sincronización Inteligente Activada:</strong> El sistema actualizará automáticamente la <strong>Base de Datos</strong> general y sumará las existencias al mes actual. Asegúrate de que las columnas tengan los nombres correctos: <i>Código, Nombre, Cantidad, Precio</i>.
+          </div>
+        </div>
+
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+            <p style="font-size: 1.1rem; color: #1e293b; margin:0;"><strong>Haz clic o arrastra tu archivo Excel</strong></p>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Formatos aceptados: .xlsx, .xls, .csv</p>
+            <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
+        </div>
+
+        <p id="loading-msg">Procesando archivo... un momento por favor.</p>
+
+        <div class="preview-container" id="preview-container">
+            <div class="preview-header">
+                <h3 style="margin:0; font-size: 1.1rem; color: #475569;">Vista Previa de Carga</h3>
+            </div>
+            
+            <div class="preview-card-list" id="preview-list"></div>
+
+            <div class="actions-bar">
+                <p id="result-msg" style="font-weight: 700; margin: 0;"></p>
+                <button id="btn-confirm" class="btn btn-success">Sincronizar Todo al Inventario</button>
+            </div>
         </div>
       </div>
-    </main>
+    </div>
 
     <script>
       import * as XLSX from "xlsx";
-      import { getStockFiltrado, upsertMasterProducto, updateInventario, addInventario } from "../lib/inventory";
+      import { getStockFiltrado, upsertMasterProducto, addStockEntry } from "../lib/inventory";
       import { getNegocios } from "../lib/negocios";
 
       const XLSX_LIB = (window as any).XLSX || XLSX;
@@ -117,7 +142,7 @@ import Navbar from "../components/navbar.astro";
       const dropZone = document.getElementById("drop-zone");
       const loadingMsg = document.getElementById("loading-msg");
       const previewContainer = document.getElementById("preview-container");
-      const previewBody = document.getElementById("preview-body");
+      const previewList = document.getElementById("preview-list");
       const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
       const resultMsg = document.getElementById("result-msg");
       const filterNeg = document.getElementById("inv-negocio") as HTMLSelectElement;
@@ -164,7 +189,7 @@ import Navbar from "../components/navbar.astro";
       }
 
       function displayPreview(data: any[]) {
-        previewBody!.innerHTML = "";
+        previewList!.innerHTML = "";
         itemsParaSync = data.map(row => {
           const nombre = row.Nombre || row.nombre || row.Producto || "Sin nombre";
           const codigo = String(row.Codigo || row.codigo || row.SKU || "").trim();
@@ -183,15 +208,16 @@ import Navbar from "../components/navbar.astro";
         });
 
         itemsParaSync.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="font-family:monospace; font-weight:600;">${item.codigo}</td>
-            <td style="font-weight:500;">${item.nombre}</td>
-            <td style="color:#059669; font-weight:600;">$${item.precio.toLocaleString()}</td>
-            <td><strong>+ ${item.cantidad}</strong> <span style="color:#94a3b8; font-size:0.8rem;">(Total: ${item.sumResult})</span></td>
-            <td><span class="${item.existingId ? 'status-update' : 'status-new'}">${item.existingId ? 'Suma a Existente' : 'Nueva Entrada'}</span></td>
+          const div = document.createElement("div");
+          div.className = "preview-card";
+          div.innerHTML = `
+            <div><span class="sku-tag">${item.codigo}</span></div>
+            <div class="name-tag">${item.nombre}</div>
+            <div class="price-tag">$${item.precio.toLocaleString()}</div>
+            <div><span class="qty-tag">+ ${item.cantidad}</span> <br/> <small style="color:#94a3b8;">Total: ${item.sumResult}</small></div>
+            <div><span class="status-tag ${item.existingId ? 'status-update' : 'status-new'}">${item.existingId ? 'Sumar' : 'Nuevo'}</span></div>
           `;
-          previewBody!.appendChild(tr);
+          previewList!.appendChild(div);
         });
 
         loadingMsg!.style.display = "none";
@@ -200,8 +226,8 @@ import Navbar from "../components/navbar.astro";
 
       btnConfirm.addEventListener("click", async () => {
         btnConfirm.disabled = true;
-        resultMsg!.textContent = "Sincronizando... por favor no cierres la ventana.";
-        resultMsg!.style.color = "#475569";
+        resultMsg!.textContent = "Sincronizando inventario...";
+        resultMsg!.style.color = "#4b5563";
         
         let count = 0;
 
@@ -215,31 +241,27 @@ import Navbar from "../components/navbar.astro";
                 categoria: item.categoria
             });
 
-            // 2. Sincronizar Inventario Mensual
-            const payload = {
-              nombre: item.nombre,
+            // 2. Sincronizar Inventario Mensual (Suma automática)
+            await addStockEntry({
               codigo: item.codigo,
+              cantidad: item.sumResult,
               negocio: negocioActual,
-              mes: mesActual,
-              cantidad: item.sumResult
-            };
-
-            if (item.existingId) {
-              await updateInventario(item.existingId, payload);
-            } else {
-              await addInventario(payload);
-            }
+              mes: mesActual
+            });
+            
             count++;
           } catch (e) {
             console.error(e);
           }
         }
 
-        resultMsg!.textContent = `✓ ¡Listo! ${count} registros procesados con éxito. Redirigiendo...`;
+        resultMsg!.textContent = `✓ ¡Sincronización Exitosa! ${count} registros actualizados.`;
         resultMsg!.style.color = "#059669";
         
         setTimeout(() => { window.location.replace("/inven"); }, 2000);
       });
     </script>
   </body>
+</html>
+ody>
 </html>

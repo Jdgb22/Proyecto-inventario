@@ -7,79 +7,103 @@ import Navbar from "../components/navbar.astro";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reportes Trabajadores</title>
+    <title>Reportes de Nómina</title>
+    
+    <!-- Premium Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-      body { font-family: system-ui, -apple-system, sans-serif; background-color: #f9fafb; margin: 0; }
-      main { max-width: 1100px; margin: 40px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-      h1 { color: #111827; margin-top: 0; }
-      .card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-top: 16px; }
-      .filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-      label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; color: #111827; }
-      input, select { padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; }
-      button { padding: 10px 16px; background-color: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-      button:disabled { background-color: #94a3b8; cursor: not-allowed; }
-      .charts { display: grid; grid-template-columns: 1fr; gap: 20px; }
-      @media (min-width: 900px) { .charts { grid-template-columns: 1fr 1fr; } }
-      .chart-wrap { height: 360px; }
-      canvas { width: 100% !important; height: 100% !important; }
-      .msg { color: #6b7280; margin-top: 12px; font-style: italic; }
-      table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-      th, td { padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: left; }
-      th { background-color: #f1f5f9; color: #475569; }
-      td code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
+      .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+      
+      h1 { font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 24px; letter-spacing: -0.02em; }
+      
+      .main-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
+      .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+      label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; background: #f9fafb; transition: all 0.2s; }
+      input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
+      
+      .btn { padding: 12px 24px; background-color: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: all 0.2s; }
+      .btn:hover:not(:disabled) { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25); }
+      .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+      .charts-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
+      @media (min-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
+      
+      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; height: 400px; }
+      .chart-card h3 { font-size: 1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; color: #374151; }
+      .chart-wrap { height: 320px; position: relative; }
+
+      .table-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; overflow: hidden; }
+      .table-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; }
+      
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+      th { color: #64748b; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; background: #f8fafc; }
+      td { font-size: 0.95rem; }
+      .msg { color: #94a3b8; margin-top: 12px; font-weight: 500; text-align: center; padding: 20px; font-style: italic; }
+      
+      .payroll-val { color: #059669; font-weight: 800; }
+      .badge-mes { font-family: monospace; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-weight: 600; color: #475569; }
     </style>
   </head>
   <body>
     <Navbar />
 
-    <main>
-      <h1>Reportes de Trabajadores por Negocio y Mes</h1>
+    <div class="container">
+      <h1>Análisis de Nómina Mensual</h1>
 
-      <div class="card">
+      <div class="main-card">
         <div class="filters">
           <label style="min-width: 260px;">
-            Negocio
+            Negocio / Sede
             <select id="rep-trab-negocio">
-              <option value="">Cargando...</option>
+              <option value="">Cargando sedes...</option>
             </select>
           </label>
 
           <label style="min-width: 200px;">
-            Desde (mes)
+            Desde el mes
             <input id="rep-trab-mes-desde" type="month" />
           </label>
 
           <label style="min-width: 200px;">
-            Hasta (mes)
+            Hasta el mes
             <input id="rep-trab-mes-hasta" type="month" />
           </label>
 
-          <button id="btn-trab-aplicar">Aplicar</button>
+          <button id="btn-trab-aplicar" class="btn">Actualizar Vista</button>
         </div>
 
         <div id="rep-trab-msg" class="msg" style="display:none;"></div>
       </div>
 
-      <div class="charts">
-        <div class="card chart-wrap">
-          <h3 style="margin:0 0 10px 0;">Total de nómina (salario base) por mes</h3>
-          <canvas id="chart-trab-salario"></canvas>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Inversión en Salarios por Mes</h3>
+          <div class="chart-wrap">
+            <canvas id="chart-trab-salario"></canvas>
+          </div>
         </div>
 
-        <div class="card chart-wrap">
-          <h3 style="margin:0 0 10px 0;">Cantidad de trabajadores por mes</h3>
-          <canvas id="chart-trab-cantidad"></canvas>
+        <div class="chart-card">
+          <h3>Evolución de Fuerza Laboral</h3>
+          <div class="chart-wrap">
+            <canvas id="chart-trab-cantidad"></canvas>
+          </div>
         </div>
       </div>
 
-      <div class="card">
-        <h3 style="margin:0 0 10px 0;">Totales mensuales</h3>
-        <div id="tabla-trab-mensual"></div>
+      <div class="table-card">
+        <h3>Resumen Detallado por Periodo</h3>
+        <div id="tabla-trab-mensual" style="overflow-x: auto;"></div>
       </div>
-    </main>
+    </div>
 
     <script>
       import { getSession, getUserRole } from "../lib/auth";
@@ -90,9 +114,9 @@ import Navbar from "../components/navbar.astro";
       let chartCantidad: any = null;
 
       const msgEl = document.getElementById("rep-trab-msg");
-      const negocioSelect = document.getElementById("rep-trab-negocio");
-      const mesDesdeInput = document.getElementById("rep-trab-mes-desde");
-      const mesHastaInput = document.getElementById("rep-trab-mes-hasta");
+      const negocioSelect = document.getElementById("rep-trab-negocio") as HTMLSelectElement;
+      const mesDesdeInput = document.getElementById("rep-trab-mes-desde") as HTMLInputElement;
+      const mesHastaInput = document.getElementById("rep-trab-mes-hasta") as HTMLInputElement;
       const btnAplicar = document.getElementById("btn-trab-aplicar");
       const tablaEl = document.getElementById("tabla-trab-mensual");
 
@@ -100,211 +124,109 @@ import Navbar from "../components/navbar.astro";
         const str = String(value ?? "").trim();
         if (!str) return "";
         if (/^\d{4}-\d{2}$/.test(str)) return str;
-        if (str.length >= 7) return str.slice(0, 7);
-        return "";
+        return str.slice(0, 7);
       };
 
-      const normalizeNegocio = (row: any) => {
-        const negocio = (row?.negocio ?? row?.negocio_id ?? row?.sucursal ?? row?.nombre_negocio ?? "").toString().trim();
-        return negocio || "General";
-      };
-
-      const showMsg = (text: string) => {
-        if (!msgEl) return;
-        msgEl.textContent = text;
-        msgEl.style.display = "block";
-      };
-
-      const hideMsg = () => {
-        if (!msgEl) return;
-        msgEl.textContent = "";
-        msgEl.style.display = "none";
-      };
+      const normalizeNegocio = (row: any) => (row?.negocio || "General").trim();
 
       async function checkAccess() {
         const session = await getSession();
-        if (!session) {
-          window.location.replace("/");
-          return false;
-        }
-
+        if (!session) { window.location.replace("/"); return false; }
         const role = await getUserRole(session.user.id);
-        if (role !== "admin") {
-          // Solo admin puede ver reportes.
-          window.location.replace("/inven");
-          return false;
-        }
+        if (role !== "admin") { window.location.replace("/init"); return false; }
         return true;
       }
 
       async function load() {
-        hideMsg();
-        if (!negocioSelect || !mesDesdeInput || !mesHastaInput || !btnAplicar) return;
-
         trabajadores = await getTrabajadores();
         if (!trabajadores || trabajadores.length === 0) {
-          showMsg("No hay datos en `trabajadores` todavía.");
+          msgEl!.textContent = "No hay registros de trabajadores todavía.";
+          msgEl!.style.display = "block";
           return;
         }
 
-        const negocios = Array.from(new Set(trabajadores.map((r) => normalizeNegocio(r)))).sort((a, b) => a.localeCompare(b));
-        negocioSelect.innerHTML = negocios.map((n) => `<option value="${n}">${n}</option>`).join("");
+        const negocios = Array.from(new Set(trabajadores.map(normalizeNegocio))).sort();
+        negocioSelect.innerHTML = negocios.map(n => `<option value="${n}">${n}</option>`).join("");
 
-        const meses = trabajadores
-          .map((r) => normalizeMes(r.mes ?? r.fecha_mes ?? r.fecha ?? r.created_at))
-          .filter((m) => m);
-
-        if (meses.length === 0) {
-          showMsg("No encontré campo `mes`/`fecha` en los trabajadores. Para graficar se necesita guardar trabajadores por mes.");
-          return;
+        const meses = trabajadores.map(r => normalizeMes(r.mes || r.created_at)).filter(m => m).sort();
+        if (meses.length > 0) {
+          mesDesdeInput.value = meses[0];
+          mesHastaInput.value = meses[meses.length - 1];
         }
-
-        const minMes = meses.slice().sort()[0];
-        const maxMes = meses.slice().sort()[meses.length - 1];
-        (mesDesdeInput as HTMLInputElement).value = minMes;
-        (mesHastaInput as HTMLInputElement).value = maxMes;
-        (negocioSelect as HTMLSelectElement).value = negocios[0];
         await aplicar();
       }
 
-      function destruirCharts() {
-        try { chartSalario?.destroy?.(); } catch {}
-        try { chartCantidad?.destroy?.(); } catch {}
-        chartSalario = null;
-        chartCantidad = null;
-      }
-
       async function aplicar() {
-        if (!trabajadores || trabajadores.length === 0) return;
-        if (!negocioSelect || !mesDesdeInput || !mesHastaInput) return;
+        if (!trabajadores.length) return;
+        if (chartSalario) chartSalario.destroy();
+        if (chartCantidad) chartCantidad.destroy();
 
-        destruirCharts();
-        tablaEl!.innerHTML = "";
-        hideMsg();
-
-        const negocio = (negocioSelect as HTMLSelectElement).value;
-        const mesDesde = (mesDesdeInput as HTMLInputElement).value;
-        const mesHasta = (mesHastaInput as HTMLInputElement).value;
-
-        if (!negocio || !mesDesde || !mesHasta) {
-          showMsg("Selecciona negocio y rango de meses.");
-          return;
-        }
-
+        const negocio = negocioSelect.value;
+        const mesDesde = mesDesdeInput.value;
+        const mesHasta = mesHastaInput.value;
         const grupos: Record<string, { cantidad: number; salarioTotal: number }> = {};
 
-        for (const row of trabajadores) {
-          const rowNegocio = normalizeNegocio(row);
-          if (rowNegocio !== negocio) continue;
+        trabajadores.forEach(row => {
+          if (normalizeNegocio(row) !== negocio) return;
+          const mesKey = normalizeMes(row.mes || row.created_at);
+          if (!mesKey || mesKey < mesDesde || mesKey > mesHasta) return;
 
-          const mesKey = normalizeMes(row.mes ?? row.fecha_mes ?? row.fecha ?? row.created_at);
-          if (!mesKey) continue;
-          if (mesKey < mesDesde || mesKey > mesHasta) continue;
-
-          const salarioBase = Number(row.salario_base ?? 0) || 0;
           if (!grupos[mesKey]) grupos[mesKey] = { cantidad: 0, salarioTotal: 0 };
           grupos[mesKey].cantidad += 1;
-          grupos[mesKey].salarioTotal += salarioBase;
-        }
+          grupos[mesKey].salarioTotal += Number(row.salario_base || 0);
+        });
 
         const mesesOrdenados = Object.keys(grupos).sort();
-        if (mesesOrdenados.length === 0) {
-          showMsg("No hay registros para ese negocio y rango de meses.");
+        if (!mesesOrdenados.length) {
+          tablaEl!.innerHTML = `<p class="msg">No hay datos para esta selección.</p>`;
           return;
         }
-
-        const salarios = mesesOrdenados.map((m) => grupos[m].salarioTotal);
-        const cantidades = mesesOrdenados.map((m) => grupos[m].cantidad);
 
         tablaEl!.innerHTML = `
           <table>
             <thead>
               <tr>
-                <th>Mes</th>
-                <th>Cantidad</th>
-                <th>Salario total</th>
+                <th>Periodo (Mes)</th>
+                <th>Personal Activo</th>
+                <th>Costo Total Nómina</th>
               </tr>
             </thead>
             <tbody>
-              ${mesesOrdenados
-                .map((m) => {
-                  const g = grupos[m];
-                  return `
-                    <tr>
-                      <td><code>${m}</code></td>
-                      <td>${Math.round(g.cantidad).toLocaleString("es-CO")}</td>
-                      <td>$${g.salarioTotal.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                  `;
-                })
-                .join("")}
+              ${mesesOrdenados.map(m => `
+                <tr>
+                  <td><span class="badge-mes">${m}</span></td>
+                  <td><strong>${grupos[m].cantidad}</strong> colaboradores</td>
+                  <td class="payroll-val">$${grupos[m].salarioTotal.toLocaleString('es-CO')}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
         `;
 
         const ChartRef = (window as any).Chart;
-        const commonOptions = {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true },
-            tooltip: { mode: "index", intersect: false }
-          },
-          scales: {
-            x: { grid: { display: false } },
-            y: { beginAtZero: true }
-          }
-        };
+        const opts = { responsive: true, maintainAspectRatio: false };
 
-        const ctxSalario = (document.getElementById("chart-trab-salario") as HTMLCanvasElement).getContext("2d");
-        const ctxCantidad = (document.getElementById("chart-trab-cantidad") as HTMLCanvasElement).getContext("2d");
-
-        chartSalario = new ChartRef(ctxSalario, {
+        chartSalario = new ChartRef(document.getElementById("chart-trab-salario"), {
           type: "line",
           data: {
             labels: mesesOrdenados,
-            datasets: [
-              {
-                label: "Salario total",
-                data: salarios,
-                borderColor: "#f59e0b",
-                backgroundColor: "rgba(245, 158, 11, 0.18)",
-                tension: 0.25,
-                fill: true
-              }
-            ]
+            datasets: [{ label: "Nómina ($)", data: mesesOrdenados.map(m => grupos[m].salarioTotal), borderColor: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)", fill: true, tension: 0.3 }]
           },
-          options: commonOptions
+          options: opts
         });
 
-        chartCantidad = new ChartRef(ctxCantidad, {
+        chartCantidad = new ChartRef(document.getElementById("chart-trab-cantidad"), {
           type: "bar",
           data: {
             labels: mesesOrdenados,
-            datasets: [
-              {
-                label: "Trabajadores",
-                data: cantidades,
-                backgroundColor: "rgba(16, 185, 129, 0.25)",
-                borderColor: "#10b981",
-                borderWidth: 1
-              }
-            ]
+            datasets: [{ label: "Empleados", data: mesesOrdenados.map(m => grupos[m].cantidad), backgroundColor: "#10b981", borderRadius: 8 }]
           },
-          options: commonOptions
+          options: opts
         });
       }
 
-      btnAplicar?.addEventListener("click", () => aplicar());
-
-      async function init() {
-        const ok = await checkAccess();
-        if (!ok) return;
-        await load();
-      }
-
-      init();
+      btnAplicar?.addEventListener("click", aplicar);
+      checkAccess().then(ok => { if (ok) load(); });
     </script>
   </body>
 </html>
-

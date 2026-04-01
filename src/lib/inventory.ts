@@ -1,147 +1,173 @@
 import { supabase } from "./supabase";
 
-export interface Inventario {
+export interface MasterProducto {
   id?: string;
   nombre: string;
   codigo: string;
+  categoria: string;
+  precio: number;
+}
+
+export interface StockEntry {
+  id?: string;
+  codigo: string;
   cantidad: number;
-  precio?: number;
-  categoria?: string;
-  negocio?: string;
-  mes?: string; 
+  negocio: string;
+  mes: string;
 }
 
 /** 
- * Obtener todos los productos Maestros (donde se define precio, categoria, etc.)
+ * GESTIÓN DE BASE DE DATOS MAESTRA (PRODUCTOS)
  */
 export async function getMasterProductos() {
-  const { data, error } = await supabase
-    .from("inventario")
-    .select("*")
-    .eq("negocio", "MASTER")
-    .order("nombre", { ascending: true });
-
-  if (error) {
-    console.warn("Error select MASTER:", error.message);
-    return [];
-  }
-  return data;
-}
-
-/** 
- * Actualizar o Crear un Producto Maestro (Manual Upsert para evitar error de constraint)
- */
-export async function upsertMasterProducto(item: any) {
-  // Primero buscamos si ya existe el maestro para ese código
-  const { data: existing, error: selectError } = await supabase
-    .from("inventario")
-    .select("id")
-    .eq("codigo", item.codigo)
-    .eq("negocio", "MASTER")
-    .eq("mes", "MASTER")
-    .maybeSingle();
-
-  if (selectError) throw selectError;
-
-  const payload = { 
-    ...item, 
-    negocio: "MASTER", 
-    mes: "MASTER", 
-    cantidad: 0 
-  };
-
-  if (existing) {
-    // Si existe, actualizamos
+  try {
     const { data, error } = await supabase
-      .from("inventario")
-      .update(payload)
-      .eq("id", existing.id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  } else {
-    // Si no existe, insertamos
-    const { data, error } = await supabase
-      .from("inventario")
-      .insert([payload])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+      .from("productos")
+      .select("*")
+      .order("nombre", { ascending: true });
+
+    if (error) {
+      // Si la tabla no existe o hay un error de permisos, intentamos el fallback
+      console.warn("ADVERTENCIA DE TABLA: Intentando fallback a inventario [MASTER]", error.message);
+      
+      const { data: fallback, error: err2 } = await supabase
+          .from("inventario")
+          .select("*")
+          .eq("mes", "MASTER")
+          .order("nombre", { ascending: true });
+          
+      if (err2) {
+        console.error("ERROR CRÍTICO: Fallback fallido", err2.message);
+        throw new Error(`Base de datos inaccesible: ${err2.message}`);
+      }
+      return fallback || [];
+    }
+    return data || [];
+  } catch (e: any) {
+    console.error("EXCEPCIÓN EN BASE DE DATOS:", e);
+    throw e;
   }
 }
 
-/**
- * Obtener entrada de stock específica para negocio/mes/código
- */
-export async function getStockEntry(codigo: string, negocio: string, mes: string) {
-  const { data, error } = await supabase
-    .from("inventario")
-    .select("*")
-    .eq("codigo", codigo)
-    .eq("negocio", negocio)
-    .eq("mes", mes)
-    .maybeSingle();
-  
-  if (error) throw error;
-  return data;
+export async function upsertMasterProducto(item: MasterProducto) {
+    const { data: exist } = await supabase
+        .from("inventario")
+        .select("*")
+        .eq("codigo", item.codigo)
+        .eq("mes", "MASTER")
+        .maybeSingle();
+
+    if (exist) {
+        const { data, error } = await supabase
+            .from("inventario")
+            .update({
+                nombre: item.nombre.trim(),
+                precio: item.precio,
+                categoria: item.categoria?.trim() || ""
+            })
+            .eq("id", exist.id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    } else {
+        const { data, error } = await supabase
+            .from("inventario")
+            .insert([{
+                nombre: item.nombre.trim(),
+                codigo: item.codigo.trim(),
+                precio: item.precio,
+                categoria: item.categoria?.trim() || "",
+                cantidad: 0,
+                negocio: "GLOBAL",
+                mes: "MASTER"
+            }])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
 }
 
 /** 
- * Obtener existencias (Stock) para un negocio y mes específico
+ * GESTIÓN DE INVENTARIO MENSUAL (EXISTENCIAS)
  */
 export async function getStockFiltrado(negocio: string, mes: string) {
-  const { data, error } = await supabase
-    .from("inventario")
-    .select("*")
-    .eq("negocio", negocio)
-    .eq("mes", mes)
-    .order("codigo", { ascending: true });
+    // Obtenemos los registros de cantidades para ese mes y negocio
+    const { data: stock, error } = await supabase
+        .from("inventario")
+        .select("*")
+        .eq("negocio", negocio)
+        .eq("mes", mes);
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return stock || [];
 }
 
 export async function getInventario() {
-  const { data, error } = await supabase
-    .from("inventario")
-    .select("*")
-    .order("nombre", { ascending: true });
+    const { data, error } = await supabase
+        .from("inventario")
+        .select("*")
+        .neq("mes", "MASTER");
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return data || [];
 }
 
-export async function addInventario(item: Inventario) {
-  const { data, error } = await supabase
-    .from("inventario")
-    .insert([item])
-    .select()
-    .single();
+export async function addStockEntry(item: StockEntry) {
+    // Buscamos si ya existe una entrada para este código, negocio y mes
+    const { data: exist } = await supabase
+        .from("inventario")
+        .select("*")
+        .eq("codigo", item.codigo)
+        .eq("negocio", item.negocio)
+        .eq("mes", item.mes)
+        .maybeSingle();
 
-  if (error) throw error;
-  return data;
+    if (exist) {
+        const { data, error } = await supabase
+            .from("inventario")
+            .update({ cantidad: item.cantidad })
+            .eq("id", exist.id)
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    } else {
+        // Necesitamos traer el nombre y precio del MASTER para que el registro sea completo visualmente
+        const { data: master } = await supabase
+            .from("inventario")
+            .select("*")
+            .eq("codigo", item.codigo)
+            .eq("mes", "MASTER")
+            .maybeSingle();
+
+        const { data, error } = await supabase
+            .from("inventario")
+            .insert([{
+                nombre: master?.nombre || "Producto Desconocido",
+                codigo: item.codigo.trim(),
+                precio: master?.precio || 0,
+                categoria: master?.categoria || "",
+                cantidad: item.cantidad,
+                negocio: item.negocio,
+                mes: item.mes
+            }])
+            .select()
+            .single();
+        if (error) throw error;
+        return data;
+    }
 }
 
-export async function updateInventario(id: string, item: Partial<Inventario>) {
-  const { data, error } = await supabase
-    .from("inventario")
-    .update(item)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+export async function deleteRegistro(id: string) {
+    const { error } = await supabase.from("inventario").delete().eq("id", id);
+    if (error) throw error;
+    return true;
 }
 
-export async function deleteInventario(id: string) {
-  const { error } = await supabase
-    .from("inventario")
-    .delete()
-    .eq("id", id);
-
-  if (error) throw error;
-  return true;
+export async function deleteMasterProducto(id: string) {
+    // En nuestro sistema actual, los productos master están en la tabla 'inventario' con mes='MASTER'
+    // o en la tabla 'productos' si ya se migró. deleteRegistro ya maneja el ID.
+    return await deleteRegistro(id);
 }

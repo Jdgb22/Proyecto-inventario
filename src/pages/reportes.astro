@@ -8,36 +8,55 @@ import Navbar from "../components/navbar.astro";
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reportes de Inventario Mensual</title>
+    
+    <!-- Premium Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      body { font-family: 'Inter', system-ui, sans-serif; background-color: #f1f5f9; margin: 0; color: #1e293b; }
-      main { max-width: 1200px; margin: 40px auto; padding: 24px; }
-      h1 { color: #0f172a; margin-top: 0; margin-bottom: 28px; font-weight: 800; }
-      .card { background: white; padding: 28px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); margin-bottom: 28px; }
+      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+      
+      h1 { font-size: 2rem; font-weight: 800; color: #111827; margin-bottom: 24px; letter-spacing: -0.02em; }
+      
+      .filters-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
       .filters { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
-      label { display: flex; flex-direction: column; gap: 8px; font-weight: 700; color: #475569; font-size: 0.875rem; }
-      input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; width: 100%; transition: border-color 0.2s; }
-      input:focus, select:focus { outline: none; border-color: #3b82f6; }
-      button { padding: 12px 32px; background-color: #3b82f6; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: background 0.2s; }
-      button:hover { background-color: #2563eb; }
+      label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 1rem; width: 100%; transition: all 0.2s; background: #f9fafb; }
+      input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
+      
+      .btn { padding: 12px 32px; background-color: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1rem; transition: all 0.2s; }
+      .btn:hover { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3); }
+
       .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .stat-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-      .stat-card h4 { margin: 0; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
-      .stat-card .value { font-size: 1.75rem; font-weight: 800; color: #1e293b; }
-      .chart-card { background: white; padding: 24px; border-radius: 16px; border: 1px solid #e2e8f0; height: 100%; }
-      .chart-container { height: 350px; position: relative; }
-      table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+      .stat-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      .stat-card h4 { margin: 0; color: #6b7280; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 800; }
+      .stat-card .value { font-size: 1.8rem; font-weight: 800; color: #111827; }
+
+      .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 32px; }
+      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; }
+      .chart-container { height: 320px; position: relative; margin-top: 16px; }
+      .chart-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0; }
+
+      .results-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e5e7eb; overflow: hidden; }
+      .results-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 20px; }
+      
+      table { width: 100%; border-collapse: collapse; }
       th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-      th { color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      th { color: #64748b; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; background: #f8fafc; }
+      td { font-size: 0.95rem; color: #374151; }
+      .badge-code { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b; font-size: 0.85rem; }
     </style>
   </head>
   <body>
     <Navbar />
 
-    <main>
+    <div class="container">
       <h1>Reportes de Inventario</h1>
 
-      <div class="card">
+      <div class="filters-card">
         <div class="filters">
           <label style="flex: 1.5; min-width: 280px;">
             Sede / Negocio
@@ -51,51 +70,51 @@ import Navbar from "../components/navbar.astro";
             <input id="report-mes" type="month" />
           </label>
 
-          <button id="btn-generate">Generar Reporte Mensual</button>
+          <button id="btn-generate" class="btn">Generar Reporte</button>
         </div>
       </div>
 
-      <div id="no-data-msg" style="padding: 60px; text-align: center; color: #94a3b8; font-style: italic;">
+      <div id="no-data-msg" style="padding: 80px; text-align: center; color: #94a3b8; font-style: italic; font-weight: 500;">
         Ingresa los parámetros para generar el reporte de existencias.
       </div>
 
       <div id="report-content" style="display: none;">
         <div class="stats-container">
-          <div class="stat-card" style="border-left: 5px solid #3b82f6;">
-            <h4>Lineas de Producto</h4>
+          <div class="stat-card" style="border-left: 6px solid #3b82f6;">
+            <h4>Líneas de Producto</h4>
             <div id="val-total-prods" class="value">0</div>
           </div>
-          <div class="stat-card" style="border-left: 5px solid #10b981;">
-            <h4>Stock Total (Unidades)</h4>
+          <div class="stat-card" style="border-left: 6px solid #10b981;">
+            <h4>Stock Total</h4>
             <div id="val-total-units" class="value">0</div>
           </div>
-          <div class="stat-card" style="border-left: 5px solid #059669;">
+          <div class="stat-card" style="border-left: 6px solid #059669;">
             <h4>Valorización Total</h4>
             <div id="val-total-money" class="value">$0</div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 32px;">
+        <div class="charts-grid">
           <div class="chart-card">
-            <h3 style="margin-top: 0; margin-bottom: 20px;">Distribución por Valor (Categoría)</h3>
+            <h3>Distribución por Valor (Categoría)</h3>
             <div class="chart-container">
               <canvas id="chart-pie-cats"></canvas>
             </div>
           </div>
           <div class="chart-card">
-            <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem;">Top 5 Productos más Valiosos</h2>
+            <h3>Top 5 Productos más Valiosos</h3>
             <div class="chart-container">
               <canvas id="chart-bar-top"></canvas>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <h3 style="margin-top: 0; margin-bottom: 12px;">Resultados Detallados</h3>
+        <div class="results-card">
+          <h3>Detalle por Referencia</h3>
           <div id="report-table-div" style="overflow-x: auto;"></div>
         </div>
       </div>
-    </main>
+    </div>
 
     <script>
       import { getMasterProductos, getStockFiltrado } from "../lib/inventory";
@@ -133,7 +152,7 @@ import Navbar from "../components/navbar.astro";
           const stockData = await getStockFiltrado(nVal, mVal);
           
           if (stockData.length === 0) {
-            msgEl!.innerHTML = `No se encontraron datos de inventario para <strong>${nVal}</strong> en <strong>${mVal}</strong>.`;
+            msgEl!.innerHTML = `No se encontraron datos para <strong>${nVal}</strong> en <strong>${mVal}</strong>.`;
             msgEl!.style.display = "block";
             contEl!.style.display = "none";
             return;
@@ -142,7 +161,6 @@ import Navbar from "../components/navbar.astro";
           msgEl!.style.display = "none";
           contEl!.style.display = "block";
 
-          // Unir Stock con Maestro para tener Precios y Nombres Actuales
           const finalReport = stockData.map(s => {
               const master = cacheMaster.find(m => m.codigo === s.codigo);
               const p = master ? master.precio : 0;
@@ -182,7 +200,6 @@ import Navbar from "../components/navbar.astro";
 
         const ChartJs = (window as any).Chart;
 
-        // Pie Chart: Categorías
         chartInstPie = new ChartJs(document.getElementById("chart-pie-cats"), {
           type: 'doughnut',
           data: {
@@ -196,7 +213,6 @@ import Navbar from "../components/navbar.astro";
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
         });
 
-        // Bar Chart: Top 5
         const top5 = [...data].sort((a,b) => b.total - a.total).slice(0, 5);
         chartInstBar = new ChartJs(document.getElementById("chart-bar-top"), {
           type: 'bar',
@@ -212,25 +228,24 @@ import Navbar from "../components/navbar.astro";
           options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
         });
 
-        // Tabla Detallada
         const tableDiv = document.getElementById("report-table-div");
         tableDiv!.innerHTML = `
           <table>
             <thead>
               <tr>
-                <th>Cód.</th>
-                <th>Nombre del Producto</th>
-                <th>Existencia</th>
-                <th>Cotización</th>
-                <th>Valorización Mes</th>
+                <th>Código</th>
+                <th>Descripción</th>
+                <th>Unidades</th>
+                <th>Costo Unitario</th>
+                <th>Subtotal</th>
               </tr>
             </thead>
             <tbody>
               ${data.map(i => `
                 <tr>
-                  <td><code>${i.codigo}</code></td>
+                  <td><span class="badge-code">${i.codigo}</span></td>
                   <td><strong>${i.nombre}</strong><br/><small style="color:#64748b;">${i.categoria}</small></td>
-                  <td>${i.cantidad} und.</td>
+                  <td>${i.cantidad.toLocaleString()} und.</td>
                   <td>$${Number(i.precio).toLocaleString()}</td>
                   <td><strong>$${i.total.toLocaleString('es-CO')}</strong></td>
                 </tr>

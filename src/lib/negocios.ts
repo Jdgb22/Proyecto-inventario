@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 export interface Negocio {
   id: string;
   nombre: string;
+  categoria?: string;
   created_at: string;
 }
 
@@ -23,10 +24,13 @@ export async function getNegocios() {
   return data || [];
 }
 
-export async function addNegocio(nombre: string) {
+export async function addNegocio(nombre: string, categoria: string = "") {
   const { data, error } = await supabase
     .from("negocios")
-    .insert([{ nombre: nombre.trim() }])
+    .insert([{ 
+      nombre: nombre.trim(),
+      categoria: categoria.trim() 
+    }])
     .select()
     .single();
 

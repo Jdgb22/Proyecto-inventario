@@ -7,185 +7,172 @@ import Navbar from "../components/navbar.astro";
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Base de Datos de Productos</title>
+    <title>Productos | Base de Datos Premium</title>
+    
+    <!-- Premium Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; margin: 0; color: #0f172a; }
+      .container { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
+      
+      .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+      h1 { margin: 0; font-size: 2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.04em; }
+      
+      .btn-toggle { 
+        padding: 12px 28px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; 
+        transition: all 0.3s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+      .btn-toggle:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(59, 130, 246, 0.4); }
+      
+      .form-card { background: white; padding: 32px; border-radius: 28px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 40px; }
+      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+      .form-group { display: flex; flex-direction: column; gap: 8px; }
+      label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; }
+      input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
+      .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; margin-top: 24px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
+
+      /* LISTA DE TARJETAS (REQUISITOS DEL USUARIO) */
+      #lista-productos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 28px; }
+      
+      .producto-card { 
+        background: white; padding: 32px; border-radius: 28px; border: 1px solid #f1f5f9; 
+        display: flex; justify-content: space-between; align-items: center; gap: 24px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); 
+        position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .producto-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
+      .producto-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #3b82f6; }
+
+      .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+      .prod-name { font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
+      .prod-sku { font-family: monospace; font-size: 0.85rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; width: fit-content; }
+      .price-tag { color: #059669; font-weight: 800; font-size: 1.2rem; }
+
+      .card-actions { display: flex; gap: 12px; align-items: center; }
+      .btn-edit { padding: 10px 20px; background: #f1f5f9; color: #3b82f6; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s; }
+      .btn-edit:hover { background: #eff6ff; transform: scale(1.05); }
+      .btn-delete { padding: 10px 20px; background: #fef2f2; color: #ef4444; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s; }
+      .btn-delete:hover { background: #fee2e2; transform: scale(1.05); }
+
+      #msg { text-align: center; font-weight: 700; margin-top: 10px; }
+    </style>
   </head>
   <body>
     <Navbar />
-
-    <div style="margin: 20px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Base de Datos de Productos</h2>
-        <button id="btn-toggle-form" style="padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.2s;">
-          + Nuevo Producto
-        </button>
+    <div class="container">
+      <div class="header-flex">
+        <h1>Base de Datos de Productos</h1>
+        <button id="btn-toggle-form" class="btn-toggle">+ Nuevo Producto</button>
       </div>
 
-      <div id="form-container" style="display: none; background: #f3f4f6; padding: 24px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #e5e7eb;">
-        <h3 id="form-title" style="margin-top: 0; margin-bottom: 15px; color: #111827;">Registrar Producto Maestro</h3>
-        <form id="form-productos" style="display: flex; flex-direction: column; gap: 10px; max-width: 400px;">
-          <input type="hidden" name="id" id="prod-id" />
-          
-          <input type="text" name="nombre" id="prod-nombre" placeholder="Nombre completo del producto" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"/>
-          
-          <input type="text" name="codigo" id="prod-codigo" placeholder="Código Único (SKU)" required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"/>
-
-          <label style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">Precio:</label>
-          <input type="number" name="precio" id="prod-precio" placeholder="0.00" step="0.01" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"/>
-
-          <label style="font-size: 0.85rem; color: #64748b;">Categoría:</label>
-          <input type="text" name="categoria" id="prod-categoria" placeholder="Categoría" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;"/>
-
-          <button type="submit" id="btn-submit" style="padding: 12px; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;">
-            Guardar en Base de Datos
-          </button>
+      <div id="form-container" class="form-card" style="display: none;">
+        <form id="form-producto">
+          <div class="form-grid">
+            <div class="form-group">
+                <label>Nombre del Producto</label>
+                <input type="text" id="p-nombre" placeholder="Ej: Camiseta Azul" required />
+            </div>
+            <div class="form-group">
+                <label>Código (SKU)</label>
+                <input type="text" id="p-codigo" placeholder="SKU-001" required />
+            </div>
+            <div class="form-group">
+                <label>Precio Unitario</label>
+                <input type="number" id="p-precio" placeholder="0" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Registrar Producto</button>
         </form>
-        <p id="msg" style="font-weight: bold; margin-top: 10px;"></p>
+        <p id="msg"></p>
       </div>
-      
-      <div style="margin-top: 20px;">
-        <h4 style="margin: 0 0 12px 0; color: #64748b;">Catálogo Maestro</h4>
-        <div class="table-responsive" style="overflow-x: auto; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
-              <tr>
-                <th style="padding: 12px;">Código</th>
-                <th style="padding: 12px;">Nombre</th>
-                <th style="padding: 12px;">Categoría</th>
-                <th style="padding: 12px;">Precio</th>
-                <th style="padding: 12px;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="lista-productos">
-              <tr><td colspan="5" style="padding: 20px; text-align: center;">Cargando...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+
+      <ul id="lista-productos">
+        <li style="text-align: center; color: #94a3b8; padding: 60px;">Cargando productos...</li>
+      </ul>
     </div>
 
     <script>
       import { getSession } from "../lib/auth";
-      import { getMasterProductos, upsertMasterProducto, deleteInventario } from "../lib/inventory";
+      import { getMasterProductos, upsertMasterProducto, deleteMasterProducto } from "../lib/inventory";
 
-      async function checkAuth() {
+      async function init() {
         const session = await getSession();
         if (!session) { window.location.replace("/"); return; }
-        loadProducts();
+        loadData();
       }
 
-      async function loadProducts() {
-        const tbody = document.getElementById("lista-productos");
-        if (!tbody) return;
-
+      async function loadData() {
+        const lista = document.getElementById("lista-productos")!;
         try {
           const data = await getMasterProductos();
-          tbody.innerHTML = "";
-          
-          if (data.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='padding: 20px; text-align: center; color: #64748b;'>No hay productos definidos.</td></tr>";
-            return;
-          }
+          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay productos registrados.</li>`;
           
           data.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.style.borderBottom = "1px solid #f1f5f9";
-            tr.innerHTML = `
-              <td style="padding: 12px; font-family: monospace;">${item.codigo}</td>
-              <td style="padding: 12px; font-weight: 500;">${item.nombre}</td>
-              <td style="padding: 12px; color: #64748b;">${item.categoria || '-'}</td>
-              <td style="padding: 12px; color: #059669; font-weight: bold;">$${Number(item.precio || 0).toLocaleString()}</td>
-              <td style="padding: 12px; display: flex; gap: 8px;">
-                <button class="btn-edit" 
-                  data-id="${item.id}" 
-                  data-nombre="${item.nombre}" 
-                  data-codigo="${item.codigo}" 
-                  data-precio="${item.precio || ''}" 
-                  data-categoria="${item.categoria || ''}"
-                  style="padding: 4px 8px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Editar</button>
-                <button class="btn-delete" 
-                  data-id="${item.id}" 
-                  style="padding: 4px 8px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Borrar</button>
-              </td>
+            const li = document.createElement("li");
+            li.className = "producto-card";
+            li.innerHTML = `
+              <div class="card-info">
+                <span class="prod-name">${item.nombre}</span>
+                <span class="prod-sku">${item.codigo}</span>
+                <span class="price-tag">$${Number(item.precio || 0).toLocaleString()}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn-edit" onclick="alert('Función de edición en desarrollo')">Editar</button>
+                <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
+              </div>
             `;
-            tbody.appendChild(tr);
+            lista.appendChild(li);
           });
 
-          // Delete handler
           document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', async (e: any) => {
-              if (confirm("¿Eliminar este producto de la base de datos maestra?")) {
-                await deleteInventario(e.target.dataset.id);
-                loadProducts();
+              const target = e.target as HTMLButtonElement;
+              if (confirm(`¿Eliminar "${target.dataset.nombre}"?`)) {
+                await deleteMasterProducto(target.dataset.id!);
+                loadData();
               }
             });
           });
-
-          // Edit handler
-          document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', (e: any) => {
-              const d = e.target.dataset;
-              (document.getElementById("prod-id") as HTMLInputElement).value = d.id;
-              (document.getElementById("prod-nombre") as HTMLInputElement).value = d.nombre;
-              (document.getElementById("prod-codigo") as HTMLInputElement).value = d.codigo;
-              (document.getElementById("prod-precio") as HTMLInputElement).value = d.precio;
-              (document.getElementById("prod-categoria") as HTMLInputElement).value = d.categoria;
-              
-              const formC = document.getElementById("form-container");
-              if (formC) formC.style.display = "block";
-              (document.getElementById("btn-toggle-form") as HTMLButtonElement).textContent = "- Cerrar";
-            });
-          });
-
-        } catch (error: any) {
-          tbody.innerHTML = `<tr><td colspan='5' style='color: red;'>Error: ${error.message}</td></tr>`;
-        }
+        } catch (e) { console.error(e); }
       }
 
-      const btnToggle = document.getElementById("btn-toggle-form");
-      const formContainer = document.getElementById("form-container");
-
-      btnToggle?.addEventListener("click", () => {
-        if (formContainer?.style.display === "none") {
-          formContainer.style.display = "block";
-          btnToggle.textContent = "- Cerrar";
-        } else {
-          formContainer!.style.display = "none";
-          btnToggle!.textContent = "+ Nuevo Producto";
-          (document.getElementById("form-productos") as HTMLFormElement).reset();
-          (document.getElementById("prod-id") as HTMLInputElement).value = "";
-        }
+      const toggleBtn = document.getElementById("btn-toggle-form")!;
+      const cont = document.getElementById("form-container")!;
+      toggleBtn.addEventListener("click", () => {
+        const isHidden = cont.style.display === "none";
+        cont.style.display = isHidden ? "block" : "none";
+        toggleBtn.textContent = isHidden ? "- Ocultar Formulario" : "+ Nuevo Producto";
+        toggleBtn.style.background = isHidden ? "#ef4444" : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
       });
 
-      const form = document.getElementById("form-productos") as HTMLFormElement;
-      form?.addEventListener("submit", async (e) => {
+      document.getElementById("form-producto")?.addEventListener("submit", async (e: any) => {
         e.preventDefault();
         const msg = document.getElementById("msg")!;
-        const fd = new FormData(form);
-
-        const payload = {
-          nombre: fd.get("nombre") as string,
-          codigo: fd.get("codigo") as string,
-          precio: parseFloat(fd.get("precio") as string) || 0,
-          categoria: fd.get("categoria") as string
-        };
-
         try {
-          await upsertMasterProducto(payload);
-          msg.textContent = "¡Base de datos actualizada!";
-          msg.style.color = "green";
-          form.reset();
-          loadProducts();
-          setTimeout(() => { 
-            msg.textContent = ""; 
-            btnToggle?.click();
-          }, 1500);
-        } catch (e: any) {
-          msg.textContent = "Error: " + e.message;
-          msg.style.color = "red";
+          msg.textContent = "Guardando...";
+          await upsertMasterProducto({
+            nombre: (document.getElementById("p-nombre") as HTMLInputElement).value,
+            codigo: (document.getElementById("p-codigo") as HTMLInputElement).value,
+            precio: parseFloat((document.getElementById("p-precio") as HTMLInputElement).value),
+            categoria: "" // Categoría opcional
+          });
+          msg.textContent = "✓ Guardado con éxito";
+          msg.style.color = "#10b981";
+          e.target.reset();
+          loadData();
+          setTimeout(() => { msg.textContent = ""; toggleBtn.click(); }, 1500);
+        } catch (err: any) {
+          msg.textContent = "Error: " + err.message;
+          msg.style.color = "#ef4444";
         }
       });
 
-      checkAuth();
+      init();
     </script>
   </body>
 </html>
