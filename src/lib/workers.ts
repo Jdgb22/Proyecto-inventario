@@ -61,7 +61,7 @@ export async function getTrabajadoresFiltrados(negocio?: string, mes?: string) {
 export async function addTrabajador(trabajador: Trabajador) {
   const { data, error } = await supabase
     .from("trabajadores")
-    .insert([trabajador])
+    .upsert([trabajador], { onConflict: 'documento' })
     .select()
     .single();
 

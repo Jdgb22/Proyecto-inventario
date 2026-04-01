@@ -9,218 +9,256 @@ import Navbar from "../components/navbar.astro";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Inventario | Gestión Premium</title>
     
-    <!-- Premium Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <style>
+    <style is:global>
       body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; margin: 0; color: #0f172a; }
-      .container { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
-      
-      .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-      h1 { margin: 0; font-size: 2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.04em; }
-      
-      .btn-toggle { 
-        padding: 12px 28px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
-        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; 
-        transition: all 0.3s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-      }
-      .btn-toggle:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(16, 185, 129, 0.4); }
-      
-      /* Formulario Moderno */
-      .form-card { background: white; padding: 32px; border-radius: 28px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 40px; }
-      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-      .form-group { display: flex; flex-direction: column; gap: 8px; }
-      label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-      input, select { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; }
-      input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
-      .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; margin-top: 24px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-
-      /* Filtros */
-      .filter-section { background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; margin-bottom: 32px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
-      .btn-search { padding: 12px 24px; background: #475569; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
-      .btn-search:hover { background: #1e293b; }
-
-      /* LISTA DE TARJETAS (REQUISITOS DEL USUARIO) */
-      #lista-inventario { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 28px; }
-      
-      .inventory-card { 
-        background: white; padding: 32px; border-radius: 28px; border: 1px solid #f1f5f9; 
-        display: flex; justify-content: space-between; align-items: center; gap: 24px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); 
-        position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .inventory-card:hover { 
-        transform: translateY(-6px); 
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
-        border-color: #06b6d4; 
-      }
-      /* Acento de color lateral */
-      .inventory-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #06b6d4; }
-
-      /* Contenido de la Tarjeta */
-      .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-      .prod-name { font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
-      .prod-sku { font-family: monospace; font-size: 0.85rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; width: fit-content; }
-      
-      .card-stats { display: flex; align-items: baseline; gap: 20px; }
-      .price-tag { color: #059669; font-weight: 800; font-size: 1.2rem; }
-      .qty-tag { color: #64748b; font-size: 1rem; font-weight: 500; }
-      .qty-val { color: #0f172a; font-weight: 800; }
-
-      /* Botones alineados (Requisito) */
-      .card-actions { display: flex; gap: 12px; align-items: center; }
-      .btn-edit { 
-        padding: 10px 20px; background: #f1f5f9; color: #3b82f6; border: none; border-radius: 12px; 
-        cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s;
-      }
-      .btn-edit:hover { background: #eff6ff; transform: scale(1.05); }
-      
-      .btn-delete { 
-        padding: 10px 20px; background: #fef2f2; color: #ef4444; border: none; border-radius: 12px; 
-        cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s;
-      }
-      .btn-delete:hover { background: #fee2e2; transform: scale(1.05); }
-
-      #msg { text-align: center; font-weight: 700; margin-top: 10px; }
-
-      .context-hint {
-        font-size: 0.95rem;
-        color: #64748b;
-        margin: -16px 0 24px 0;
-        font-weight: 600;
-      }
-      .context-hint strong { color: #0f172a; }
+      .main-container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
       .page-hero {
-        background: linear-gradient(135deg, #ecfeff 0%, #f0f9ff 50%, #f8fafc 100%);
-        border: 1px solid #e0f2fe;
-        border-radius: 24px;
-        padding: 28px 32px;
-        margin-bottom: 28px;
-        position: relative;
-        overflow: hidden;
+        background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 32px; margin-bottom: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex; justify-content: space-between; align-items: flex-end;
+        gap: 24px; flex-wrap: wrap; position: relative; overflow: hidden;
       }
       .page-hero::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 180px;
-        height: 100%;
-        background: radial-gradient(ellipse at top right, rgba(14, 165, 233, 0.12), transparent 70%);
-        pointer-events: none;
+        content: ""; position: absolute; top: 0; right: 0; width: 300px; height: 100%;
+        background: radial-gradient(ellipse at top right, rgba(6, 182, 212, 0.08), transparent 70%); pointer-events: none;
       }
+      .hero-content { flex: 1; min-width: 300px; z-index: 1; }
+      
       .page-hero__badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #0369a1;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid #bae6fd;
-        padding: 6px 12px;
-        border-radius: 999px;
-        margin-bottom: 12px;
+        display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.1em; color: #0369a1; background: #f0f9ff; border: 1px solid #bae6fd;
+        padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;
       }
       .page-hero__badge::before {
-        content: "";
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #06b6d4;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
+        content: ""; width: 8px; height: 8px; border-radius: 50%; background: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.25);
       }
-      .page-hero__title {
-        margin: 0 0 8px 0;
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #0f172a;
-        letter-spacing: -0.03em;
+      
+      .page-hero__title { margin: 0 0 12px 0; font-size: 2.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+      .page-hero__desc { margin: 0; font-size: 1rem; color: #64748b; line-height: 1.6; max-width: 65ch; }
+
+      .split-layout { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
+      @media (max-width: 1024px) { .split-layout { grid-template-columns: 1fr; } }
+
+      .sidebar-section { position: sticky; top: 100px; }
+
+      .form-card { 
+        background: white; padding: 32px; border-radius: 24px; border: 1px solid #e2e8f0; 
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); transition: all 0.3s;
       }
-      .page-hero__desc {
-        margin: 0;
-        font-size: 0.95rem;
-        color: #64748b;
-        line-height: 1.55;
-        max-width: 52ch;
+      .form-card.edit-mode { border-color: #06b6d4; box-shadow: 0 20px 25px -5px rgba(6, 182, 212, 0.1); }
+      
+      .form-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+      .form-title { font-size: 1.25rem; font-weight: 800; margin: 0; color: #0f172a; }
+      
+      .btn-cancel-edit {
+        display: none; background: #f1f5f9; color: #64748b; border: none; padding: 6px 12px;
+        border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
       }
+      .form-card.edit-mode .btn-cancel-edit { display: block; }
+      .btn-cancel-edit:hover { background: #e2e8f0; color: #0f172a; }
+
+      .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+      label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; color: #0f172a; }
+      input:focus, select:focus { outline: none; border-color: #06b6d4; box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.15); background: white; }
+      input:disabled, select:disabled { opacity: 0.6; cursor: not-allowed; }
+      
+      .btn-submit { 
+        width: 100%; padding: 16px; background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%); 
+        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 1rem;
+        margin-top: 12px; box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3); transition: all 0.3s;
+      }
+      .btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 20px -3px rgba(6, 182, 212, 0.4); }
+      .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+      
+      #msg { text-align: center; font-weight: 600; margin-top: 16px; font-size: 0.9rem; }
+
+      .list-section { display: flex; flex-direction: column; gap: 24px; }
+      
+      .filter-section { 
+        background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; 
+        display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+      }
+      .filter-section .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+      
+      .btn-search { 
+        padding: 14px 28px; background: #1e293b; color: white; border: none; border-radius: 12px; 
+        cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.2s; height: 52px;
+      }
+      .btn-search:hover { background: #0f172a; transform: translateY(-1px); }
+
+      .list-header {
+        display: flex; justify-content: space-between; align-items: center; background: white;
+        padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0;
+      }
+      .list-title-group { display: flex; flex-direction: column; gap: 4px; }
+      .context-hint { font-size: 0.85rem; color: #64748b; margin: 0; }
+      .context-hint strong { color: #0f172a; }
+
+      .list-count {
+        font-weight: 700; color: #06b6d4; background: #ecfeff; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; border: 1px solid #cffafe;
+      }
+
+      #lista-inventario { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+      
+      .inventory-card { 
+        background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; 
+        display: flex; flex-direction: column; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
+      }
+      .inventory-card.is-editing { border-color: #06b6d4; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2); }
+      .inventory-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); border-color: #cbd5e1; }
+      .inventory-card::before { 
+        content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 4px; 
+        background: linear-gradient(90deg, #06b6d4, #0ea5e9); opacity: 0; transition: opacity 0.3s;
+      }
+      .inventory-card:hover::before, .inventory-card.is-editing::before { opacity: 1; }
+
+      .card-info { display: flex; flex-direction: column; gap: 8px; }
+      .prod-name { font-size: 1.15rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
+      .prod-sku { font-family: 'Inter', monospace; font-weight: 600; font-size: 0.75rem; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; width: fit-content; }
+      
+      .card-stats { 
+        display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+        padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;
+      }
+      .stat-item { display: flex; flex-direction: column; gap: 2px; }
+      .stat-label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
+      .price-tag { color: #059669; font-weight: 800; font-size: 1.1rem; }
+      .qty-val { color: #0f172a; font-weight: 800; font-size: 1.2rem; display: flex; align-items: baseline; gap: 4px; }
+      .qty-unit { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+
+      .card-actions { display: flex; gap: 12px; margin-top: auto; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+      
+      .btn-edit { 
+        flex: 1; padding: 10px; background: white; color: #0ea5e9; border: 1px solid #bae6fd; 
+        border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; 
+      }
+      .btn-edit:hover { background: #f0f9ff; border-color: #38bdf8; }
+      
+      .btn-delete { 
+        flex: 1; padding: 10px; background: white; color: #ef4444; border: 1px solid #fecaca; 
+        border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; 
+      }
+      .btn-delete:hover { background: #fef2f2; border-color: #ef4444; }
+
+      .empty-state {
+        grid-column: 1 / -1; background: white; border: 1px dashed #cbd5e1; border-radius: 20px;
+        padding: 60px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
+      }
+      .empty-icon {
+        width: 64px; height: 64px; background: #f1f5f9; color: #94a3b8; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; margin-bottom: 8px; font-size: 24px;
+      }
+      .empty-text { color: #64748b; font-weight: 500; }
     </style>
   </head>
   <body>
     <Navbar />
     
-    <div class="container">
+    <div class="main-container">
       <header class="page-hero">
-        <span class="page-hero__badge">Base de datos · Operación</span>
-        <h2 class="page-hero__title">Inventario por sede y mes</h2>
-        <p class="page-hero__desc">
-          Aquí consultas y registras <strong>existencias reales</strong> (filas en la base). Los gráficos y totales agregados están en <strong>Análisis → Reportes inventario</strong>.
-        </p>
+        <div class="hero-content">
+          <span class="page-hero__badge">Base de datos · Operación</span>
+          <h1 class="page-hero__title">Inventario por Sede y Mes</h1>
+          <p class="page-hero__desc">
+            Consulta y registra existencias reales mediante conteo directo. 
+            Las proyecciones y totales agregados globales están en la sección de <strong>Análisis Estratégico</strong>.
+          </p>
+        </div>
       </header>
 
-      <div class="header-flex">
-        <h1>Inventario Mensual</h1>
-        <button id="btn-toggle-form" class="btn-toggle">+ Registrar Stock</button>
-      </div>
+      <div class="split-layout">
+        <div class="list-section">
+          <div class="filter-section">
+            <div class="form-group">
+                <label for="filter-negocio">Sede a Consultar</label>
+                <select id="filter-negocio"></select>
+            </div>
+            <div class="form-group">
+                <label for="filter-mes">Periodo (Mes/Año)</label>
+                <input type="month" id="filter-mes" />
+            </div>
+            <button id="btn-search" class="btn-search">Filtrar</button>
+          </div>
 
-      <p id="context-inv" class="context-hint" style="display: none;"></p>
-
-      <div id="form-container" class="form-card" style="display: none;">
-        <form id="form-stock">
-          <div class="form-grid">
-            <div class="form-group">
-                <label>Sede / Negocio</label>
-                <select id="s-negocio" required></select>
+          <div class="list-header" id="list-header" style="display: none;">
+            <div class="list-title-group">
+              <h2 style="margin:0; font-size:1.1rem; font-weight:800; color: #0f172a;">Existencias Registradas</h2>
+              <p id="context-inv" class="context-hint"></p>
             </div>
-            <div class="form-group">
-                <label>Mes</label>
-                <input type="month" id="s-mes" required />
-            </div>
-            <div class="form-group">
-                <label>Producto (Código)</label>
-                <input type="text" id="s-codigo" placeholder="SKU..." list="master-codes" required />
-                <datalist id="master-codes"></datalist>
-            </div>
-            <div class="form-group">
-                <label>Cantidad Actual</label>
-                <input type="number" id="s-cantidad" placeholder="0" required />
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="text-align: right; line-height: 1.2;">
+                <span style="font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase;">Valorizado Total</span><br/>
+                <span id="total-val" style="font-weight: 800; color: #059669; font-size: 1.15rem; letter-spacing:-0.02em;">$0</span>
+              </div>
+              <span class="list-count" id="list-count">--</span>
             </div>
           </div>
-          <button type="submit" class="btn-submit">Guardar Registro Mensual</button>
-        </form>
-        <p id="msg"></p>
-      </div>
 
-      <div class="filter-section">
-        <div class="form-group" style="flex: 1;">
-            <label>Filtrar Sede</label>
-            <select id="filter-negocio"></select>
+          <ul id="lista-inventario">
+            <li class="empty-state">
+              <div class="empty-icon">📦</div>
+              <span class="empty-text">Cargando módulos...</span>
+            </li>
+          </ul>
         </div>
-        <div class="form-group" style="flex: 1;">
-            <label>Filtrar Mes</label>
-            <input type="month" id="filter-mes" />
-        </div>
-        <button id="btn-search" class="btn-search">Actualizar</button>
-      </div>
 
-      <ul id="lista-inventario">
-        <li style="text-align: center; color: #94a3b8; padding: 60px;">Cargando...</li>
-      </ul>
+        <div class="sidebar-section">
+          <div class="form-card" id="main-form-card">
+            <div class="form-header">
+              <div>
+                <h3 class="form-title" id="form-title">Registrar Stock Actual</h3>
+                <p id="form-desc" style="margin: 6px 0 0 0; color: #64748b; font-size: 0.85rem;">Añade nuevos conteos de productos.</p>
+              </div>
+              <button type="button" class="btn-cancel-edit" id="btn-cancel-edit">Cancelar</button>
+            </div>
+            
+            <form id="form-stock">
+              <input type="hidden" id="edit-id" value="" />
+
+              <div class="form-group">
+                  <label for="s-negocio">Sede / Negocio Destino</label>
+                  <select id="s-negocio" required></select>
+              </div>
+              <div class="form-group">
+                  <label for="s-mes">Mes del Registro</label>
+                  <input type="month" id="s-mes" required />
+              </div>
+              <div class="form-group">
+                  <label for="s-codigo">Producto (Código SKU)</label>
+                  <input type="text" id="s-codigo" placeholder="Ej: CAM-AZ-001" list="master-codes" required />
+                  <datalist id="master-codes"></datalist>
+              </div>
+              <div class="form-group">
+                  <label for="s-cantidad">Unidades en Existencia</label>
+                  <input type="number" id="s-cantidad" placeholder="0" min="0" required />
+              </div>
+              
+              <button type="submit" id="btn-submit" class="btn-submit">Guardar Registro Mensual</button>
+            </form>
+            <p id="msg"></p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-      import { getSession } from "../lib/auth";
-      import { getStockFiltrado, addStockEntry, getMasterProductos, deleteRegistro } from "../lib/inventory";
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getStockFiltrado, addStockEntry, getMasterProductos, deleteRegistro, updateStockEntry } from "../lib/inventory";
       import { getNegocios } from "../lib/negocios";
+
+      const state = { editingId: null as string | null };
 
       async function init() {
         const session = await getSession();
         if (!session) { window.location.replace("/"); return; }
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin") { window.location.replace("/init"); return; }
 
         const now = new Date();
         const curM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -228,15 +266,19 @@ import Navbar from "../components/navbar.astro";
         (document.getElementById("filter-mes") as HTMLInputElement).value = curM;
 
         await Promise.all([loadNegocios(), loadMasterCodes()]);
-        loadData();
+        
+        if ((document.getElementById("filter-negocio") as HTMLSelectElement).value) {
+            loadData();
+        }
       }
 
       async function loadNegocios() {
         const negs = await getNegocios();
-        ["s-negocio", "filter-negocio"].forEach(id => {
-          const el = document.getElementById(id) as HTMLSelectElement;
-          el.innerHTML = negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
-        });
+        const opts = negs.length 
+               ? negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("")
+               : `<option value="">Sin sedes</option>`;
+        (document.getElementById("s-negocio") as HTMLSelectElement).innerHTML = opts;
+        (document.getElementById("filter-negocio") as HTMLSelectElement).innerHTML = opts;
       }
 
       async function loadMasterCodes() {
@@ -244,93 +286,197 @@ import Navbar from "../components/navbar.astro";
         document.getElementById("master-codes")!.innerHTML = codes.map(p => `<option value="${p.codigo}">${p.nombre}</option>`).join("");
       }
 
+      function startEdit(item: any) {
+        (document.getElementById('edit-id') as HTMLInputElement).value = item.id;
+        (document.getElementById('s-negocio') as HTMLSelectElement).value = item.negocio;
+        (document.getElementById('s-mes') as HTMLInputElement).value = item.mes;
+        (document.getElementById('s-codigo') as HTMLInputElement).value = item.codigo;
+        (document.getElementById('s-cantidad') as HTMLInputElement).value = item.cantidad;
+
+        // Deshabilitar campos clave para evitar inconsistencias
+        (document.getElementById('s-negocio') as HTMLSelectElement).disabled = true;
+        (document.getElementById('s-mes') as HTMLInputElement).disabled = true;
+        (document.getElementById('s-codigo') as HTMLInputElement).disabled = true;
+
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.add('edit-mode');
+        document.getElementById('form-title')!.textContent = "Corregir Conteo";
+        document.getElementById('form-desc')!.textContent = `Actualizando cantidad para ${item.nombre}`;
+        document.getElementById('btn-submit')!.textContent = "Actualizar Cantidad";
+        
+        state.editingId = item.id;
+        
+        document.querySelectorAll('.inventory-card').forEach(el => el.classList.remove('is-editing'));
+        document.getElementById(`card-${item.id}`)?.classList.add('is-editing');
+        
+        if(window.innerWidth <= 1024) formCard.scrollIntoView({ behavior: 'smooth' });
+        
+        (document.getElementById('s-cantidad') as HTMLInputElement).focus();
+      }
+
+      function cancelEdit() {
+        state.editingId = null;
+        const form = document.getElementById("form-stock") as HTMLFormElement;
+        form.reset();
+        (document.getElementById('edit-id') as HTMLInputElement).value = "";
+        
+        // Habilitar campos editables nuevamente
+        (document.getElementById('s-negocio') as HTMLSelectElement).disabled = false;
+        (document.getElementById('s-mes') as HTMLInputElement).disabled = false;
+        (document.getElementById('s-codigo') as HTMLInputElement).disabled = false;
+
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        const fMes = (document.getElementById("filter-mes") as HTMLInputElement).value;
+        if(fNeg) (document.getElementById('s-negocio') as HTMLSelectElement).value = fNeg;
+        if(fMes) (document.getElementById('s-mes') as HTMLInputElement).value = fMes;
+
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.remove('edit-mode');
+        document.getElementById('form-title')!.textContent = "Registrar Stock Actual";
+        document.getElementById('form-desc')!.textContent = "Añade nuevos conteos de productos.";
+        document.getElementById('btn-submit')!.textContent = "Guardar Registro Mensual";
+        
+        document.querySelectorAll('.inventory-card').forEach(el => el.classList.remove('is-editing'));
+      }
+
+      document.getElementById("btn-cancel-edit")?.addEventListener("click", cancelEdit);
+
       async function loadData() {
         const lista = document.getElementById("lista-inventario")!;
+        const count = document.getElementById("list-count")!;
+        const listHeader = document.getElementById("list-header")!;
+        
         const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
         const fMes = (document.getElementById("filter-mes") as HTMLInputElement).value;
         const hint = document.getElementById("context-inv")!;
 
         if (!fNeg || !fMes) {
-          hint.style.display = "none";
-          lista.innerHTML = `<li style="text-align: center; padding: 60px; color: #94a3b8;">Selecciona sede y mes para ver el inventario de ese negocio.</li>`;
+          listHeader.style.display = "none";
+          lista.innerHTML = `
+            <li class="empty-state">
+              <span class="empty-text">Selecciona una Sede y un Periodo en los filtros.</span>
+            </li>`;
           return;
         }
 
-        hint.innerHTML = `Mostrando inventario de: <strong>${fNeg}</strong> · mes <strong>${fMes}</strong>`;
-        hint.style.display = "block";
+        listHeader.style.display = "flex";
+        hint.innerHTML = `Viendo: <strong>${fNeg}</strong> · Periodo: <strong>${fMes}</strong>`;
+        count.textContent = "Cargando...";
 
         try {
-          const data = await getStockFiltrado(fNeg, fMes);
-          (document.getElementById("s-negocio") as HTMLSelectElement).value = fNeg;
-          (document.getElementById("s-mes") as HTMLInputElement).value = fMes;
+          if(!state.editingId) {
+            (document.getElementById("s-negocio") as HTMLSelectElement).value = fNeg;
+            (document.getElementById("s-mes") as HTMLInputElement).value = fMes;
+          }
 
-          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay registros para este negocio en este mes.</li>`;
-          
+          const data = await getStockFiltrado(fNeg, fMes);
+          count.textContent = `${data.length} ${data.length === 1 ? 'registro' : 'registros'}`;
+
+          let valTotal = 0;
+          data.forEach(item => { valTotal += (item.precio || 0) * (item.cantidad || 0); });
+          document.getElementById("total-val")!.textContent = `$${valTotal.toLocaleString('es-CO')}`;
+
+          if (data.length === 0) {
+              lista.innerHTML = `<li class="empty-state"><span class="empty-text">No hay stock registrado.</span></li>`;
+              return;
+          }
+
+          lista.innerHTML = "";
           data.forEach(item => {
             const li = document.createElement("li");
             li.className = "inventory-card";
+            li.id = `card-${item.id}`;
+            if (state.editingId === item.id) li.classList.add('is-editing');
+            
             li.innerHTML = `
               <div class="card-info">
-                <span class="prod-name">${item.nombre}</span>
                 <span class="prod-sku">${item.codigo}</span>
+                <span class="prod-name">${item.nombre}</span>
                 <div class="card-stats">
-                  <span class="price-tag">$${Number(item.precio || 0).toLocaleString()}</span>
-                  <span class="qty-tag">Stock: <span class="qty-val">${item.cantidad}</span> und.</span>
+                  <div class="stat-item">
+                    <span class="stat-label">Precio Unitario</span>
+                    <span class="price-tag">$${Number(item.precio || 0).toLocaleString()}</span>
+                  </div>
+                  <div class="stat-item" style="align-items: flex-end;">
+                    <span class="stat-label">En Stock</span>
+                    <span class="qty-val">${item.cantidad} <span class="qty-unit">unid.</span></span>
+                  </div>
                 </div>
               </div>
               <div class="card-actions">
-                <button class="btn-edit" onclick="alert('Función de edición en desarrollo')">Editar</button>
+                <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar Cantidad</button>
                 <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
               </div>
             `;
             lista.appendChild(li);
           });
 
+          document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e: any) => {
+              const itemData = JSON.parse(e.target.dataset.item);
+              startEdit(itemData);
+            });
+          });
+
           document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', async (e: any) => {
-              if (confirm(`¿Eliminar "${e.target.dataset.nombre}"?`)) {
+              if (confirm(`¿Remover el registro de "${e.target.dataset.nombre}"?`)) {
                 await deleteRegistro(e.target.dataset.id);
+                if(state.editingId === e.target.dataset.id) cancelEdit();
                 loadData();
               }
             });
           });
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+          console.error(e); count.textContent = "Error";
+        }
       }
 
-      // UI Logic
-      const toggleBtn = document.getElementById("btn-toggle-form")!;
-      const cont = document.getElementById("form-container")!;
-      toggleBtn.addEventListener("click", () => {
-        const isHidden = cont.style.display === "none";
-        cont.style.display = isHidden ? "block" : "none";
-        toggleBtn.textContent = isHidden ? "- Ocultar Formulario" : "+ Registrar Stock";
-        toggleBtn.style.background = isHidden ? "#ef4444" : "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+      document.getElementById("btn-search")?.addEventListener("click", () => {
+        cancelEdit();
+        loadData();
       });
-
-      document.getElementById("btn-search")?.addEventListener("click", loadData);
-      document.getElementById("form-stock")?.addEventListener("submit", async (e) => {
+      
+      document.getElementById("form-stock")?.addEventListener("submit", async (e: any) => {
         e.preventDefault();
         const msg = document.getElementById("msg")!;
-        const btn = (e.target as HTMLFormElement).querySelector('button[type="submit"]') as HTMLButtonElement;
+        const btn = document.getElementById("btn-submit") as HTMLButtonElement;
+        const editId = (document.getElementById("edit-id") as HTMLInputElement).value;
+        const isUpdate = editId.trim().length > 0;
         
         try {
-          msg.textContent = "Guardando...";
+          msg.textContent = "";
           btn.disabled = true;
-          await addStockEntry({
-            codigo: (document.getElementById("s-codigo") as HTMLInputElement).value,
-            cantidad: parseInt((document.getElementById("s-cantidad") as HTMLInputElement).value),
-            negocio: (document.getElementById("s-negocio") as HTMLSelectElement).value,
-            mes: (document.getElementById("s-mes") as HTMLInputElement).value
-          });
-          msg.textContent = "✓ Guardado con éxito";
+          btn.textContent = "Guardando...";
+          
+          if (isUpdate) {
+            await updateStockEntry(
+                editId, 
+                parseInt((document.getElementById("s-cantidad") as HTMLInputElement).value)
+            );
+            msg.textContent = "✓ Cantidad actualizada";
+          } else {
+            await addStockEntry({
+              codigo: (document.getElementById("s-codigo") as HTMLInputElement).value,
+              cantidad: parseInt((document.getElementById("s-cantidad") as HTMLInputElement).value),
+              negocio: (document.getElementById("s-negocio") as HTMLSelectElement).value,
+              mes: (document.getElementById("s-mes") as HTMLInputElement).value
+            });
+            msg.textContent = "✓ Registro exitoso";
+          }
+          
           msg.style.color = "#10b981";
-          (document.getElementById("s-cantidad") as HTMLInputElement).value = "";
+          
+          cancelEdit();
           loadData();
-          setTimeout(() => { msg.textContent = ""; toggleBtn.click(); btn.disabled = false; }, 1500);
+          
+          setTimeout(() => { msg.textContent = ""; }, 3000);
         } catch (err: any) {
           msg.textContent = "Error: " + err.message;
           msg.style.color = "#ef4444";
+        } finally {
           btn.disabled = false;
+          if(!state.editingId) btn.textContent = "Guardar Registro Mensual";
         }
       });
 

@@ -9,127 +9,174 @@ import Navbar from "../components/navbar.astro";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Productos | Base de Datos Premium</title>
     
-    <!-- Premium Font: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <style>
+    <style is:global>
       body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; margin: 0; color: #0f172a; }
-      .container { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
-      
-      .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
-      h1 { margin: 0; font-size: 2rem; font-weight: 800; color: #0f172a; letter-spacing: -0.04em; }
-      
-      .btn-toggle { 
-        padding: 12px 28px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
-        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; 
-        transition: all 0.3s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      }
-      .btn-toggle:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(59, 130, 246, 0.4); }
-      
-      .form-card { background: white; padding: 32px; border-radius: 28px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); margin-bottom: 40px; }
-      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-      .form-group { display: flex; flex-direction: column; gap: 8px; }
-      label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
-      input, select { padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; }
-      input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); background: white; }
-      .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; margin-top: 24px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
-
-      /* LISTA DE TARJETAS (REQUISITOS DEL USUARIO) */
-      #lista-productos { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 28px; }
-      
-      .producto-card { 
-        background: white; padding: 32px; border-radius: 28px; border: 1px solid #f1f5f9; 
-        display: flex; justify-content: space-between; align-items: center; gap: 24px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02); 
-        position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .producto-card:hover { transform: translateY(-6px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #3b82f6; }
-      .producto-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 8px; background: #3b82f6; }
-
-      .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-      .prod-name { font-size: 1.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
-      .prod-sku { font-family: monospace; font-size: 0.85rem; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; width: fit-content; }
-      .price-tag { color: #059669; font-weight: 800; font-size: 1.2rem; }
-
-      .card-actions { display: flex; gap: 12px; align-items: center; }
-      .btn-edit { padding: 10px 20px; background: #f1f5f9; color: #3b82f6; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s; }
-      .btn-edit:hover { background: #eff6ff; transform: scale(1.05); }
-      .btn-delete { padding: 10px 20px; background: #fef2f2; color: #ef4444; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.9rem; transition: all 0.2s; }
-      .btn-delete:hover { background: #fee2e2; transform: scale(1.05); }
-
-      #msg { text-align: center; font-weight: 700; margin-top: 10px; }
+      .main-container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
       .page-hero {
-        background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
-        border: 1px solid #bfdbfe;
-        border-radius: 24px;
-        padding: 24px 28px;
-        margin-bottom: 28px;
+        background: white; border: 1px solid #e2e8f0; border-radius: 24px; padding: 32px;
+        margin-bottom: 32px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); display: flex;
+        justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; position: relative; overflow: hidden;
       }
+      .page-hero::after {
+        content: ""; position: absolute; top: 0; right: 0; width: 300px; height: 100%;
+        background: radial-gradient(ellipse at top right, rgba(59, 130, 246, 0.1), transparent 70%); pointer-events: none;
+      }
+      .hero-content { flex: 1; min-width: 300px; z-index: 1; }
+      
       .page-hero__badge {
-        display: inline-block;
-        font-size: 0.68rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: #1d4ed8;
-        background: #fff;
-        border: 1px solid #93c5fd;
-        padding: 6px 12px;
-        border-radius: 999px;
-        margin-bottom: 10px;
+        display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        letter-spacing: 0.1em; color: #3b82f6; background: #eff6ff; border: 1px solid #bfdbfe;
+        padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;
       }
-      .page-hero__title { margin: 0 0 8px 0; font-size: 1.35rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; }
-      .page-hero__desc { margin: 0; font-size: 0.92rem; color: #64748b; line-height: 1.5; max-width: 56ch; }
+      .page-hero__badge::before {
+        content: ""; width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      }
+      .page-hero__title { margin: 0 0 12px 0; font-size: 2.25rem; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+      .page-hero__desc { margin: 0; font-size: 1rem; color: #64748b; line-height: 1.6; max-width: 60ch; }
+
+      .split-layout { display: grid; grid-template-columns: 1fr 400px; gap: 32px; align-items: start; }
+      @media (max-width: 1024px) { .split-layout { grid-template-columns: 1fr; } }
+
+      .sidebar-section { position: sticky; top: 100px; }
+
+      .form-card { 
+        background: white; padding: 32px; border-radius: 24px; border: 1px solid #e2e8f0; 
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); transition: all 0.3s;
+      }
+      .form-card.edit-mode { border-color: #3b82f6; box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.1); }
+      
+      .form-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+      .form-title { font-size: 1.25rem; font-weight: 800; margin: 0; color: #0f172a; }
+
+      .btn-cancel-edit {
+        display: none; background: #f1f5f9; color: #64748b; border: none; padding: 6px 12px;
+        border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      }
+      .form-card.edit-mode .btn-cancel-edit { display: block; }
+      .btn-cancel-edit:hover { background: #e2e8f0; color: #0f172a; }
+
+      .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+      label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+      input { padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; color: #0f172a; }
+      input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); background: white; }
+      input:disabled { opacity: 0.6; cursor: not-allowed; }
+      
+      .btn-submit { 
+        width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 1rem;
+        margin-top: 12px; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4); transition: all 0.3s;
+      }
+      .btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 20px -3px rgba(59, 130, 246, 0.5); }
+      .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+      
+      #msg { text-align: center; font-weight: 600; margin-top: 16px; font-size: 0.9rem; }
+
+      .list-section { display: flex; flex-direction: column; gap: 24px; }
+      .list-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0; }
+      .list-count { font-weight: 700; color: #3b82f6; background: #eff6ff; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; border: 1px solid #dbeafe; }
+
+      #lista-productos { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+      
+      .producto-card { 
+        background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; 
+        display: flex; flex-direction: column; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
+      }
+      .producto-card.is-editing { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+      .producto-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); border-color: #cbd5e1; }
+      .producto-card::before { 
+        content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 4px; 
+        background: linear-gradient(90deg, #3b82f6, #818cf8); opacity: 0; transition: opacity 0.3s;
+      }
+      .producto-card:hover::before, .producto-card.is-editing::before { opacity: 1; }
+
+      .card-info { display: flex; flex-direction: column; gap: 8px; }
+      .prod-name { font-size: 1.15rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
+      .prod-sku { font-family: 'Inter', monospace; font-weight: 600; font-size: 0.75rem; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; width: fit-content; }
+      
+      .price-tag { color: #10b981; font-weight: 800; font-size: 1.3rem; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+      .price-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; }
+
+      .card-actions { display: flex; gap: 12px; margin-top: auto; border-top: 1px solid #f1f5f9; padding-top: 16px; }
+      .btn-edit { flex: 1; padding: 10px; background: white; color: #3b82f6; border: 1px solid #bfdbfe; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; }
+      .btn-edit:hover { background: #eff6ff; border-color: #3b82f6; }
+      .btn-delete { flex: 1; padding: 10px; background: white; color: #ef4444; border: 1px solid #fecaca; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; }
+      .btn-delete:hover { background: #fef2f2; border-color: #ef4444; }
+
+      .empty-state {
+        grid-column: 1 / -1; background: white; border: 1px dashed #cbd5e1; border-radius: 20px;
+        padding: 60px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
+      }
     </style>
   </head>
   <body>
     <Navbar />
-    <div class="container">
+    <div class="main-container">
       <header class="page-hero">
-        <span class="page-hero__badge">Base de datos · Catálogo</span>
-        <h2 class="page-hero__title">Maestro de productos</h2>
-        <p class="page-hero__desc">
-          Define precios y referencias. El inventario mensual por sede lo gestionas en <strong>Inventario</strong>; los gráficos en <strong>Análisis → Reportes inventario</strong>.
-        </p>
+        <div class="hero-content">
+          <span class="page-hero__badge">Catálogo</span>
+          <h1 class="page-hero__title">Maestro de Productos</h1>
+          <p class="page-hero__desc">Gestiona el catálogo central de productos, definiendo referencias (SKU) y precios base.</p>
+        </div>
       </header>
 
-      <div class="header-flex">
-        <h1>Base de Datos de Productos</h1>
-        <button id="btn-toggle-form" class="btn-toggle">+ Nuevo Producto</button>
-      </div>
-
-      <div id="form-container" class="form-card" style="display: none;">
-        <form id="form-producto">
-          <div class="form-grid">
-            <div class="form-group">
-                <label>Nombre del Producto</label>
-                <input type="text" id="p-nombre" placeholder="Ej: Camiseta Azul" required />
-            </div>
-            <div class="form-group">
-                <label>Código (SKU)</label>
-                <input type="text" id="p-codigo" placeholder="SKU-001" required />
-            </div>
-            <div class="form-group">
-                <label>Precio Unitario</label>
-                <input type="number" id="p-precio" placeholder="0" required />
-            </div>
+      <div class="split-layout">
+        <div class="list-section">
+          <div class="list-header">
+            <h2 style="margin:0; font-size:1.1rem; font-weight:800;">Directorio de Productos</h2>
+            <span class="list-count" id="list-count">Cargando...</span>
           </div>
-          <button type="submit" class="btn-submit">Registrar Producto</button>
-        </form>
-        <p id="msg"></p>
-      </div>
+          <ul id="lista-productos">
+            <li class="empty-state"><span class="empty-text">Cargando catálogo...</span></li>
+          </ul>
+        </div>
 
-      <ul id="lista-productos">
-        <li style="text-align: center; color: #94a3b8; padding: 60px;">Cargando productos...</li>
-      </ul>
+        <div class="sidebar-section">
+          <div class="form-card" id="main-form-card">
+            <div class="form-header">
+              <div>
+                <h3 class="form-title" id="form-title">Registrar Nuevo</h3>
+                <p id="form-desc" style="margin: 6px 0 0 0; color: #64748b; font-size: 0.85rem;">Añade un producto al catálogo maestro.</p>
+              </div>
+              <button type="button" class="btn-cancel-edit" id="btn-cancel-edit">Cancelar</button>
+            </div>
+            
+            <form id="form-producto">
+              <input type="hidden" id="edit-id" value="" />
+
+              <div class="form-group">
+                  <label for="p-nombre">Nombre del Producto</label>
+                  <input type="text" id="p-nombre" placeholder="Ej: Camiseta Azul Premium" required />
+              </div>
+              
+              <div class="form-group">
+                  <label for="p-codigo">Código Unitario (SKU)</label>
+                  <input type="text" id="p-codigo" placeholder="Ej: CAM-AZ-001" required />
+              </div>
+              
+              <div class="form-group">
+                  <label for="p-precio">Precio Base ($)</label>
+                  <input type="number" id="p-precio" placeholder="0" min="0" step="0.01" required />
+              </div>
+              
+              <button type="submit" id="btn-submit" class="btn-submit">Añadir al Catálogo</button>
+            </form>
+            <p id="msg"></p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
       import { getSession } from "../lib/auth";
       import { getMasterProductos, upsertMasterProducto, deleteMasterProducto } from "../lib/inventory";
+
+      const state = { editingId: null as string | null };
 
       async function init() {
         const session = await getSession();
@@ -137,69 +184,142 @@ import Navbar from "../components/navbar.astro";
         loadData();
       }
 
+      function startEdit(item: any) {
+        (document.getElementById('edit-id') as HTMLInputElement).value = item.id;
+        (document.getElementById('p-nombre') as HTMLInputElement).value = item.nombre;
+        (document.getElementById('p-codigo') as HTMLInputElement).value = item.codigo;
+        (document.getElementById('p-precio') as HTMLInputElement).value = item.precio;
+
+        // Deshabilitar el código SKU para evitar que cambien la llave principal de todos los inventarios
+        (document.getElementById('p-codigo') as HTMLInputElement).disabled = true;
+
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.add('edit-mode');
+        document.getElementById('form-title')!.textContent = "Modificar Catálogo";
+        document.getElementById('form-desc')!.textContent = `Actualizando producto SKU: ${item.codigo}`;
+        document.getElementById('btn-submit')!.textContent = "Guardar Cambios";
+        
+        state.editingId = item.id;
+        
+        document.querySelectorAll('.producto-card').forEach(el => el.classList.remove('is-editing'));
+        document.getElementById(`card-${item.id}`)?.classList.add('is-editing');
+        
+        if(window.innerWidth <= 1024) formCard.scrollIntoView({ behavior: 'smooth' });
+        (document.getElementById('p-nombre') as HTMLInputElement).focus();
+      }
+
+      function cancelEdit() {
+        state.editingId = null;
+        const form = document.getElementById("form-producto") as HTMLFormElement;
+        form.reset();
+        (document.getElementById('edit-id') as HTMLInputElement).value = "";
+        
+        (document.getElementById('p-codigo') as HTMLInputElement).disabled = false;
+
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.remove('edit-mode');
+        document.getElementById('form-title')!.textContent = "Registrar Nuevo";
+        document.getElementById('form-desc')!.textContent = "Añade un producto al catálogo maestro.";
+        document.getElementById('btn-submit')!.textContent = "Añadir al Catálogo";
+        
+        document.querySelectorAll('.producto-card').forEach(el => el.classList.remove('is-editing'));
+      }
+
+      document.getElementById("btn-cancel-edit")?.addEventListener("click", cancelEdit);
+
       async function loadData() {
         const lista = document.getElementById("lista-productos")!;
+        const count = document.getElementById("list-count")!;
+        
         try {
           const data = await getMasterProductos();
-          lista.innerHTML = data.length ? "" : `<li style="text-align: center; padding: 60px; color: #94a3b8;">No hay productos registrados.</li>`;
+          count.textContent = `${data.length} ${data.length === 1 ? 'producto' : 'productos'}`;
+          
+          if (data.length === 0) {
+            lista.innerHTML = `
+              <li class="empty-state">
+                <span style="font-size: 24px;">📝</span>
+                <span class="empty-text">El catálogo está vacío. Añade el primer producto.</span>
+              </li>`;
+            return;
+          }
+          
+          lista.innerHTML = "";
           
           data.forEach(item => {
             const li = document.createElement("li");
             li.className = "producto-card";
+            li.id = `card-${item.id}`;
+            if (state.editingId === item.id) li.classList.add('is-editing');
+            
             li.innerHTML = `
               <div class="card-info">
-                <span class="prod-name">${item.nombre}</span>
                 <span class="prod-sku">${item.codigo}</span>
-                <span class="price-tag">$${Number(item.precio || 0).toLocaleString()}</span>
+                <span class="prod-name">${item.nombre}</span>
+                <span class="price-tag"><span class="price-label">Precio</span>$${Number(item.precio || 0).toLocaleString()}</span>
               </div>
               <div class="card-actions">
-                <button class="btn-edit" onclick="alert('Función de edición en desarrollo')">Editar</button>
+                <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar</button>
                 <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
               </div>
             `;
             lista.appendChild(li);
           });
 
+          document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e: any) => {
+              const itemData = JSON.parse(e.target.dataset.item);
+              startEdit(itemData);
+            });
+          });
+
           document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', async (e: any) => {
               const target = e.target as HTMLButtonElement;
-              if (confirm(`¿Eliminar "${target.dataset.nombre}"?`)) {
+              if (confirm(`¿Estás seguro de que deseas eliminar permanentemente "${target.dataset.nombre}"?`)) {
                 await deleteMasterProducto(target.dataset.id!);
+                if(state.editingId === target.dataset.id) cancelEdit();
                 loadData();
               }
             });
           });
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+          console.error(e); count.textContent = "Error";
+        }
       }
-
-      const toggleBtn = document.getElementById("btn-toggle-form")!;
-      const cont = document.getElementById("form-container")!;
-      toggleBtn.addEventListener("click", () => {
-        const isHidden = cont.style.display === "none";
-        cont.style.display = isHidden ? "block" : "none";
-        toggleBtn.textContent = isHidden ? "- Ocultar Formulario" : "+ Nuevo Producto";
-        toggleBtn.style.background = isHidden ? "#ef4444" : "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)";
-      });
 
       document.getElementById("form-producto")?.addEventListener("submit", async (e: any) => {
         e.preventDefault();
         const msg = document.getElementById("msg")!;
+        const submitBtn = document.getElementById("btn-submit") as HTMLButtonElement;
+        const editId = (document.getElementById("edit-id") as HTMLInputElement).value;
+        const isUpdate = editId.trim().length > 0;
+        
         try {
-          msg.textContent = "Guardando...";
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Guardando...";
+          msg.textContent = "";
+          
           await upsertMasterProducto({
             nombre: (document.getElementById("p-nombre") as HTMLInputElement).value,
             codigo: (document.getElementById("p-codigo") as HTMLInputElement).value,
             precio: parseFloat((document.getElementById("p-precio") as HTMLInputElement).value),
             categoria: "" // Categoría opcional
           });
-          msg.textContent = "✓ Guardado con éxito";
+          
+          msg.textContent = isUpdate ? "✓ Producto actualizado con éxito" : "✓ Producto registrado con éxito";
           msg.style.color = "#10b981";
-          e.target.reset();
+          
+          cancelEdit();
           loadData();
-          setTimeout(() => { msg.textContent = ""; toggleBtn.click(); }, 1500);
+          
+          setTimeout(() => { msg.textContent = ""; }, 3000);
         } catch (err: any) {
           msg.textContent = "Error: " + err.message;
           msg.style.color = "#ef4444";
+        } finally {
+          submitBtn.disabled = false;
+          if(!state.editingId) submitBtn.textContent = "Añadir al Catálogo";
         }
       });
 

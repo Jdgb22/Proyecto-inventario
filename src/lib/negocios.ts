@@ -3,7 +3,6 @@ import { supabase } from "./supabase";
 export interface Negocio {
   id: string;
   nombre: string;
-  categoria?: string;
   created_at: string;
 }
 
@@ -24,12 +23,11 @@ export async function getNegocios() {
   return data || [];
 }
 
-export async function addNegocio(nombre: string, categoria: string = "") {
+export async function addNegocio(nombre: string) {
   const { data, error } = await supabase
     .from("negocios")
     .insert([{ 
-      nombre: nombre.trim(),
-      categoria: categoria.trim() 
+      nombre: nombre.trim()
     }])
     .select()
     .single();
@@ -58,4 +56,19 @@ export async function deleteNegocio(id: string) {
 export async function migrateNegocios(uniqueNames: string[]) {
   const jobs = uniqueNames.map(nombre => addNegocio(nombre).catch(() => null));
   await Promise.all(jobs);
+}
+
+export async function updateNegocio(id: string, nombre: string) {
+  const { data, error } = await supabase
+    .from("negocios")
+    .update({ nombre: nombre.trim() })
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error al actualizar negocio:", error.message);
+    throw error;
+  }
+  return data;
 }

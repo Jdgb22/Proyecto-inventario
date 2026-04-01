@@ -14,6 +14,9 @@ export interface StockEntry {
   cantidad: number;
   negocio: string;
   mes: string;
+  nombre?: string;
+  precio?: number;
+  categoria?: string;
 }
 
 /** 
@@ -145,10 +148,10 @@ export async function addStockEntry(item: StockEntry) {
         const { data, error } = await supabase
             .from("inventario")
             .insert([{
-                nombre: master?.nombre || "Producto Desconocido",
+                nombre: item.nombre || master?.nombre || "Producto Desconocido",
                 codigo: item.codigo.trim(),
-                precio: master?.precio || 0,
-                categoria: master?.categoria || "",
+                precio: item.precio ?? master?.precio ?? 0,
+                categoria: item.categoria || master?.categoria || "",
                 cantidad: item.cantidad,
                 negocio: item.negocio,
                 mes: item.mes
@@ -170,4 +173,16 @@ export async function deleteMasterProducto(id: string) {
     // En nuestro sistema actual, los productos master están en la tabla 'inventario' con mes='MASTER'
     // o en la tabla 'productos' si ya se migró. deleteRegistro ya maneja el ID.
     return await deleteRegistro(id);
+}
+
+export async function updateStockEntry(id: string, cantidad: number) {
+    const { data, error } = await supabase
+        .from("inventario")
+        .update({ cantidad })
+        .eq("id", id)
+        .select()
+        .single();
+        
+    if (error) throw error;
+    return data;
 }

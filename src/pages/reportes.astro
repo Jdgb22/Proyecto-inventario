@@ -195,6 +195,7 @@ import Navbar from "../components/navbar.astro";
     </div>
 
     <script>
+      import { getSession, getUserRole } from "../lib/auth";
       import { getMasterProductos, getStockFiltrado } from "../lib/inventory";
       import { getNegocios } from "../lib/negocios";
 
@@ -206,6 +207,11 @@ import Navbar from "../components/navbar.astro";
       const mesInput = document.getElementById("report-mes") as HTMLInputElement;
 
       async function init() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return; }
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin") { window.location.replace("/init"); return; }
+
         const now = new Date();
         mesInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 

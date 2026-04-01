@@ -238,18 +238,38 @@ import Navbar from "../components/navbar.astro";
 
         let vTotal = 0, sTotal = 0;
         const mInv: Record<string, number> = {};
+        
+        // Detectar el último mes que realmente tenga datos
+        let latestMes = mActual;
+        fInv.forEach(i => {
+           const m = String(i.mes || "").trim().slice(0,7);
+           if (m && m !== "MASTER" && m > latestMes) latestMes = m;
+        });
+        
+        // Si no hay datos en el mes actual, usar el último mes histórico
+        let activeMes = mActual;
+        const hasCurrentMonth = fInv.some(i => String(i.mes || "").trim().slice(0,7) === mActual);
+        if (!hasCurrentMonth && fInv.length > 0) {
+            let maxM = "";
+            fInv.forEach(i => {
+                const m = String(i.mes || "").trim().slice(0,7);
+                if (m !== "MASTER" && (!maxM || m > maxM)) maxM = m;
+            });
+            if (maxM) activeMes = maxM;
+        }
+
         fInv.forEach(i => {
            const v = (i.cantidad || 0) * (i.precio || 0);
-           const m = String(i.mes || "").slice(0,7);
-           if (m === mActual) { vTotal += v; sTotal += (i.cantidad || 0); }
-           if (m) mInv[m] = (mInv[m] || 0) + v;
+           const m = String(i.mes || "").trim().slice(0,7);
+           if (m === activeMes) { vTotal += v; sTotal += (i.cantidad || 0); }
+           if (m && m !== "MASTER") mInv[m] = (mInv[m] || 0) + v;
         });
 
         let nTotal = 0, wTotal = 0;
         const mWork: Record<string, number> = {};
         fWork.forEach(w => {
-           const m = String(w.mes || "").slice(0,7);
-           if (m === mActual) { nTotal += (w.salario_base || 0); wTotal++; }
+           nTotal += (w.salario_base || 0); 
+           wTotal++;
            const neg = w.negocio || "General";
            mWork[neg] = (mWork[neg] || 0) + 1;
         });

@@ -9,10 +9,12 @@ import Navbar from "../components/navbar.astro";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Subir Trabajadores</title>
     
-    <!-- Premium Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- SheetJS (XLSX) vía CDN para evitar errores de empaquetado -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style>
       body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
@@ -64,10 +66,10 @@ import Navbar from "../components/navbar.astro";
     <div class="container">
       <div class="header-flex">
         <h1>Carga Masiva de Trabajadores</h1>
-        <button id="btn-template" class="btn btn-gray">
+        <a href="/plantilla_trabajadores.xlsx" download="plantilla_trabajadores.xlsx" class="btn btn-gray" style="text-decoration: none;">
           <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Descargar Plantilla
-        </button>
+        </a>
       </div>
 
       <div class="main-card">
@@ -106,12 +108,9 @@ import Navbar from "../components/navbar.astro";
     </div>
 
     <script>
-      import * as XLSX from "xlsx";
       import { getTrabajadoresFiltrados, getTrabajadores, addTrabajador, updateTrabajador } from "../lib/workers";
       import { getNegocios } from "../lib/negocios";
       import { getSession } from "../lib/auth";
-
-      const XLSX_LIB = (window as any).XLSX || XLSX;
 
       let trabajadoresActuales: any[] = [];
       let datosAProcesar: any[] = [];
@@ -138,18 +137,6 @@ import Navbar from "../components/navbar.astro";
       const negocioInput = document.getElementById("worker-negocio") as HTMLInputElement;
       const negociosDatalist = document.getElementById("negocios-list");
       const mesInput = document.getElementById("worker-mes") as HTMLInputElement;
-      const btnTemplate = document.getElementById("btn-template");
-
-      btnTemplate?.addEventListener("click", () => {
-        const headers = [
-          ["Nombre", "Documento", "Teléfono", "Cargo", "Horas Extras", "Deuda"],
-          ["Ejemplo Nombre", "123456", "300000000", "Operario", 0, 0]
-        ];
-        const ws = XLSX_LIB.utils.aoa_to_sheet(headers);
-        const wb = XLSX_LIB.utils.book_new();
-        XLSX_LIB.utils.book_append_sheet(wb, ws, "Plantilla");
-        XLSX_LIB.writeFile(wb, "plantilla_trabajadores.xlsx");
-      });
 
       async function loadNegocios() {
         try {
@@ -184,10 +171,19 @@ import Navbar from "../components/navbar.astro";
           trabajadoresActuales = await getTrabajadoresFiltrados(negocioSeleccionado, mesSeleccionado);
           const reader = new FileReader();
           reader.onload = (e: any) => {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX_LIB.read(data, { type: "array" });
-            const json = XLSX_LIB.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
-            procesarJSON(json);
+            try {
+              const XLSX_LIB = (window as any).XLSX;
+              if (!XLSX_LIB) throw new Error("Motor de Excel aún cargando. Intenta otra vez.");
+              
+              const data = new Uint8Array(e.target.result);
+              const wb = XLSX_LIB.read(data, { type: "array" });
+              const json = XLSX_LIB.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+              procesarJSON(json);
+            } catch (err: any) {
+              console.error(err);
+              alert("Error procesando Excel: " + (err.message || "Archivo corrupto."));
+              loadingMsg!.style.display = "none";
+            }
           };
           reader.readAsArrayBuffer(file);
         } catch (error: any) { alert(error.message); loadingMsg!.style.display = "none"; }
@@ -200,39 +196,90 @@ import Navbar from "../components/navbar.astro";
           Object.keys(row).forEach(k => r[k.toLowerCase().trim()] = row[k]);
           
           const nombre = String(r["nombre"] || "").trim();
-          const documento = String(r["documento"] || "").trim();
+          const documento = String(r["documento"] || r["cédula"] || r["cedula"] || r["doc"] || "").trim();
           const horas = parseFloat(r["horas_extras"] || r["extras"] || 0);
           const deuda = parseFloat(r["deuda"] || 0);
 
           const existing = trabajadoresActuales.find(t => String(t.documento).trim() === documento);
           
+          const isValid = (nombre !== "" && documento !== "");
+
           return {
             dbId: existing?.id,
-            nombre, documento, 
+            nombre: nombre || "SIN NOMBRE", 
+            documento: documento || "SIN CÉDULA", 
             tel: r["teléfono"] || r["telefono"] || "",
             cargo: r["cargo"] || "",
             horas, deuda,
-            isValid: (nombre !== "" && documento !== ""),
-            status: existing ? "status-update" : "status-new",
-            statusText: existing ? "Existente" : "Nuevo"
+            isValid,
+            status: !isValid ? "status-error" : (existing ? "status-update" : "status-new"),
+            statusText: !isValid ? "Omitido" : (existing ? "Existente" : "Nuevo")
           };
         });
 
         datosAProcesar.forEach(item => {
           const card = document.createElement("div");
           card.className = "worker-preview-card";
-          card.innerHTML = `
-            <div>
-                <div class="worker-name">${item.nombre}</div>
-                <span class="worker-doc">${item.documento}</span>
-            </div>
-            <div style="font-size:0.85rem; color:#64748b;">${item.cargo || '-'}</div>
-            <div style="font-size:0.85rem;">Extras: <strong>${item.horas}</strong></div>
-            <div style="color:#ef4444; font-weight:700;">Deuda: $${item.deuda.toLocaleString()}</div>
-            <div class="status-pill ${item.status}">${item.statusText}</div>
-          `;
+          if (!item.isValid) {
+            card.style.backgroundColor = "#fef2f2";
+            card.style.borderColor = "#fca5a5";
+            card.innerHTML = `
+              <div>
+                  <div class="worker-name" style="color:#b91c1c;">${item.nombre}</div>
+                  <span class="worker-doc" style="background:#fee2e2; color:#991b1b;">${item.documento}</span>
+              </div>
+              <div style="font-size:0.85rem; color:#b91c1c;">Datos Incompletos</div>
+              <div style="font-size:0.85rem;">-</div>
+              <div>-</div>
+              <div class="status-pill status-error">Omitido</div>
+            `;
+          } else {
+            card.innerHTML = `
+              <div>
+                  <div class="worker-name">${item.nombre}</div>
+                  <span class="worker-doc">${item.documento}</span>
+              </div>
+              <div style="font-size:0.85rem; color:#64748b;">${item.cargo || '-'}</div>
+              <div style="font-size:0.85rem;">Extras: <strong>${item.horas}</strong></div>
+              <div style="color:#ef4444; font-weight:700;">Deuda: $${item.deuda.toLocaleString()}</div>
+              <div class="status-pill ${item.status}">${item.statusText}</div>
+            `;
+          }
           previewList!.appendChild(card);
         });
+
+        const errores = datosAProcesar.filter(i => !i.isValid).length;
+        const validos = datosAProcesar.filter(i => i.isValid).length;
+        const totalExtras = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.horas, 0);
+        const totalDeudas = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.deuda, 0);
+
+        const totalBanner = document.createElement("div");
+        totalBanner.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+        totalBanner.style.color = "white";
+        totalBanner.style.padding = "20px 24px";
+        totalBanner.style.borderRadius = "16px";
+        totalBanner.style.marginTop = "24px";
+        totalBanner.style.display = "flex";
+        totalBanner.style.justifyContent = "space-between";
+        totalBanner.style.alignItems = "center";
+        
+        totalBanner.innerHTML = `
+           <div>
+             <h3 style="margin:0; font-size:1.15rem; font-weight:800;">Resumen del Archivo</h3>
+             <p style="margin:4px 0 0 0; opacity:0.9; font-size:0.9rem;">${validos} trabajadores válidos ${errores > 0 ? '<strong style="color:#fee2e2;">(' + errores + ' errores omitidos)</strong>' : ""}</p>
+           </div>
+           <div style="display:flex; gap: 24px; text-align:right;">
+             <div>
+               <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; opacity:0.9;">Total Extras</div>
+               <div style="font-size:1.4rem; font-weight:800; letter-spacing:-0.03em;">${totalExtras} <span style="font-size:0.9rem; font-weight:600; opacity:0.9;">hrs</span></div>
+             </div>
+             <div>
+               <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; opacity:0.9;">Total Deudas</div>
+               <div style="font-size:1.4rem; font-weight:800; letter-spacing:-0.03em;">$${totalDeudas.toLocaleString('es-CO')}</div>
+             </div>
+           </div>
+        `;
+        previewList!.appendChild(totalBanner);
 
         loadingMsg!.style.display = "none";
         previewSection!.style.display = "block";
@@ -243,19 +290,48 @@ import Navbar from "../components/navbar.astro";
         resultMsg!.textContent = "Sincronizando nómina...";
         
         let count = 0;
-        for (const item of datosAProcesar.filter(i => i.isValid)) {
-          try {
-            const payload = {
-              nombre: item.nombre, documento: item.documento,
-              telefono: item.tel, cargo: item.cargo,
-              horas_extras: item.horas, deuda: item.deuda,
-              negocio: negocioSeleccionado, mes: mesSeleccionado
-            };
-            if (item.dbId) await updateTrabajador(item.dbId, payload);
-            else await addTrabajador(payload as any);
-            count++;
-          } catch (e) { console.error(e); }
+        let dbErrores = 0;
+        let dbErrorMsg = "";
+        
+        const validItems = datosAProcesar.filter(i => i.isValid);
+
+        if (validItems.length === 0) {
+           resultMsg!.textContent = "No hay ningún trabajador válido para sincronizar. Todos están omitidos.";
+           resultMsg!.style.color = "#ef4444";
+           btnConfirm.disabled = false;
+           return;
         }
+
+        const CHUNK_SIZE = 20;
+
+        for (let i = 0; i < validItems.length; i += CHUNK_SIZE) {
+          const chunk = validItems.slice(i, i + CHUNK_SIZE);
+          await Promise.all(chunk.map(async (item) => {
+            try {
+              const payload = {
+                nombre: item.nombre, documento: item.documento,
+                telefono: item.tel, cargo: item.cargo,
+                horas_extras: item.horas, deuda: item.deuda,
+                negocio: negocioSeleccionado, mes: mesSeleccionado
+              };
+              if (item.dbId) await updateTrabajador(item.dbId, payload);
+              else await addTrabajador(payload as any);
+              count++;
+            } catch (e: any) {
+              console.error("Error BD Trabajador:", e);
+              dbErrores++;
+              if (!dbErrorMsg) dbErrorMsg = e.message || "Error desconocido BD";
+            }
+          }));
+        }
+        
+        if (dbErrores > 0) {
+           resultMsg!.textContent = `Atención: ${count} guardados, pero fallaron ${dbErrores} por error: ${dbErrorMsg}`;
+           resultMsg!.style.color = "#ef4444";
+           btnConfirm.disabled = false;
+           return;
+        }
+
         resultMsg!.textContent = `✓ ¡Sincronizado! ${count} trabajadores procesados.`;
         resultMsg!.style.color = "#059669";
         setTimeout(() => window.location.replace("/reportes_trabajadores"), 2000);

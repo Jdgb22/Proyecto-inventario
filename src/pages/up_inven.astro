@@ -9,16 +9,19 @@ import Navbar from "../components/navbar.astro";
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Carga Masiva de Inventario</title>
     
-    <!-- Premium Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- SheetJS (XLSX) vía CDN -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style>
       body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
       .container { padding: 24px; max-width: 1000px; margin: 0 auto; }
       
-      h1 { font-size: 1.8rem; font-weight: 800; color: #111827; margin-top: 0; margin-bottom: 24px; letter-spacing: -0.025em; }
+      .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+      .header-flex h1 { margin: 0; font-size: 1.8rem; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
       
       .main-card { background: white; padding: 32px; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
       
@@ -40,6 +43,8 @@ import Navbar from "../components/navbar.astro";
       .btn:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.7; }
       .btn-success { background: #10b981; }
       .btn-success:hover { background: #059669; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+      .btn-gray { background: #64748b; }
+      .btn-gray:hover:not(:disabled) { background: #475569; }
 
       .preview-container { display: none; margin-top: 32px; animation: fadeIn 0.4s ease-out; }
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -64,7 +69,13 @@ import Navbar from "../components/navbar.astro";
     <Navbar />
     
     <div class="container">
-      <h1>Cargar Inventario Masivo</h1>
+      <div class="header-flex">
+        <h1>Cargar Inventario Masivo</h1>
+        <a href="/plantilla_inventario.xlsx" download="plantilla_inventario.xlsx" class="btn btn-gray" style="text-decoration: none;">
+          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+          Descargar Plantilla
+        </a>
+      </div>
       
       <div class="main-card">
         <div class="form-grid">
@@ -110,13 +121,11 @@ import Navbar from "../components/navbar.astro";
     </div>
 
     <script>
-      import * as XLSX from "xlsx";
-      import { getStockFiltrado, upsertMasterProducto, addStockEntry } from "../lib/inventory";
+      import { getStockFiltrado, getMasterProductos, addStockEntry } from "../lib/inventory";
       import { getNegocios } from "../lib/negocios";
 
-      const XLSX_LIB = (window as any).XLSX || XLSX;
-
       let stockActualEnDB: any[] = [];
+      let dbMaestra: any[] = [];
       let itemsParaSync: any[] = [];
       let negocioActual = "";
       let mesActual = "";
@@ -171,14 +180,24 @@ import Navbar from "../components/navbar.astro";
         
         try {
           stockActualEnDB = await getStockFiltrado(negocioActual, mesActual);
+          dbMaestra = await getMasterProductos();
 
           const reader = new FileReader();
           reader.onload = (e: any) => {
-            const arr = new Uint8Array(e.target.result);
-            const wb = XLSX_LIB.read(arr, { type: 'array' });
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            const rawJson = XLSX_LIB.utils.sheet_to_json(sheet);
-            displayPreview(rawJson);
+            try {
+              const XLSX_LIB = (window as any).XLSX;
+              if (!XLSX_LIB) throw new Error("Motor de Excel aún cargando. Intenta otra vez.");
+
+              const arr = new Uint8Array(e.target.result);
+              const wb = XLSX_LIB.read(arr, { type: 'array' });
+              const sheet = wb.Sheets[wb.SheetNames[0]];
+              const rawJson = XLSX_LIB.utils.sheet_to_json(sheet);
+              displayPreview(rawJson);
+            } catch (err: any) {
+              console.error(err);
+              alert("Error procesando Excel: " + (err.message || "Archivo corrupto o vacío."));
+              loadingMsg!.style.display = "none";
+            }
           };
           reader.readAsArrayBuffer(file);
         } catch (error) {
@@ -190,35 +209,88 @@ import Navbar from "../components/navbar.astro";
 
       function displayPreview(data: any[]) {
         previewList!.innerHTML = "";
-        itemsParaSync = data.map(row => {
-          const nombre = row.Nombre || row.nombre || row.Producto || "Sin nombre";
-          const codigo = String(row.Codigo || row.codigo || row.SKU || "").trim();
-          const cantidad = parseInt(row.Cantidad || row.cantidad || 0);
-          const precio = parseFloat(row.Precio || row.precio || 0);
-          const categoria = row.Categoria || row.categoria || "";
+        let grandTotal = 0;
+        let errores = 0;
 
-          const match = stockActualEnDB.find(i => String(i.codigo).trim() === codigo);
+        itemsParaSync = data.map(row => {
+          const rowNombre = String(row.Producto || row.producto || row.Nombre || row.nombre || "").trim().toLowerCase();
+          const rowCodigo = String(row.Codigo || row.codigo || row.SKU || "").trim();
+          const cantidad = parseInt(row.Cantidad || row.cantidad || 0);
+
+          const masterMatch = dbMaestra.find(m => {
+            const mCod = String(m.codigo).trim();
+            const mNom = String(m.nombre).trim().toLowerCase();
+            return (rowCodigo && mCod === rowCodigo) || (rowNombre && mNom === rowNombre);
+          });
+          
+          const codigoOficial = masterMatch ? String(masterMatch.codigo).trim() : rowCodigo;
+          const stockMatch = stockActualEnDB.find(i => String(i.codigo).trim() === codigoOficial);
+
+          if (!masterMatch) {
+             errores++;
+             return { isValid: false, codigo: codigoOficial || "SIN CÓDIGO", cantidad, errorReason: "NO ENCONTRADO EN DB" };
+          }
+
+          const dbPrecio = masterMatch.precio || 0;
+          const subtotalRow = dbPrecio * cantidad;
+          grandTotal += subtotalRow;
           
           return {
-            nombre, codigo, cantidad, precio, categoria,
-            existingId: match?.id || null,
-            prevStock: match ? match.cantidad : 0,
-            sumResult: (match ? match.cantidad : 0) + cantidad
+            isValid: true,
+            nombre: masterMatch.nombre, 
+            categoria: masterMatch.categoria,
+            codigo: codigoOficial, 
+            cantidad, 
+            precio: dbPrecio, 
+            subtotalRow,
+            existingId: stockMatch?.id || null,
+            sumResult: (stockMatch ? stockMatch.cantidad : 0) + cantidad
           };
         });
 
         itemsParaSync.forEach(item => {
           const div = document.createElement("div");
           div.className = "preview-card";
-          div.innerHTML = `
-            <div><span class="sku-tag">${item.codigo}</span></div>
-            <div class="name-tag">${item.nombre}</div>
-            <div class="price-tag">$${item.precio.toLocaleString()}</div>
-            <div><span class="qty-tag">+ ${item.cantidad}</span> <br/> <small style="color:#94a3b8;">Total: ${item.sumResult}</small></div>
-            <div><span class="status-tag ${item.existingId ? 'status-update' : 'status-new'}">${item.existingId ? 'Sumar' : 'Nuevo'}</span></div>
-          `;
+          
+          if (!item.isValid) {
+            div.style.backgroundColor = "#fef2f2";
+            div.style.borderColor = "#fca5a5";
+            div.innerHTML = `
+              <div><span class="sku-tag" style="background:#fee2e2; color:#991b1b;">${item.codigo}</span></div>
+              <div class="name-tag" style="color:#b91c1c;">${item.errorReason}</div>
+              <div class="price-tag">-</div>
+              <div><span class="qty-tag">${item.cantidad} uns.</span></div>
+              <div><span class="status-tag" style="background:#fee2e2; color:#b91c1c;">Omitido</span></div>
+            `;
+          } else {
+            div.innerHTML = `
+              <div><span class="sku-tag">${item.codigo}</span></div>
+              <div class="name-tag">${item.nombre}</div>
+              <div class="price-tag">$${item.subtotalRow.toLocaleString('es-CO')} <br/><small style="color:#94a3b8; font-weight:500;">$${item.precio.toLocaleString()} c/u</small></div>
+              <div><span class="qty-tag">+ ${item.cantidad}</span> <br/> <small style="color:#94a3b8;">Total mes: ${item.sumResult}</small></div>
+              <div><span class="status-tag ${item.existingId ? 'status-update' : 'status-new'}">${item.existingId ? 'Sumar' : 'Nuevo'}</span></div>
+            `;
+          }
           previewList!.appendChild(div);
         });
+
+        const totalBanner = document.createElement("div");
+        totalBanner.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+        totalBanner.style.color = "white";
+        totalBanner.style.padding = "20px 24px";
+        totalBanner.style.borderRadius = "16px";
+        totalBanner.style.marginTop = "24px";
+        totalBanner.style.display = "flex";
+        totalBanner.style.justifyContent = "space-between";
+        totalBanner.style.alignItems = "center";
+        totalBanner.innerHTML = `
+           <div>
+             <h3 style="margin:0; font-size:1.15rem; font-weight:800;">Valorización del Archivo</h3>
+             <p style="margin:4px 0 0 0; opacity:0.9; font-size:0.9rem;">${itemsParaSync.filter(i => i.isValid).length} productos validados ${errores > 0 ? '<strong style="color:#fee2e2;">(' + errores + ' errores omitidos)</strong>' : ""}</p>
+           </div>
+           <div style="font-size:1.8rem; font-weight:800; letter-spacing:-0.03em;">$${grandTotal.toLocaleString('es-CO')}</div>
+        `;
+        previewList!.appendChild(totalBanner);
 
         loadingMsg!.style.display = "none";
         previewContainer!.style.display = "block";
@@ -230,29 +302,48 @@ import Navbar from "../components/navbar.astro";
         resultMsg!.style.color = "#4b5563";
         
         let count = 0;
+        let dbErrores = 0;
+        let dbErrorMsg = "";
+        const validItems = itemsParaSync.filter(i => i.isValid);
 
-        for (const item of itemsParaSync) {
-          try {
-            // 1. Sincronizar Base de Datos Maestra
-            await upsertMasterProducto({
-                nombre: item.nombre,
+        if (validItems.length === 0) {
+           resultMsg!.textContent = "No hay ningún registro válido (verde) para sincronizar. Todos están omitidos.";
+           resultMsg!.style.color = "#ef4444";
+           btnConfirm.disabled = false;
+           return;
+        }
+
+        const CHUNK_SIZE = 15;
+
+        for (let i = 0; i < validItems.length; i += CHUNK_SIZE) {
+          const chunk = validItems.slice(i, i + CHUNK_SIZE);
+          await Promise.all(chunk.map(async (item) => {
+            try {
+              // Sincronizar Inventario Mensual (Validado)
+              await addStockEntry({
                 codigo: item.codigo,
+                cantidad: item.sumResult,
+                negocio: negocioActual,
+                mes: mesActual,
+                nombre: item.nombre,
                 precio: item.precio,
                 categoria: item.categoria
-            });
+              });
+              
+              count++;
+            } catch (e: any) {
+              console.error("Error BD:", e);
+              dbErrores++;
+              if (!dbErrorMsg) dbErrorMsg = e.message || "Error desconocido BD";
+            }
+          }));
+        }
 
-            // 2. Sincronizar Inventario Mensual (Suma automática)
-            await addStockEntry({
-              codigo: item.codigo,
-              cantidad: item.sumResult,
-              negocio: negocioActual,
-              mes: mesActual
-            });
-            
-            count++;
-          } catch (e) {
-            console.error(e);
-          }
+        if (dbErrores > 0) {
+           resultMsg!.textContent = `Atención: ${count} guardados, pero fallaron ${dbErrores} por error: ${dbErrorMsg}`;
+           resultMsg!.style.color = "#ef4444";
+           btnConfirm.disabled = false;
+           return;
         }
 
         resultMsg!.textContent = `✓ ¡Sincronización Exitosa! ${count} registros actualizados.`;
@@ -262,6 +353,4 @@ import Navbar from "../components/navbar.astro";
       });
     </script>
   </body>
-</html>
-ody>
 </html>
