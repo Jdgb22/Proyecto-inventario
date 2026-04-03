@@ -126,6 +126,12 @@ import Navbar from "../components/navbar.astro";
             <div class="stat-label">Personal Activo</div>
             <div id="stat-workers-count" class="stat-value">0</div>
           </div>
+          <div class="stat-card">
+            <div class="stat-accent" style="background: #14b8a6;"></div>
+            <div class="icon-circle" style="background: #ccfbf1; color: #14b8a6;">🏢</div>
+            <div class="stat-label">Sedes Activas</div>
+            <div id="stat-negocios-count" class="stat-value">0</div>
+          </div>
         </div>
 
         <div class="charts-grid">
@@ -186,6 +192,7 @@ import Navbar from "../components/navbar.astro";
 
       let globalInventory: any[] = [];
       let globalWorkers: any[] = [];
+      let globalNegocios: any[] = [];
       let chartInv: any = null;
       let chartWork: any = null;
 
@@ -211,6 +218,7 @@ import Navbar from "../components/navbar.astro";
             
             globalInventory = inv;
             globalWorkers = workers;
+            globalNegocios = negs;
 
             const nSelect = document.getElementById("dash-negocio") as HTMLSelectElement;
             negs.forEach((n: any) => {
@@ -278,6 +286,13 @@ import Navbar from "../components/navbar.astro";
         document.getElementById("stat-inv-items")!.textContent = sTotal.toLocaleString('es-CO');
         document.getElementById("stat-payroll-value")!.textContent = `$${nTotal.toLocaleString('es-CO')}`;
         document.getElementById("stat-workers-count")!.textContent = wTotal.toString();
+        
+        // Sedes Activas
+        if (filter === "todos") {
+           document.getElementById("stat-negocios-count")!.textContent = globalNegocios.length.toString();
+        } else {
+           document.getElementById("stat-negocios-count")!.textContent = "1";
+        }
 
         renderCharts(mInv, mWork, filter);
       }
