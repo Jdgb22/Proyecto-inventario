@@ -139,11 +139,23 @@ import Navbar from "../components/navbar.astro";
             <input id="rep-trab-mes-hasta" type="month" />
           </label>
 
+          <label style="min-width: 140px;">
+            Valor Hora Extra
+            <input id="rep-trab-val-extra" type="number" value="6000" step="100" />
+          </label>
+
+          <label style="min-width: 140px;">
+            Deducciones (%)
+            <input id="rep-trab-deduccion" type="number" value="8" step="0.1" />
+          </label>
+
           <button id="btn-trab-aplicar" class="btn">Actualizar Vista</button>
         </div>
 
         <div id="rep-trab-msg" class="msg" style="display:none;"></div>
       </div>
+
+      <h2 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 24px; margin-top: 24px;">Resumen del Análisis de Nómina</h2>
 
       <div class="charts-grid">
         <div class="chart-card">
@@ -161,7 +173,7 @@ import Navbar from "../components/navbar.astro";
         </div>
       </div>
 
-      <div class="table-card">
+      <div class="table-card" style="margin-bottom: 24px;">
         <h3>Resumen Detallado por Periodo</h3>
         <div id="tabla-trab-mensual" style="overflow-x: auto;"></div>
       </div>
@@ -179,14 +191,14 @@ import Navbar from "../components/navbar.astro";
       const negocioSelect = document.getElementById("rep-trab-negocio") as HTMLSelectElement;
       const mesDesdeInput = document.getElementById("rep-trab-mes-desde") as HTMLInputElement;
       const mesHastaInput = document.getElementById("rep-trab-mes-hasta") as HTMLInputElement;
+      const valExtraInput = document.getElementById("rep-trab-val-extra") as HTMLInputElement;
+      const deduccionInput = document.getElementById("rep-trab-deduccion") as HTMLInputElement;
       const btnAplicar = document.getElementById("btn-trab-aplicar");
       const tablaEl = document.getElementById("tabla-trab-mensual");
 
       const normalizeMes = (value: any) => {
         const str = String(value ?? "").trim();
-        if (!str) return "";
-        if (/^\d{4}-\d{2}$/.test(str)) return str;
-        return str.slice(0, 7);
+        return str || "";
       };
 
       const normalizeNegocio = (row: any) => (row?.negocio || "General").trim();
@@ -208,12 +220,13 @@ import Navbar from "../components/navbar.astro";
         }
 
         const negocios = Array.from(new Set(trabajadores.map(normalizeNegocio))).sort();
-        negocioSelect.innerHTML = negocios.map(n => `<option value="${n}">${n}</option>`).join("");
+        negocioSelect.innerHTML = `<option value="GLOBAL">Todos los Negocios (Global)</option>` + 
+          negocios.map(n => `<option value="${n}">${n}</option>`).join("");
 
         const meses = trabajadores.map(r => normalizeMes(r.mes || r.created_at)).filter(m => m).sort();
         if (meses.length > 0) {
-          mesDesdeInput.value = meses[0];
-          mesHastaInput.value = meses[meses.length - 1];
+          mesDesdeInput.value = meses[0].slice(0, 7);
+          mesHastaInput.value = meses[meses.length - 1].slice(0, 7);
         }
         await aplicar();
       }
@@ -226,16 +239,37 @@ import Navbar from "../components/navbar.astro";
         const negocio = negocioSelect.value;
         const mesDesde = mesDesdeInput.value;
         const mesHasta = mesHastaInput.value;
+        const valorHoraExtra = parseFloat(valExtraInput.value) || 0;
+        const deduccionesPorcentaje = parseFloat(deduccionInput.value) || 0;
+
         const grupos: Record<string, { cantidad: number; salarioTotal: number }> = {};
+        const detalleEmpleados: any[] = [];
+        
+        let granTotalNegocio = 0;
+        const limiteHasta = mesHasta ? mesHasta + "-31" : ""; // Para soportar días de corte > 10, 20
 
         trabajadores.forEach(row => {
-          if (normalizeNegocio(row) !== negocio) return;
+          if (negocio !== "GLOBAL" && normalizeNegocio(row) !== negocio) return;
           const mesKey = normalizeMes(row.mes || row.created_at);
-          if (!mesKey || mesKey < mesDesde || mesKey > mesHasta) return;
+          if (!mesKey || mesKey < mesDesde || (limiteHasta && mesKey > limiteHasta)) return;
+
+          const salarioBase = Number(row.salario_base || 0);
+          const horasTrabajadas = Number(row.horas_trabajadas || 0);
+          const horasExtras = Number(row.horas_extras || 0);
+          const deuda = Number(row.deuda || 0);
+
+          // Total a Pagar = (Salario Base / 240 * Horas Trab) + (Horas Extras * Valor Hora Extra) - Deuda
+          const pagoBase = (salarioBase / 240) * horasTrabajadas;
+          const pagoExtras = horasExtras * valorHoraExtra;
+          
+          // Deducciones calculadas a partir del pago base
+          const valorDeducciones = pagoBase * (deduccionesPorcentaje / 100);
+          
+          const totalPagar = pagoBase + pagoExtras - deuda - valorDeducciones;
 
           if (!grupos[mesKey]) grupos[mesKey] = { cantidad: 0, salarioTotal: 0 };
           grupos[mesKey].cantidad += 1;
-          grupos[mesKey].salarioTotal += Number(row.salario_base || 0);
+          grupos[mesKey].salarioTotal += totalPagar;
         });
 
         const mesesOrdenados = Object.keys(grupos).sort();
@@ -258,12 +292,14 @@ import Navbar from "../components/navbar.astro";
                 <tr>
                   <td><span class="badge-mes">${m}</span></td>
                   <td><strong>${grupos[m].cantidad}</strong> colaboradores</td>
-                  <td class="payroll-val">$${grupos[m].salarioTotal.toLocaleString('es-CO')}</td>
+                  <td class="payroll-val">$${grupos[m].salarioTotal.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
         `;
+
+
 
         const ChartRef = (window as any).Chart;
         const opts = { responsive: true, maintainAspectRatio: false };

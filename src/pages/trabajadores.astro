@@ -420,9 +420,9 @@ import Navbar from "../components/navbar.astro";
         const sd = sedeDe(item);
         if (sd) {
              const sel = document.getElementById('t-sede') as HTMLSelectElement;
-             // Solo asigna si existe la opcion
              if(Array.from(sel.options).some(o => o.value === sd)) sel.value = sd;
         }
+        (document.getElementById('t-sede') as HTMLSelectElement).disabled = true;
 
         // Cambiar UI del formulario
         const formCard = document.getElementById('main-form-card')!;
@@ -456,6 +456,8 @@ import Navbar from "../components/navbar.astro";
         document.getElementById('btn-submit')!.textContent = "Guardar Registro";
         
         // Mantener la sede seleccionada en el filtro
+        const selSede = document.getElementById('t-sede') as HTMLSelectElement;
+        selSede.disabled = false;
         const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
         if(fNeg) (document.getElementById('t-sede') as HTMLSelectElement).value = fNeg;
 
@@ -584,9 +586,12 @@ import Navbar from "../components/navbar.astro";
             nombre: (document.getElementById("t-nombre") as HTMLInputElement).value,
             documento: (document.getElementById("t-id") as HTMLInputElement).value,
             cargo: (document.getElementById("t-cargo") as HTMLInputElement).value,
-            salario_base: parseFloat((document.getElementById("t-salario") as HTMLInputElement).value),
-            negocio: (document.getElementById("t-sede") as HTMLSelectElement).value
+            salario_base: parseFloat((document.getElementById("t-salario") as HTMLInputElement).value)
           };
+          
+          if (!isUpdate) {
+            newData.negocio = (document.getElementById("t-sede") as HTMLSelectElement).value;
+          }
 
           if (isUpdate) {
             await updateTrabajador(editId, newData);

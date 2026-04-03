@@ -96,13 +96,12 @@ export async function upsertMasterProducto(item: MasterProducto) {
  * GESTIÓN DE INVENTARIO MENSUAL (EXISTENCIAS)
  */
 export async function getStockFiltrado(negocio: string, mes: string) {
-    // Obtenemos los registros de cantidades para ese mes y negocio
-    const { data: stock, error } = await supabase
-        .from("inventario")
-        .select("*")
-        .eq("negocio", negocio)
-        .eq("mes", mes);
-
+    let query = supabase.from("inventario").select("*").eq("mes", mes);
+    if (negocio && negocio !== "GLOBAL") {
+        query = query.eq("negocio", negocio);
+    }
+    
+    const { data: stock, error } = await query;
     if (error) throw error;
     return stock || [];
 }

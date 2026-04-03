@@ -18,8 +18,8 @@ XLSX.writeFile(wbInv, path.join(publicDir, "plantilla_inventario.xlsx"));
 
 // 2. Plantilla Trabajadores
 const wsWork = XLSX.utils.aoa_to_sheet([
-  ["Nombre", "Documento", "Teléfono", "Cargo", "Horas Extras", "Deuda"],
-  ["Ejemplo Nombre", "123456", "300000000", "Operario", 0, 0]
+  ["Nombre", "Documento", "Cargo", "Horas Trabajadas", "Horas Extras", "Deuda"],
+  ["Ejemplo Nombre", "123456", "Cajero", 80, 0, 0]
 ]);
 const wbWork = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wbWork, wsWork, "Plantilla");

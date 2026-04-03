@@ -83,12 +83,20 @@ import Navbar from "../components/navbar.astro";
                 <label>Mes de Registro</label>
                 <input id="worker-mes" type="month" required />
             </div>
+            <div class="form-group">
+                <label>Día de Corte</label>
+                <select id="worker-corte" required>
+                  <option value="10">Día 10</option>
+                  <option value="20">Día 20</option>
+                  <option value="30">Día 30</option>
+                </select>
+            </div>
         </div>
 
         <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
             <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             <p style="font-size: 1.1rem; color: #1e293b; margin:0;"><strong>Haz clic o arrastra tu archivo Excel</strong></p>
-            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Columnas: Nombre, Documento, Teléfono, Cargo, Extras, Deuda.</p>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Columnas: Nombre, Documento, Cargo, Horas Trabajadas, Extras, Deuda.</p>
             <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
         </div>
 
@@ -137,6 +145,7 @@ import Navbar from "../components/navbar.astro";
       const negocioInput = document.getElementById("worker-negocio") as HTMLInputElement;
       const negociosDatalist = document.getElementById("negocios-list");
       const mesInput = document.getElementById("worker-mes") as HTMLInputElement;
+      const corteInput = document.getElementById("worker-corte") as HTMLSelectElement;
 
       async function loadNegocios() {
         try {
@@ -158,10 +167,12 @@ import Navbar from "../components/navbar.astro";
 
       async function handleFile(file: File) {
         negocioSeleccionado = negocioInput.value.trim();
-        mesSeleccionado = mesInput.value.trim();
+        
+        const corte = corteInput.value;
+        mesSeleccionado = mesInput.value.trim() ? `${mesInput.value.trim()}-${corte}` : "";
 
         if (!negocioSeleccionado || !mesSeleccionado) {
-          alert("Selecciona Negocio y Mes."); return;
+          alert("Selecciona Negocio, Mes y Día de Corte."); return;
         }
 
         loadingMsg!.style.display = "block";
@@ -197,7 +208,12 @@ import Navbar from "../components/navbar.astro";
           
           const nombre = String(r["nombre"] || "").trim();
           const documento = String(r["documento"] || r["cédula"] || r["cedula"] || r["doc"] || "").trim();
-          const horas = parseFloat(r["horas_extras"] || r["extras"] || 0);
+          const rawExtras = r["horas_extras"] ?? r["horas extras"] ?? r["extras"] ?? r["he"] ?? r["hora extra"] ?? r["ext"] ?? 0;
+          const extras = parseFloat(rawExtras) || 0;
+          
+          const rawHoras = r["horas_trabajadas"] ?? r["horas trabajadas"] ?? r["horas"] ?? r["ht"] ?? 0;
+          const horasTrabajadas = parseFloat(rawHoras) || 0;
+
           const deuda = parseFloat(r["deuda"] || 0);
 
           const existing = trabajadoresActuales.find(t => String(t.documento).trim() === documento);
@@ -210,7 +226,7 @@ import Navbar from "../components/navbar.astro";
             documento: documento || "SIN CÉDULA", 
             tel: r["teléfono"] || r["telefono"] || "",
             cargo: r["cargo"] || "",
-            horas, deuda,
+            horasTrabajadas, extras, deuda,
             isValid,
             status: !isValid ? "status-error" : (existing ? "status-update" : "status-new"),
             statusText: !isValid ? "Omitido" : (existing ? "Existente" : "Nuevo")
@@ -240,7 +256,7 @@ import Navbar from "../components/navbar.astro";
                   <span class="worker-doc">${item.documento}</span>
               </div>
               <div style="font-size:0.85rem; color:#64748b;">${item.cargo || '-'}</div>
-              <div style="font-size:0.85rem;">Extras: <strong>${item.horas}</strong></div>
+              <div style="font-size:0.85rem;">Horas Trab: <strong>${item.horasTrabajadas}</strong> | Extras: <strong>${item.extras}</strong></div>
               <div style="color:#ef4444; font-weight:700;">Deuda: $${item.deuda.toLocaleString()}</div>
               <div class="status-pill ${item.status}">${item.statusText}</div>
             `;
@@ -250,7 +266,8 @@ import Navbar from "../components/navbar.astro";
 
         const errores = datosAProcesar.filter(i => !i.isValid).length;
         const validos = datosAProcesar.filter(i => i.isValid).length;
-        const totalExtras = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.horas, 0);
+        const totalExtras = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.extras, 0);
+        const totalTrabajadas = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.horasTrabajadas, 0);
         const totalDeudas = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.deuda, 0);
 
         const totalBanner = document.createElement("div");
@@ -311,7 +328,8 @@ import Navbar from "../components/navbar.astro";
               const payload = {
                 nombre: item.nombre, documento: item.documento,
                 telefono: item.tel, cargo: item.cargo,
-                horas_extras: item.horas, deuda: item.deuda,
+                horas_trabajadas: item.horasTrabajadas,
+                horas_extras: item.extras, deuda: item.deuda,
                 negocio: negocioSeleccionado, mes: mesSeleccionado
               };
               if (item.dbId) await updateTrabajador(item.dbId, payload);

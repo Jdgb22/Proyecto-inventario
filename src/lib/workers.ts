@@ -12,6 +12,7 @@ export interface Trabajador {
   // el frontend hará fallback a la lógica antigua.
   negocio?: string;
   mes?: string; // Idealmente "YYYY-MM"
+  horas_trabajadas?: number;
   horas_extras?: number;
   deuda?: number;
 }
@@ -61,7 +62,7 @@ export async function getTrabajadoresFiltrados(negocio?: string, mes?: string) {
 export async function addTrabajador(trabajador: Trabajador) {
   const { data, error } = await supabase
     .from("trabajadores")
-    .upsert([trabajador], { onConflict: 'documento' })
+    .insert([trabajador])
     .select()
     .single();
 

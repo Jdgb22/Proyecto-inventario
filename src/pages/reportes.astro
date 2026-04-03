@@ -219,7 +219,8 @@ import Navbar from "../components/navbar.astro";
           cacheMaster = await getMasterProductos();
           const negocios = await getNegocios();
           if (negocioSelect) {
-            negocioSelect.innerHTML = negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+            negocioSelect.innerHTML = `<option value="GLOBAL">Todos los Negocios (Global)</option>` + 
+              negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
           }
         } catch (e) { console.error(e); }
       }
@@ -245,18 +246,30 @@ import Navbar from "../components/navbar.astro";
           msgEl!.style.display = "none";
           contEl!.style.display = "block";
 
-          const finalReport = stockData.map(s => {
+          const finalReportMap = new Map();
+          stockData.forEach(s => {
               const master = cacheMaster.find(m => m.codigo === s.codigo);
-              const p = master ? master.precio : 0;
-              return {
-                  codigo: s.codigo,
-                  nombre: master ? master.nombre : s.nombre,
-                  categoria: master ? (master.categoria || 'Sin Categoría') : 'S/C',
-                  precio: p,
-                  cantidad: s.cantidad || 0,
-                  total: (s.cantidad || 0) * p
-              };
+              const p = master ? Number(master.precio) : 0;
+              const nombre = master ? master.nombre : s.nombre;
+              const categoria = master ? (master.categoria || 'Sin Categoría') : 'S/C';
+              const cantidadStr = Number(s.cantidad) || 0;
+
+              if(finalReportMap.has(s.codigo)) {
+                  const existing = finalReportMap.get(s.codigo);
+                  existing.cantidad += cantidadStr;
+                  existing.total += cantidadStr * p;
+              } else {
+                  finalReportMap.set(s.codigo, {
+                      codigo: s.codigo,
+                      nombre: nombre,
+                      categoria: categoria,
+                      precio: p,
+                      cantidad: cantidadStr,
+                      total: cantidadStr * p
+                  });
+              }
           });
+          const finalReport = Array.from(finalReportMap.values());
 
           renderCharts(finalReport);
         } catch (e: any) {

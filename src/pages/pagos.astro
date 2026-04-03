@@ -1,0 +1,309 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!DOCTYPE html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nómina a Pagar</title>
+    
+    <!-- Premium Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        margin: 0;
+        color: #1e293b;
+        background-color: #f0fdf4;
+        background-image:
+          radial-gradient(ellipse 70% 45% at 80% -10%, rgba(16, 185, 129, 0.15), transparent),
+          linear-gradient(180deg, #ecfdf5 0%, #fafafa 40%, #f4f4f5 100%);
+        min-height: 100vh;
+      }
+      .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px 48px; }
+
+      .report-hero {
+        background: linear-gradient(125deg, #065f46 0%, #047857 38%, #059669 100%);
+        color: #fff;
+        border-radius: 24px;
+        padding: 32px 36px;
+        margin-bottom: 28px;
+        box-shadow: 0 20px 40px -12px rgba(4, 120, 87, 0.42);
+        position: relative;
+        overflow: hidden;
+      }
+      .report-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h40V0H0v40z' fill='none'/%3E%3Cpath d='M20 0v40M0 20h40' stroke='%23ffffff' stroke-opacity='0.1' stroke-width='1'/%3E%3C/svg%3E");
+        pointer-events: none;
+      }
+      .report-hero__inner { position: relative; z-index: 1; max-width: 620px; }
+      .report-hero__badge {
+        display: inline-block;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #d1fae5;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 14px;
+      }
+      .report-hero h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.85rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.2;
+      }
+      .report-hero__desc {
+        margin: 0;
+        font-size: 0.98rem;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.55;
+        font-weight: 500;
+      }
+
+      .main-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #a7f3d0; box-shadow: 0 10px 30px -8px rgba(5, 150, 105, 0.12); margin-bottom: 32px; }
+      .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+      label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; background: #f9fafb; transition: all 0.2s; }
+      input:focus, select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); background: white; }
+      
+      .btn { padding: 12px 24px; background-color: #10b981; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: all 0.2s; }
+      .btn:hover { background-color: #059669; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.25); }
+
+      .table-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #a7f3d0; overflow: hidden; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.06); }
+      .table-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; }
+      
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
+      th { color: #64748b; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; background: #f8fafc; }
+      td { font-size: 0.95rem; color: #333; }
+      .msg { color: #94a3b8; margin-top: 12px; font-weight: 500; text-align: center; padding: 20px; font-style: italic; }
+      
+      .payroll-val { color: #059669; font-weight: 800; }
+      .badge-mes { font-family: monospace; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-weight: 600; color: #475569; }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+
+    <div class="container">
+      <header class="report-hero">
+        <div class="report-hero__inner">
+          <span class="report-hero__badge">Nómina · Pagos</span>
+          <h1>Total a Pagar</h1>
+          <p class="report-hero__desc">
+            Visualiza el valor exacto a facturar a cada empleado basado en las <strong>horas trabajadas, deudas y deducciones</strong>.
+          </p>
+        </div>
+      </header>
+
+      <div class="main-card">
+        <div class="filters">
+          <label style="min-width: 260px;">
+            Negocio / Sede
+            <select id="pago-negocio">
+              <option value="GLOBAL">Todos los Negocios (Global)</option>
+            </select>
+          </label>
+
+          <label style="min-width: 200px;">
+            Desde el mes
+            <input id="pago-mes-desde" type="month" />
+          </label>
+
+          <label style="min-width: 200px;">
+            Hasta el mes
+            <input id="pago-mes-hasta" type="month" />
+          </label>
+
+          <label style="min-width: 140px;">
+            Valor Hora Extra
+            <input id="pago-val-extra" type="number" value="6000" step="100" />
+          </label>
+
+          <label style="min-width: 140px;">
+            Deducciones (%)
+            <input id="pago-deduccion" type="number" value="8" step="0.1" />
+          </label>
+
+          <button id="btn-aplicar" class="btn">Calcular Pagos</button>
+        </div>
+
+        <div id="pago-msg" class="msg" style="display:none;"></div>
+      </div>
+
+      <div id="gran-total-card" style="display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 32px; border-radius: 20px; text-align: center; margin-bottom: 32px; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);">
+        <h2 style="margin: 0; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.9;">Total Depositado para el Período</h2>
+        <div id="gran-total-valor" style="font-size: 3.5rem; font-weight: 800; letter-spacing: -0.05em; margin-top: 8px;">$0</div>
+      </div>
+
+      <div class="table-card">
+        <h3>Desglose por Empleado</h3>
+        <div id="tabla-pago-detalle" style="overflow-x: auto;"></div>
+      </div>
+    </div>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getTrabajadores } from "../lib/workers";
+
+      let trabajadores: any[] = [];
+
+      const msgEl = document.getElementById("pago-msg");
+      const negocioSelect = document.getElementById("pago-negocio") as HTMLSelectElement;
+      const mesDesdeInput = document.getElementById("pago-mes-desde") as HTMLInputElement;
+      const mesHastaInput = document.getElementById("pago-mes-hasta") as HTMLInputElement;
+      const valExtraInput = document.getElementById("pago-val-extra") as HTMLInputElement;
+      const deduccionInput = document.getElementById("pago-deduccion") as HTMLInputElement;
+      const btnAplicar = document.getElementById("btn-aplicar");
+      const tablaDetalleEl = document.getElementById("tabla-pago-detalle");
+
+      const normalizeMes = (value: any) => {
+        const str = String(value ?? "").trim();
+        return str || "";
+      };
+
+      const normalizeNegocio = (row: any) => (row?.negocio || "General").trim();
+
+      async function checkAuth() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return false; }
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin") { window.location.replace("/init"); return false; }
+        return true;
+      }
+
+      async function load() {
+        trabajadores = await getTrabajadores();
+        if (!trabajadores || trabajadores.length === 0) {
+          msgEl!.textContent = "No hay registros de nómina todavía.";
+          msgEl!.style.display = "block";
+          return;
+        }
+
+        const negocios = Array.from(new Set(trabajadores.map(normalizeNegocio))).sort();
+        negocioSelect.innerHTML = `<option value="GLOBAL">Todos los Negocios (Global)</option>` + 
+          negocios.map(n => `<option value="${n}">${n}</option>`).join("");
+
+        const meses = trabajadores.map(r => normalizeMes(r.mes || r.created_at)).filter(m => m).sort();
+        if (meses.length > 0) {
+          mesDesdeInput.value = meses[0].slice(0, 7);
+          mesHastaInput.value = meses[meses.length - 1].slice(0, 7);
+        }
+        await aplicar();
+      }
+
+      async function aplicar() {
+        if (!trabajadores.length) return;
+
+        const negocio = negocioSelect.value;
+        const mesDesde = mesDesdeInput.value;
+        const mesHasta = mesHastaInput.value;
+        const valorHoraExtra = parseFloat(valExtraInput.value) || 0;
+        const deduccionesPorcentaje = parseFloat(deduccionInput.value) || 0;
+
+        const detalleEmpleados: any[] = [];
+        let granTotalNegocio = 0;
+        const limiteHasta = mesHasta ? mesHasta + "-31" : ""; 
+
+        trabajadores.forEach(row => {
+          if (negocio !== "GLOBAL" && normalizeNegocio(row) !== negocio) return;
+          const mesKey = normalizeMes(row.mes || row.created_at);
+          if (!mesKey || mesKey < mesDesde || (limiteHasta && mesKey > limiteHasta)) return;
+
+          const salarioBase = Number(row.salario_base || 0);
+          const horasTrabajadas = Number(row.horas_trabajadas || 0);
+          const horasExtras = Number(row.horas_extras || 0);
+          const deuda = Number(row.deuda || 0);
+
+          const pagoBase = (salarioBase / 240) * horasTrabajadas;
+          const pagoExtras = horasExtras * valorHoraExtra;
+          const valorDeducciones = pagoBase * (deduccionesPorcentaje / 100);
+          
+          const totalPagar = pagoBase + pagoExtras - deuda - valorDeducciones;
+
+          detalleEmpleados.push({
+            nombre: row.nombre || "Sin Nombre",
+            documento: row.documento || "N/A",
+            mes: mesKey,
+            salarioBase,
+            horasTrabajadas,
+            horasExtras,
+            pagoExtras,
+            deuda,
+            valorDeducciones,
+            totalPagar
+          });
+
+          granTotalNegocio += totalPagar;
+        });
+
+        const granTotalEl = document.getElementById("gran-total-valor");
+        const granTotalCard = document.getElementById("gran-total-card");
+        
+        if (detalleEmpleados.length === 0) {
+            tablaDetalleEl!.innerHTML = `<p class="msg">No hay registros para este filtro.</p>`;
+            if (granTotalCard) granTotalCard.style.display = "none";
+            return;
+        }
+
+        if (granTotalEl && granTotalCard) {
+          granTotalEl.textContent = `$${granTotalNegocio.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
+          granTotalCard.style.display = "block";
+        }
+
+        detalleEmpleados.sort((a,b) => b.totalPagar - a.totalPagar);
+
+        tablaDetalleEl!.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Empleado</th>
+                <th>Corte</th>
+                <th>Salario Mensual</th>
+                <th>Horas Trab.</th>
+                <th>Extras ($)</th>
+                <th>Deudas ($)</th>
+                <th>Deducciones ($)</th>
+                <th>Total a Pagar</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${detalleEmpleados.map(e => `
+                <tr>
+                  <td><strong>${e.nombre}</strong><br/><span style="font-size:0.75rem; color:#64748b; font-family:monospace;">${e.documento}</span></td>
+                  <td><span class="badge-mes">${e.mes}</span></td>
+                  <td>$${e.salarioBase.toLocaleString('es-CO')}</td>
+                  <td><strong>${e.horasTrabajadas}</strong></td>
+                  <td style="color:#059669;">+ $${e.pagoExtras.toLocaleString('es-CO', { maximumFractionDigits: 0 })} <span style="font-size:0.7rem; color:#64748b;">(${e.horasExtras}h)</span></td>
+                  <td style="color:#ef4444;">- $${e.deuda.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                  <td style="color:#ef4444;">- $${e.valorDeducciones.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                  <td class="payroll-val">$${e.totalPagar.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      btnAplicar?.addEventListener("click", aplicar);
+
+      async function run() {
+        if (await checkAuth()) await load();
+      }
+      run();
+    </script>
+  </body>
+</html>
