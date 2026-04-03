@@ -12,14 +12,8 @@ import Navbar from "../components/navbar.astro";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-    <style is:global>
-      body { 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-        background-color: #f8fafc; 
-        margin: 0; 
-        color: #0f172a; 
-      }
+  </head>
+  <style is:global>
       
       .main-container {
         max-width: 1400px;
@@ -362,7 +356,6 @@ import Navbar from "../components/navbar.astro";
         padding: 60px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
       }
     </style>
-  </head>
   <body>
     <Navbar />
     
@@ -801,3 +794,11 @@ import Navbar from "../components/navbar.astro";
     </script>
   </body>
 </html>
+
+<style is:global>
+      body { 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        background-color: #f8fafc; 
+        margin: 0; 
+        color: #0f172a; 
+      }
