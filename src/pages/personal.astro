@@ -1,0 +1,803 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!DOCTYPE html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Personal | Premium</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style is:global>
+      body { 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+        background-color: #f8fafc; 
+        margin: 0; 
+        color: #0f172a; 
+      }
+      
+      .main-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 32px 24px;
+      }
+
+      /* Hero Header */
+      .page-hero {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 24px;
+        padding: 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+        flex-wrap: wrap;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .page-hero::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 100%;
+        background: radial-gradient(ellipse at top right, rgba(167, 139, 250, 0.1), transparent 70%);
+        pointer-events: none;
+      }
+      
+      .hero-content { flex: 1; min-width: 300px; z-index: 1; }
+      
+      .page-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #6d28d9;
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      
+      .page-hero__badge::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+      }
+      
+      .page-hero__title { 
+        margin: 0 0 12px 0; 
+        font-size: 2.25rem; 
+        font-weight: 800; 
+        color: #0f172a; 
+        letter-spacing: -0.03em; 
+      }
+      
+      .page-hero__desc { 
+        margin: 0; 
+        font-size: 1rem; 
+        color: #64748b; 
+        line-height: 1.6; 
+        max-width: 65ch; 
+      }
+
+      /* Split Layout */
+      .split-layout {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 32px;
+        align-items: start;
+      }
+      
+      @media (max-width: 1024px) {
+        .split-layout { grid-template-columns: 1fr; }
+      }
+
+      /* Form Section (Sidebar) */
+      .sidebar-section {
+        position: sticky;
+        top: 100px;
+      }
+
+      .form-card { 
+        background: white; 
+        padding: 32px; 
+        border-radius: 24px; 
+        border: 1px solid #e2e8f0; 
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01); 
+        transition: all 0.3s;
+      }
+      .form-card.edit-mode {
+        border-color: #8b5cf6;
+        box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.1);
+      }
+      
+      .form-header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .form-title {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin: 0;
+        color: #0f172a;
+      }
+
+      .btn-cancel-edit {
+        display: none;
+        background: #f1f5f9;
+        color: #64748b;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .form-card.edit-mode .btn-cancel-edit {
+        display: block;
+      }
+      .btn-cancel-edit:hover { background: #e2e8f0; color: #0f172a; }
+      
+      .form-group { 
+        display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;
+      }
+      
+      label { 
+        font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; 
+      }
+      
+      input[type="text"], input[type="number"], input[type="date"], select { 
+        padding: 14px 16px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 1rem; background: #f8fafc; transition: all 0.2s; color: #0f172a;
+      }
+      
+      input:focus, select:focus { 
+        outline: none; border-color: #8b5cf6; box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); background: white; 
+      }
+      
+      /* Checkbox List Styles */
+      .checkbox-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        margin-top: 8px;
+      }
+      .check-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .check-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .check-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .check-row input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #8b5cf6;
+        cursor: pointer;
+      }
+      .check-row label {
+        font-size: 0.85rem;
+        color: #0f172a;
+        text-transform: none;
+        font-weight: 600;
+        margin: 0;
+        cursor: pointer;
+      }
+      .date-input-container {
+        display: none;
+        margin-left: 26px;
+      }
+      .date-input-container.visible {
+        display: block;
+      }
+      .date-input-container input {
+        width: 100%;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+
+      .btn-submit { 
+        width: 100%; padding: 16px; background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%); 
+        color: white; border: none; border-radius: 14px; cursor: pointer; font-weight: 800; font-size: 1rem;
+        margin-top: 12px; box-shadow: 0 10px 15px -3px rgba(124, 58, 237, 0.3); transition: all 0.3s;
+      }
+      .btn-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 20px -3px rgba(124, 58, 237, 0.4); }
+      .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+      
+      #msg { text-align: center; font-weight: 600; margin-top: 16px; font-size: 0.9rem; }
+
+      /* List Section */
+      .list-section { display: flex; flex-direction: column; gap: 24px; }
+      
+      .filter-section { 
+        background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; 
+        display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+      }
+      .filter-section .form-group { margin-bottom: 0; flex: 1; min-width: 200px; }
+      
+      .btn-search { 
+        padding: 14px 28px; background: #1e293b; color: white; border: none; border-radius: 12px; 
+        cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.2s; height: 52px;
+      }
+      .btn-search:hover { background: #0f172a; transform: translateY(-1px); }
+
+      .list-header {
+        display: flex; justify-content: space-between; align-items: center; background: white;
+        padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0;
+      }
+      
+      .list-title-group { display: flex; flex-direction: column; gap: 4px; }
+      .context-hint { font-size: 0.85rem; color: #64748b; margin: 0; }
+      .context-hint strong { color: #0f172a; }
+
+      .list-count {
+        font-weight: 700; color: #8b5cf6; background: #f5f3ff;
+        padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; border: 1px solid #ede9fe;
+      }
+
+      #lista-personal { 
+        list-style: none; padding: 0; margin: 0;
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; 
+      }
+      
+      .worker-card { 
+        background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; 
+        display: flex; flex-direction: column; gap: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative; overflow: hidden;
+      }
+      .worker-card.is-editing {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+      }
+      .worker-card:hover { 
+        transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); border-color: #cbd5e1;
+      }
+      .worker-card::before { 
+        content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 4px; 
+        background: linear-gradient(90deg, #8b5cf6, #c084fc); opacity: 0; transition: opacity 0.3s;
+      }
+      .worker-card:hover::before, .worker-card.is-editing::before { opacity: 1; }
+
+      .card-info { display: flex; flex-direction: column; gap: 8px; }
+      .prod-name { font-size: 1.15rem; font-weight: 800; color: #0f172a; line-height: 1.2; }
+      
+      .prod-sku { 
+        font-family: 'Inter', monospace; font-weight: 600; font-size: 0.75rem; 
+        color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; width: fit-content; 
+      }
+      
+      .card-stats { 
+        display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+        padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;
+      }
+      
+      .stat-item { display: flex; flex-direction: column; gap: 2px; }
+      .stat-label { font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
+      .price-tag { color: #059669; font-weight: 800; font-size: 1.1rem; }
+
+      .badges-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      
+      .badge-item {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      
+      .badge-req-yes {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+      }
+      
+      .badge-req-no {
+        background: #f1f5f9;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+      }
+
+      .card-actions { 
+        display: flex; gap: 12px; margin-top: auto; border-top: 1px solid #f1f5f9; padding-top: 16px;
+      }
+      
+      .btn-edit { 
+        flex: 1; padding: 10px; background: white; color: #8b5cf6; border: 1px solid #ddd6fe; 
+        border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; 
+      }
+      .btn-edit:hover { background: #f5f3ff; border-color: #c4b5fd; }
+      
+      .btn-delete { 
+        flex: 1; padding: 10px; background: white; color: #ef4444; border: 1px solid #fecaca; 
+        border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: all 0.2s; 
+      }
+      .btn-delete:hover { background: #fef2f2; border-color: #ef4444; }
+
+      .empty-state {
+        grid-column: 1 / -1; background: white; border: 1px dashed #cbd5e1; border-radius: 20px;
+        padding: 60px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+    
+    <div class="main-container">
+      <header class="page-hero">
+        <div class="hero-content">
+          <span class="page-hero__badge">Base de datos · Personal</span>
+          <h1 class="page-hero__title">Personal y Liquidaciones</h1>
+          <p class="page-hero__desc">
+            Gestiona la asignación del personal adicional, fecha de ingreso y estados de liquidación, primas y cesantías verificados por sede.
+          </p>
+        </div>
+      </header>
+
+      <div class="split-layout">
+        
+        <!-- Left Column: List Section -->
+        <div class="list-section">
+          <div class="filter-section">
+            <div class="form-group">
+                <label for="filter-negocio">Filtrar Sede</label>
+                <select id="filter-negocio"></select>
+            </div>
+            <button id="btn-search" class="btn-search">Actualizar Vista</button>
+          </div>
+
+          <div class="list-header" id="list-header" style="display: none;">
+            <div class="list-title-group">
+              <h2 style="margin:0; font-size:1.1rem; font-weight:800; color: #0f172a;">Personal Asignado</h2>
+              <p id="context-hint" class="context-hint"></p>
+            </div>
+            <span class="list-count" id="list-count">--</span>
+          </div>
+
+          <ul id="lista-personal">
+            <li class="empty-state">
+              <span style="font-size: 24px;">🏢</span>
+              <span style="color: #64748b; font-weight: 500;">Selecciona una sede en los filtros para ver el personal.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Right Column: Form Section -->
+        <div class="sidebar-section">
+          <div class="form-card" id="main-form-card">
+            <div class="form-header">
+              <div>
+                <h3 class="form-title" id="form-title">Inscribir Personal</h3>
+                <p id="form-desc" style="margin: 6px 0 0 0; color: #64748b; font-size: 0.85rem;">Agregar nueva persona al sistema.</p>
+              </div>
+              <button type="button" class="btn-cancel-edit" id="btn-cancel-edit">Cancelar</button>
+            </div>
+            
+            <form id="form-personal">
+              <!-- Campo oculto para modo edición -->
+              <input type="hidden" id="edit-id" value="" />
+
+              <div class="form-group">
+                  <label for="t-nombre">Nombre Completo</label>
+                  <input type="text" id="t-nombre" placeholder="Nombre..." required />
+              </div>
+              
+              <div class="form-group">
+                  <label for="t-id">Identificación (Cédula/ID)</label>
+                  <input type="text" id="t-id" placeholder="Documento" required />
+              </div>
+              
+              <div class="form-group">
+                  <label for="t-cargo">Cargo / Puesto</label>
+                  <input type="text" id="t-cargo" placeholder="Ej: Operario" />
+              </div>
+              
+              <div class="form-group">
+                  <label for="t-salario">Salario Base ($)</label>
+                  <input type="number" id="t-salario" placeholder="0" min="0" />
+              </div>
+              
+              <div class="form-group">
+                  <label for="t-sede">Sede Asignada</label>
+                  <select id="t-sede" required></select>
+              </div>
+
+              <div class="form-group">
+                  <label for="t-fecha-entrada">Fecha de Ingreso</label>
+                  <input type="date" id="t-fecha-entrada" />
+              </div>
+
+              <div class="form-group">
+                <label>Detalles de Liquidación y Primas</label>
+                <div class="checkbox-list">
+                  
+                  <div class="check-item">
+                    <div class="check-row">
+                      <input type="checkbox" id="t-prima" />
+                      <label for="t-prima">Reconoce Prima</label>
+                    </div>
+                    <div class="date-input-container" id="container-prima">
+                      <label for="t-fecha-prima" style="font-size: 0.7rem;">Fecha Prima</label>
+                      <input type="date" id="t-fecha-prima" />
+                    </div>
+                  </div>
+
+                  <div class="check-item">
+                    <div class="check-row">
+                      <input type="checkbox" id="t-liquidacion" />
+                      <label for="t-liquidacion">Reconoce Liquidación</label>
+                    </div>
+                    <div class="date-input-container" id="container-liquidacion">
+                      <label for="t-fecha-liquidacion" style="font-size: 0.7rem;">Fecha Liquidación</label>
+                      <input type="date" id="t-fecha-liquidacion" />
+                    </div>
+                  </div>
+
+                  <div class="check-item">
+                    <div class="check-row">
+                      <input type="checkbox" id="t-cesantias" />
+                      <label for="t-cesantias">Reconoce Cesantías</label>
+                    </div>
+                    <div class="date-input-container" id="container-cesantias">
+                      <label for="t-fecha-cesantias" style="font-size: 0.7rem;">Fecha Cesantías</label>
+                      <input type="date" id="t-fecha-cesantias" />
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              
+              <button type="submit" id="btn-submit" class="btn-submit">Guardar Registro Exitoso</button>
+            </form>
+            <p id="msg"></p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getPersonalFiltrado, addPersonal, updatePersonal, deletePersonal } from "../lib/personal";
+      import type { Personal } from "../lib/personal";
+      import { getNegocios } from "../lib/negocios";
+
+      // Manejo de estado del UI
+      const state = {
+        editingId: null as string | null
+      };
+
+      async function init() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return; }
+        // Se puede modificar según los roles permitidos
+        
+        await loadNegocios();
+        setupCheckboxes();
+        
+        if ((document.getElementById("filter-negocio") as HTMLSelectElement).value) {
+            loadData();
+        }
+      }
+
+      function setupCheckboxes() {
+        ['prima', 'liquidacion', 'cesantias'].forEach(field => {
+          const chk = document.getElementById(`t-${field}`) as HTMLInputElement;
+          const container = document.getElementById(`container-${field}`) as HTMLDivElement;
+          const dateInput = document.getElementById(`t-fecha-${field}`) as HTMLInputElement;
+
+          chk.addEventListener('change', () => {
+             if (chk.checked) {
+               container.classList.add('visible');
+             } else {
+               container.classList.remove('visible');
+               dateInput.value = '';
+             }
+          });
+        });
+      }
+
+      async function loadNegocios() {
+        const negs = await getNegocios();
+        const opts = negs.length > 0 
+          ? negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("") 
+          : `<option value="">Sin sedes disponibles</option>`;
+        
+        (document.getElementById("t-sede") as HTMLSelectElement).innerHTML = opts;
+        (document.getElementById("filter-negocio") as HTMLSelectElement).innerHTML = opts;
+      }
+
+      function startEdit(item: any) {
+        // Llenar formulario
+        (document.getElementById('edit-id') as HTMLInputElement).value = item.id;
+        (document.getElementById('t-nombre') as HTMLInputElement).value = item.nombre || "";
+        (document.getElementById('t-id') as HTMLInputElement).value = item.documento || "";
+        (document.getElementById('t-cargo') as HTMLInputElement).value = item.cargo || "";
+        (document.getElementById('t-salario') as HTMLInputElement).value = item.salario_base || 0;
+        (document.getElementById('t-fecha-entrada') as HTMLInputElement).value = item.fecha_entrada || "";
+        
+        // Cargar Sede
+        const sd = item.negocio;
+        if (sd) {
+             const sel = document.getElementById('t-sede') as HTMLSelectElement;
+             if(Array.from(sel.options).some(o => o.value === sd)) sel.value = sd;
+        }
+
+        // Cargar Checkboxes y Fechas
+        ['prima', 'liquidacion', 'cesantias'].forEach(field => {
+          const chk = document.getElementById(`t-${field}`) as HTMLInputElement;
+          const container = document.getElementById(`container-${field}`) as HTMLDivElement;
+          const dateInput = document.getElementById(`t-fecha-${field}`) as HTMLInputElement;
+          
+          chk.checked = item[field] === true;
+          if (chk.checked) {
+             container.classList.add('visible');
+             dateInput.value = item[`fecha_${field}`] || "";
+          } else {
+             container.classList.remove('visible');
+             dateInput.value = "";
+          }
+        });
+
+        // Cambiar UI del formulario
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.add('edit-mode');
+        document.getElementById('form-title')!.textContent = "Editar Personal";
+        document.getElementById('form-desc')!.textContent = `Actualizando a ${item.nombre}`;
+        document.getElementById('btn-submit')!.textContent = "Actualizar Registro";
+        
+        state.editingId = item.id;
+        
+        document.querySelectorAll('.worker-card').forEach(el => el.classList.remove('is-editing'));
+        document.getElementById(`card-${item.id}`)?.classList.add('is-editing');
+        
+        if(window.innerWidth <= 1024) {
+             formCard.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      function cancelEdit() {
+        state.editingId = null;
+        const form = document.getElementById("form-personal") as HTMLFormElement;
+        form.reset();
+        (document.getElementById('edit-id') as HTMLInputElement).value = "";
+        
+        // Ocultar fecha inputs
+        ['prima', 'liquidacion', 'cesantias'].forEach(field => {
+            const container = document.getElementById(`container-${field}`) as HTMLDivElement;
+            container.classList.remove('visible');
+        });
+
+        const formCard = document.getElementById('main-form-card')!;
+        formCard.classList.remove('edit-mode');
+        document.getElementById('form-title')!.textContent = "Inscribir Personal";
+        document.getElementById('form-desc')!.textContent = "Agregar nueva persona al sistema.";
+        document.getElementById('btn-submit')!.textContent = "Guardar Registro";
+        
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        if(fNeg) (document.getElementById('t-sede') as HTMLSelectElement).value = fNeg;
+
+        document.querySelectorAll('.worker-card').forEach(el => el.classList.remove('is-editing'));
+      }
+
+      document.getElementById("btn-cancel-edit")?.addEventListener("click", cancelEdit);
+
+      async function loadData() {
+        const lista = document.getElementById("lista-personal")!;
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        const header = document.getElementById("list-header")!;
+        const hint = document.getElementById("context-hint")!;
+        const count = document.getElementById("list-count")!;
+
+        if (!fNeg) {
+          header.style.display = "none";
+          lista.innerHTML = `
+            <li class="empty-state">
+              <span style="font-size: 24px;">⚠️</span>
+              <span style="color: #64748b; font-weight: 500;">Primero configura negocios en la tabla sede para listar el personal.</span>
+            </li>`;
+          return;
+        }
+
+        header.style.display = "flex";
+        hint.innerHTML = `Personal filtrado: <strong>${fNeg}</strong>`;
+        count.textContent = "Cargando...";
+
+        try {
+          if (!state.editingId) {
+             (document.getElementById("t-sede") as HTMLSelectElement).value = fNeg;
+          }
+
+          let data = await getPersonalFiltrado(fNeg);
+
+          count.textContent = `${data.length} ${data.length === 1 ? 'persona' : 'personas'}`;
+
+          if (data.length === 0) {
+             lista.innerHTML = `
+              <li class="empty-state">
+                <span class="empty-text">No hay personal para la sede seleccionada.</span>
+              </li>`;
+             return;
+          }
+
+          lista.innerHTML = "";
+          
+          data.forEach(item => {
+            const li = document.createElement("li");
+            li.className = "worker-card";
+            li.id = `card-${item.id}`;
+            if (state.editingId === item.id) li.classList.add('is-editing');
+            
+            const doc = item.documento || "Sin ID";
+            const dtIngreso = item.fecha_entrada || "Sin fecha asignada";
+            
+            // Build Badges
+            const primaBadge = item.prima 
+                ? `<span class="badge-item badge-req-yes">✓ Prima : ${item.fecha_prima || 'Sin Fecha'}</span>`
+                : `<span class="badge-item badge-req-no">⨯ Prima</span>`;
+                
+            const liquidacionBadge = item.liquidacion 
+                ? `<span class="badge-item badge-req-yes">✓ Liquidación : ${item.fecha_liquidacion || 'Sin Fecha'}</span>`
+                : `<span class="badge-item badge-req-no">⨯ Liquidación</span>`;
+                
+            const cesantiasBadge = item.cesantias 
+                ? `<span class="badge-item badge-req-yes">✓ Cesantías : ${item.fecha_cesantias || 'Sin Fecha'}</span>`
+                : `<span class="badge-item badge-req-no">⨯ Cesantías</span>`;
+
+            li.innerHTML = `
+              <div class="card-info">
+                <span class="prod-sku">ID: ${doc}</span>
+                <span class="prod-name">${item.nombre}</span>
+                
+                <div class="card-stats">
+                  <div class="stat-item">
+                    <span class="stat-label">Ingreso</span>
+                    <span style="font-weight: 700; color: #334155; font-size: 0.85rem;">${dtIngreso}</span>
+                  </div>
+                  <div class="stat-item" style="align-items: flex-end;">
+                    <span class="stat-label">Salario</span>
+                    <span class="price-tag">$${Number(item.salario_base || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div class="badges-container">
+                    ${primaBadge}
+                    ${liquidacionBadge}
+                    ${cesantiasBadge}
+                </div>
+              </div>
+              <div class="card-actions">
+                <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar Datos</button>
+                <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Remover</button>
+              </div>
+            `;
+            lista.appendChild(li);
+          });
+
+          // Bind Edit
+          document.querySelectorAll('.btn-edit').forEach(btn => {
+            btn.addEventListener('click', (e: any) => {
+              const itemData = JSON.parse(e.target.dataset.item);
+              startEdit(itemData);
+            });
+          });
+
+          // Bind Delete
+          document.querySelectorAll('.btn-delete').forEach(btn => {
+            btn.addEventListener('click', async (e: any) => {
+              if (confirm(`¿Eliminar definitivamente a "${e.target.dataset.nombre}"?`)) {
+                await deletePersonal(e.target.dataset.id);
+                if(state.editingId === e.target.dataset.id) cancelEdit();
+                loadData();
+              }
+            });
+          });
+        } catch (e) {
+            console.error(e);
+            count.textContent = "Error";
+        }
+      }
+
+      document.getElementById("btn-search")?.addEventListener("click", () => {
+         cancelEdit();
+         loadData();
+      });
+
+      document.getElementById("form-personal")?.addEventListener("submit", async (e: any) => {
+        e.preventDefault();
+        const msg = document.getElementById("msg")!;
+        const btn = document.getElementById("btn-submit") as HTMLButtonElement;
+        const editId = (document.getElementById("edit-id") as HTMLInputElement).value;
+        const isUpdate = editId.trim().length > 0;
+
+        try {
+          msg.textContent = "";
+          btn.disabled = true;
+          btn.textContent = "Guardando...";
+
+          const newData: Partial<Personal> = {
+            nombre: (document.getElementById("t-nombre") as HTMLInputElement).value,
+            documento: (document.getElementById("t-id") as HTMLInputElement).value,
+            cargo: (document.getElementById("t-cargo") as HTMLInputElement).value || null,
+            salario_base: parseFloat((document.getElementById("t-salario") as HTMLInputElement).value || "0"),
+            negocio: (document.getElementById("t-sede") as HTMLSelectElement).value || null,
+            fecha_entrada: (document.getElementById("t-fecha-entrada") as HTMLInputElement).value || null,
+            prima: (document.getElementById("t-prima") as HTMLInputElement).checked,
+            fecha_prima: (document.getElementById("t-fecha-prima") as HTMLInputElement).value || null,
+            liquidacion: (document.getElementById("t-liquidacion") as HTMLInputElement).checked,
+            fecha_liquidacion: (document.getElementById("t-fecha-liquidacion") as HTMLInputElement).value || null,
+            cesantias: (document.getElementById("t-cesantias") as HTMLInputElement).checked,
+            fecha_cesantias: (document.getElementById("t-fecha-cesantias") as HTMLInputElement).value || null,
+          };
+
+          if (isUpdate) {
+            await updatePersonal(editId, newData);
+            msg.textContent = "✓ Actualizado correctamente";
+          } else {
+            await addPersonal(newData as Personal);
+            msg.textContent = "✓ Nuevo personal registrado";
+          }
+          
+          msg.style.color = "#10b981";
+          
+          cancelEdit();
+          loadData();
+          
+          setTimeout(() => { msg.textContent = ""; }, 3000);
+        } catch (err: any) {
+          msg.textContent = "Error: " + err.message;
+          msg.style.color = "#ef4444";
+        } finally {
+          btn.disabled = false;
+          if(!state.editingId) btn.textContent = "Guardar Registro";
+        }
+      });
+
+      // Init on astro navigation and first load
+      init();
+    </script>
+  </body>
+</html>

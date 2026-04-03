@@ -1,4 +1,5 @@
 ---
+
 ---
 
 <header class="navbar" aria-label="Navegación principal">
@@ -6,9 +7,23 @@
     <!-- Brand Logo -->
     <a href="/init" class="brand">
       <div class="brand-icon">
-        <svg xmlns="http://www.w3.org/2007/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+        <svg
+          xmlns="http://www.w3.org/2007/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          ><path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          ></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"
+          ></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg
+        >
       </div>
-      <span class="brand-text">Sistema<span class="brand-highlight">Inven</span></span>
+      <span class="brand-text"
+        >Sistema<span class="brand-highlight">Inven</span></span
+      >
     </a>
 
     <!-- Desktop Navigation -->
@@ -17,12 +32,19 @@
       <div class="nav-group">
         <span class="group-label">Operaciones</span>
         <ul class="nav-links">
-          <li class="admin-only"><a href="/inven" class="link-item">Inventario</a></li>
+          <li class="admin-only">
+            <a href="/inven" class="link-item">Inventario</a>
+          </li>
           <li><a href="/productos" class="link-item">Productos</a></li>
           <li><a href="/up_inven" class="link-item">Subir Inv.</a></li>
-          <li class="admin-only"><a href="/trabajadores" class="link-item">Nómina</a></li>
+          <li class="admin-only">
+            <a href="/trabajadores" class="link-item">Nómina</a>
+          </li>
           <li><a href="/up_trabajador" class="link-item">Subir Trab.</a></li>
-          <li class="admin-only"><a href="/negocios" class="link-item">Negocios</a></li>
+          <li class="admin-only">
+            <a href="/negocios" class="link-item">Negocios</a>
+          </li>
+          <li><a href="/personal" class="link-item">Personal</a></li>
         </ul>
       </div>
 
@@ -34,13 +56,42 @@
         <ul class="nav-links">
           <li>
             <a href="/reportes" class="link-item item-analytics">
-              <svg xmlns="http://www.w3.org/2007/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+              <svg
+                xmlns="http://www.w3.org/2007/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                ><line x1="18" y1="20" x2="18" y2="10"></line><line
+                  x1="12"
+                  y1="20"
+                  x2="12"
+                  y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg
+              >
               Inv.
             </a>
           </li>
           <li>
             <a href="/reportes_trabajadores" class="link-item item-analytics">
-              <svg xmlns="http://www.w3.org/2007/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <svg
+                xmlns="http://www.w3.org/2007/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                ><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                ></path><circle cx="9" cy="7" r="4"></circle><path
+                  d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path
+                  d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg
+              >
               Nómina
             </a>
           </li>
@@ -54,8 +105,25 @@
         <span class="group-label" style="opacity: 0;">Salir</span>
         <ul class="nav-links">
           <li>
-            <button id="btn-logout" class="link-item btn-logout" title="Cerrar Sessión">
-              <svg xmlns="http://www.w3.org/2007/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <button
+              id="btn-logout"
+              class="link-item btn-logout"
+              title="Cerrar Sessión"
+            >
+              <svg
+                xmlns="http://www.w3.org/2007/svg"
+                width="14"
+                height="14"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+                ><path
+                  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9"
+                ></path></svg
+              >
               Salir
             </button>
           </li>
@@ -64,8 +132,23 @@
     </nav>
 
     <!-- Mobile Menu Button -->
-    <button class="mobile-trigger" id="mobile-menu-btn" aria-label="Alternar menú">
-      <svg class="hamburger" xmlns="http://www.w3.org/2007/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    <button
+      class="mobile-trigger"
+      id="mobile-menu-btn"
+      aria-label="Alternar menú"
+    >
+      <svg
+        xmlns="http://www.w3.org/2007/svg"
+        width="24"
+        height="24"
+        fill="none"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        class="hamburger"
+        viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"></path></svg
+      >
     </button>
   </div>
 
@@ -78,24 +161,46 @@
           <a href="/inven" class="mobile-link admin-only">Inventario</a>
           <a href="/productos" class="mobile-link">Productos</a>
           <a href="/up_inven" class="mobile-link">Subir Inventario</a>
-          <a href="/trabajadores" class="mobile-link admin-only">Trabajadores</a>
+          <a href="/trabajadores" class="mobile-link admin-only">Trabajadores</a
+          >
           <a href="/up_trabajador" class="mobile-link">Subir Trabajadores</a>
           <a href="/negocios" class="mobile-link admin-only">Negocios</a>
+          <a href="/personal" class="mobile-link">Personal</a>
         </div>
       </div>
-      
+
       <div class="mobile-group mobile-group-analytics admin-only">
         <h4 class="mobile-label">Análisis Estratégico</h4>
         <div class="mobile-links">
-          <a href="/reportes" class="mobile-link analytics-link">Reportes de Inventario</a>
-          <a href="/reportes_trabajadores" class="mobile-link analytics-link">Reportes de Nómina</a>
+          <a href="/reportes" class="mobile-link analytics-link"
+            >Reportes de Inventario</a
+          >
+          <a href="/reportes_trabajadores" class="mobile-link analytics-link"
+            >Reportes de Nómina</a
+          >
         </div>
       </div>
-      
+
       <div class="mobile-group">
         <div class="mobile-links">
           <button id="btn-logout-mobile" class="mobile-link logout-link">
-            <svg xmlns="http://www.w3.org/2007/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <svg
+              xmlns="http://www.w3.org/2007/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              ><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"
+              ></path><polyline points="16 17 21 12 16 7"></polyline><line
+                x1="21"
+                y1="12"
+                x2="9"
+                y2="12"></line></svg
+            >
             Cerrar Sesión
           </button>
         </div>
@@ -117,8 +222,15 @@
   }
 
   /* Reset & Base */
-  ul { list-style: none; padding: 0; margin: 0; }
-  a { text-decoration: none; color: inherit; }
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
   .navbar {
     position: sticky;
@@ -161,7 +273,9 @@
     color: white;
     border-radius: 0.75rem;
     box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .brand:hover .brand-icon {
@@ -254,7 +368,7 @@
   .item-analytics {
     color: var(--accent-purple);
     background: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     border: 1px solid rgba(139, 92, 246, 0.1);
   }
 
@@ -369,12 +483,12 @@
     font-family: inherit;
     color: var(--text-secondary);
   }
-  
+
   .btn-logout:hover {
     color: #ef4444;
     background: #fef2f2;
   }
-  
+
   .logout-link {
     background: #fef2f2;
     color: #ef4444;
@@ -386,7 +500,7 @@
     cursor: pointer;
     font-family: inherit;
   }
-  
+
   .logout-link:active {
     background: #fee2e2;
   }
@@ -424,41 +538,45 @@
       if (!session) return;
       const role = await getUserRole(session.user.id);
       if (role === "trabajador") {
-        document.querySelectorAll('.admin-only').forEach((el: any) => {
-          el.style.display = 'none';
+        document.querySelectorAll(".admin-only").forEach((el: any) => {
+          el.style.display = "none";
         });
       }
-    } catch(e) { console.error("Error validando perfil en menú", e); }
+    } catch (e) {
+      console.error("Error validando perfil en menú", e);
+    }
   }
 
   // Ensure the script runs on every page load even when using view transitions
-  document.addEventListener('astro:page-load', () => {
+  document.addEventListener("astro:page-load", () => {
     initNavbar();
     applyNavSecurity();
   });
-  
+
   // Also run on initial load
   initNavbar();
   applyNavSecurity();
 
   function initNavbar() {
-    const mobileBtn = document.getElementById('mobile-menu-btn');
-    const mobileNav = document.getElementById('mobile-nav');
+    const mobileBtn = document.getElementById("mobile-menu-btn");
+    const mobileNav = document.getElementById("mobile-nav");
 
     if (mobileBtn && mobileNav && mobileBtn.parentNode) {
       // Remove old listeners to prevent stacking
       const newBtn = mobileBtn.cloneNode(true) as HTMLElement;
       mobileBtn.parentNode.replaceChild(newBtn, mobileBtn);
-      
-      newBtn.addEventListener('click', () => {
-        mobileNav.classList.toggle('is-open');
-        
-        const svg = newBtn.querySelector('svg');
+
+      newBtn.addEventListener("click", () => {
+        mobileNav.classList.toggle("is-open");
+
+        const svg = newBtn.querySelector("svg");
         if (svg) {
-          if (mobileNav.classList.contains('is-open')) {
-            svg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
+          if (mobileNav.classList.contains("is-open")) {
+            svg.innerHTML =
+              '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>';
           } else {
-            svg.innerHTML = '<line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>';
+            svg.innerHTML =
+              '<line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>';
           }
         }
       });
@@ -474,14 +592,14 @@
       }
     };
 
-    const desktopLogout = document.getElementById('btn-logout');
+    const desktopLogout = document.getElementById("btn-logout");
     if (desktopLogout) {
-      desktopLogout.addEventListener('click', handleLogout);
+      desktopLogout.addEventListener("click", handleLogout);
     }
 
-    const mobileLogout = document.getElementById('btn-logout-mobile');
+    const mobileLogout = document.getElementById("btn-logout-mobile");
     if (mobileLogout) {
-      mobileLogout.addEventListener('click', handleLogout);
+      mobileLogout.addEventListener("click", handleLogout);
     }
   }
 </script>
