@@ -2,88 +2,268 @@
 import Navbar from "../components/navbar.astro";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es-co">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Panel de Control Maestro</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #edf2f7; margin: 0; color: #1e293b; overflow-x: hidden; }
-      
+      body {
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background-color: #edf2f7;
+        margin: 0;
+        color: #1e293b;
+        overflow-x: hidden;
+      }
+
       /* Mesh Gradient Background */
-      .mesh-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; overflow: hidden; background: #fff; }
-      .blob { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(120px); opacity: 0.15; animation: move 20s infinite alternate; }
-      .blob-1 { background: #60a5fa; top: -10%; left: -10%; }
-      .blob-2 { background: #a78bfa; bottom: -10%; right: -10%; animation-delay: -5s; }
-      .blob-3 { background: #f472b6; top: 40%; left: 30%; animation-delay: -10s; }
-      @keyframes move { from { transform: translate(0,0) scale(1); } to { transform: translate(100px, 100px) scale(1.1); } }
-
-      .container { max-width: 1200px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
-      
-      .welcome-card { 
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
-        padding: 48px; border-radius: 32px; color: white; margin-bottom: 32px; 
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); position: relative; overflow: hidden;
+      .mesh-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        overflow: hidden;
+        background: #fff;
       }
-      .welcome-card::after { 
-        content: ""; position: absolute; top: 0; right: 0; width: 300px; height: 300px; 
-        background: radial-gradient(circle, rgba(96, 165, 250, 0.2) 0%, transparent 70%); 
+      .blob {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.15;
+        animation: move 20s infinite alternate;
       }
-      .welcome-card h1 { margin: 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; }
-      .welcome-card p { margin: 12px 0 0; opacity: 0.8; font-size: 1.1rem; max-width: 600px; }
-
-      .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .stat-card { 
-        background: white; padding: 24px; border-radius: 24px; border: 1px solid #e2e8f0; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex; flex-direction: column; position: relative; overflow: hidden;
+      .blob-1 {
+        background: #60a5fa;
+        top: -10%;
+        left: -10%;
       }
-      .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #cbd5e1; }
-      .stat-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
-      
-      .label-flex { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-      .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-      .stat-value { font-size: 2rem; font-weight: 800; color: #0f172a; }
-      .icon-circle { 
-        width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; 
-        margin-bottom: 16px; font-size: 1.2rem; 
+      .blob-2 {
+        background: #a78bfa;
+        bottom: -10%;
+        right: -10%;
+        animation-delay: -5s;
+      }
+      .blob-3 {
+        background: #f472b6;
+        top: 40%;
+        left: 30%;
+        animation-delay: -10s;
+      }
+      @keyframes move {
+        from {
+          transform: translate(0, 0) scale(1);
+        }
+        to {
+          transform: translate(100px, 100px) scale(1.1);
+        }
       }
 
-      .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .chart-card { background: white; padding: 24px; border-radius: 28px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-      .chart-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-      .chart-header h3 { margin: 0; font-size: 1.2rem; font-weight: 800; color: #0f172a; }
-      .chart-container { height: 300px; }
-
-      .quick-actions-section h3 { font-size: 1.6rem; font-weight: 800; margin-bottom: 24px; color: #0f172a; }
-      .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-      .action-btn { 
-        background: white; padding: 32px 24px; border-radius: 24px; border: 1px solid #e2e8f0; 
-        text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 12px;
-        transition: all 0.3s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+        position: relative;
+        z-index: 1;
       }
-      .action-btn:hover { background: #f8fafc; border-color: #3b82f6; transform: scale(1.02); }
-      .action-icon { font-size: 2rem; }
-      .action-label { font-weight: 800; color: #1e293b; font-size: 1rem; }
 
-      #loading { text-align: center; padding: 100px; font-weight: 800; color: #64748b; font-size: 1.5rem; }
+      .welcome-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 48px;
+        border-radius: 32px;
+        color: white;
+        margin-bottom: 32px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+      }
+      .welcome-card::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(
+          circle,
+          rgba(96, 165, 250, 0.2) 0%,
+          transparent 70%
+        );
+      }
+      .welcome-card h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+      }
+      .welcome-card p {
+        margin: 12px 0 0;
+        opacity: 0.8;
+        font-size: 1.1rem;
+        max-width: 600px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: white;
+        padding: 24px;
+        border-radius: 24px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+      .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: #cbd5e1;
+      }
+      .stat-accent {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+      }
+
+      .label-flex {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .icon-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        font-size: 1.2rem;
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .chart-card {
+        background: white;
+        padding: 24px;
+        border-radius: 28px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+      .chart-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .chart-container {
+        height: 300px;
+      }
+
+      .quick-actions-section h3 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 24px;
+        color: #0f172a;
+      }
+      .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+      }
+      .action-btn {
+        background: white;
+        padding: 32px 24px;
+        border-radius: 24px;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .action-btn:hover {
+        background: #f8fafc;
+        border-color: #3b82f6;
+        transform: scale(1.02);
+      }
+      .action-icon {
+        font-size: 2rem;
+      }
+      .action-label {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 1rem;
+      }
+
+      #loading {
+        text-align: center;
+        padding: 100px;
+        font-weight: 800;
+        color: #64748b;
+        font-size: 1.5rem;
+      }
     </style>
   </head>
   <body>
     <Navbar />
-    
+
     <div class="mesh-bg">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
     </div>
 
     <div class="container">
@@ -92,11 +272,19 @@ import Navbar from "../components/navbar.astro";
       <div id="admin-dashboard" style="display: none;">
         <div class="welcome-card">
           <h1>¡Hola Administrador!</h1>
-          <p>Tu central de inteligencia empresarial está actualizada. Aquí tienes el pulso de tus sucursales hoy.</p>
-          
+          <p>
+            Tu central de inteligencia empresarial está actualizada. Aquí tienes
+            el pulso de tus sucursales hoy.
+          </p>
+
           <div style="margin-top: 32px;">
-            <select id="dash-negocio" style="padding: 10px 20px; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);">
-              <option value="todos" style="color: #000;">🌍 Todas las Sedes</option>
+            <select
+              id="dash-negocio"
+              style="padding: 10px 20px; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: white; font-weight: 700; cursor: pointer; backdrop-filter: blur(10px);"
+            >
+              <option value="todos" style="color: #000;"
+                >🌍 Todas las Sedes</option
+              >
             </select>
           </div>
         </div>
@@ -104,31 +292,56 @@ import Navbar from "../components/navbar.astro";
         <div class="stats-grid">
           <div class="stat-card">
             <div class="stat-accent" style="background: #3b82f6;"></div>
-            <div class="icon-circle" style="background: #eff6ff; color: #3b82f6;">💰</div>
+            <div
+              class="icon-circle"
+              style="background: #eff6ff; color: #3b82f6;"
+            >
+              💰
+            </div>
             <div class="stat-label">Valorización Inventario</div>
             <div id="stat-inv-value" class="stat-value">$0</div>
           </div>
           <div class="stat-card">
             <div class="stat-accent" style="background: #10b981;"></div>
-            <div class="icon-circle" style="background: #ecfdf5; color: #10b981;">📦</div>
+            <div
+              class="icon-circle"
+              style="background: #ecfdf5; color: #10b981;"
+            >
+              📦
+            </div>
             <div class="stat-label">Stock Acumulado</div>
             <div id="stat-inv-items" class="stat-value">0</div>
           </div>
           <div class="stat-card">
             <div class="stat-accent" style="background: #f59e0b;"></div>
-            <div class="icon-circle" style="background: #fffbeb; color: #f59e0b;">💳</div>
+            <div
+              class="icon-circle"
+              style="background: #fffbeb; color: #f59e0b;"
+            >
+              💳
+            </div>
             <div class="stat-label">Nómina del Mes</div>
             <div id="stat-payroll-value" class="stat-value">$0</div>
           </div>
           <div class="stat-card">
             <div class="stat-accent" style="background: #a78bfa;"></div>
-            <div class="icon-circle" style="background: #f5f3ff; color: #a78bfa;">👥</div>
+            <div
+              class="icon-circle"
+              style="background: #f5f3ff; color: #a78bfa;"
+            >
+              👥
+            </div>
             <div class="stat-label">Personal Activo</div>
             <div id="stat-workers-count" class="stat-value">0</div>
           </div>
           <div class="stat-card">
             <div class="stat-accent" style="background: #14b8a6;"></div>
-            <div class="icon-circle" style="background: #ccfbf1; color: #14b8a6;">🏢</div>
+            <div
+              class="icon-circle"
+              style="background: #ccfbf1; color: #14b8a6;"
+            >
+              🏢
+            </div>
             <div class="stat-label">Sedes Activas</div>
             <div id="stat-negocios-count" class="stat-value">0</div>
           </div>
@@ -137,7 +350,7 @@ import Navbar from "../components/navbar.astro";
         <div class="charts-grid">
           <div class="chart-card">
             <div class="chart-header">
-                <h3>Tendencia de Valores</h3>
+              <h3>Tendencia de Valores</h3>
             </div>
             <div class="chart-container">
               <canvas id="mini-chart-inventory"></canvas>
@@ -145,7 +358,7 @@ import Navbar from "../components/navbar.astro";
           </div>
           <div class="chart-card">
             <div class="chart-header">
-                <h3>Distribución de Personal</h3>
+              <h3>Distribución de Personal</h3>
             </div>
             <div class="chart-container">
               <canvas id="mini-chart-workers"></canvas>
@@ -177,9 +390,18 @@ import Navbar from "../components/navbar.astro";
       </div>
 
       <div id="worker-dashboard" style="display: none;">
-        <div style="background: white; padding: 64px; border-radius: 32px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px rgba(0,0,0,0.05);">
-           <h1 style="font-size: 2.5rem; font-weight: 800; color: #3b82f6; margin-bottom: 16px;">¡Bienvenido de vuelta!</h1>
-           <p style="font-size: 1.1rem; color: #64748b;">Tu portal de trabajo está listo. Usa el menú para acceder a tus herramientas.</p>
+        <div
+          style="background: white; padding: 64px; border-radius: 32px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px rgba(0,0,0,0.05);"
+        >
+          <h1
+            style="font-size: 2.5rem; font-weight: 800; color: #3b82f6; margin-bottom: 16px;"
+          >
+            ¡Bienvenido de vuelta!
+          </h1>
+          <p style="font-size: 1.1rem; color: #64748b;">
+            Tu portal de trabajo está listo. Usa el menú para acceder a tus
+            herramientas.
+          </p>
         </div>
       </div>
     </div>
@@ -203,7 +425,10 @@ import Navbar from "../components/navbar.astro";
 
         try {
           const session = await getSession();
-          if (!session) { window.location.replace("/"); return; }
+          if (!session) {
+            window.location.replace("/");
+            return;
+          }
 
           const role = await getUserRole(session.user.id);
           loading!.style.display = "none";
@@ -213,14 +438,16 @@ import Navbar from "../components/navbar.astro";
             const [inv, workers, negs] = await Promise.all([
               getInventario().catch(() => []),
               getTrabajadores().catch(() => []),
-              getNegocios().catch(() => [])
+              getNegocios().catch(() => []),
             ]);
-            
+
             globalInventory = inv;
             globalWorkers = workers;
             globalNegocios = negs;
 
-            const nSelect = document.getElementById("dash-negocio") as HTMLSelectElement;
+            const nSelect = document.getElementById(
+              "dash-negocio",
+            ) as HTMLSelectElement;
             negs.forEach((n: any) => {
               const opt = document.createElement("option");
               opt.value = n.nombre;
@@ -229,69 +456,102 @@ import Navbar from "../components/navbar.astro";
               nSelect.appendChild(opt);
             });
 
-            nSelect.addEventListener("change", (e) => processStats((e.target as HTMLSelectElement).value));
+            nSelect.addEventListener("change", (e) =>
+              processStats((e.target as HTMLSelectElement).value),
+            );
             processStats("todos");
           } else {
             workerUI!.style.display = "block";
           }
-        } catch (e) { window.location.replace("/"); }
+        } catch (e) {
+          window.location.replace("/");
+        }
       }
 
       function processStats(filter: string) {
         const now = new Date();
-        const mActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const mActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
-        const fInv = filter === "todos" ? globalInventory : globalInventory.filter(i => String(i.negocio).trim() === filter);
-        const fWork = filter === "todos" ? globalWorkers : globalWorkers.filter(w => String(w.negocio).trim() === filter);
+        const fInv =
+          filter === "todos"
+            ? globalInventory
+            : globalInventory.filter(
+                (i) => String(i.negocio).trim() === filter,
+              );
+        const fWork =
+          filter === "todos"
+            ? globalWorkers
+            : globalWorkers.filter((w) => String(w.negocio).trim() === filter);
 
-        let vTotal = 0, sTotal = 0;
+        let vTotal = 0,
+          sTotal = 0;
         const mInv: Record<string, number> = {};
-        
+
         // Detectar el último mes que realmente tenga datos
         let latestMes = mActual;
-        fInv.forEach(i => {
-           const m = String(i.mes || "").trim().slice(0,7);
-           if (m && m !== "MASTER" && m > latestMes) latestMes = m;
+        fInv.forEach((i) => {
+          const m = String(i.mes || "")
+            .trim()
+            .slice(0, 7);
+          if (m && m !== "MASTER" && m > latestMes) latestMes = m;
         });
-        
+
         // Si no hay datos en el mes actual, usar el último mes histórico
         let activeMes = mActual;
-        const hasCurrentMonth = fInv.some(i => String(i.mes || "").trim().slice(0,7) === mActual);
+        const hasCurrentMonth = fInv.some(
+          (i) =>
+            String(i.mes || "")
+              .trim()
+              .slice(0, 7) === mActual,
+        );
         if (!hasCurrentMonth && fInv.length > 0) {
-            let maxM = "";
-            fInv.forEach(i => {
-                const m = String(i.mes || "").trim().slice(0,7);
-                if (m !== "MASTER" && (!maxM || m > maxM)) maxM = m;
-            });
-            if (maxM) activeMes = maxM;
+          let maxM = "";
+          fInv.forEach((i) => {
+            const m = String(i.mes || "")
+              .trim()
+              .slice(0, 7);
+            if (m !== "MASTER" && (!maxM || m > maxM)) maxM = m;
+          });
+          if (maxM) activeMes = maxM;
         }
 
-        fInv.forEach(i => {
-           const v = (i.cantidad || 0) * (i.precio || 0);
-           const m = String(i.mes || "").trim().slice(0,7);
-           if (m === activeMes) { vTotal += v; sTotal += (i.cantidad || 0); }
-           if (m && m !== "MASTER") mInv[m] = (mInv[m] || 0) + v;
+        fInv.forEach((i) => {
+          const v = (i.cantidad || 0) * (i.precio || 0);
+          const m = String(i.mes || "")
+            .trim()
+            .slice(0, 7);
+          if (m === activeMes) {
+            vTotal += v;
+            sTotal += i.cantidad || 0;
+          }
+          if (m && m !== "MASTER") mInv[m] = (mInv[m] || 0) + v;
         });
 
-        let nTotal = 0, wTotal = 0;
+        let nTotal = 0,
+          wTotal = 0;
         const mWork: Record<string, number> = {};
-        fWork.forEach(w => {
-           nTotal += (w.salario_base || 0); 
-           wTotal++;
-           const neg = w.negocio || "General";
-           mWork[neg] = (mWork[neg] || 0) + 1;
+        fWork.forEach((w) => {
+          nTotal += w.salario_base || 0;
+          wTotal++;
+          const neg = w.negocio || "General";
+          mWork[neg] = (mWork[neg] || 0) + 1;
         });
 
-        document.getElementById("stat-inv-value")!.textContent = `$${vTotal.toLocaleString('es-CO')}`;
-        document.getElementById("stat-inv-items")!.textContent = sTotal.toLocaleString('es-CO');
-        document.getElementById("stat-payroll-value")!.textContent = `$${nTotal.toLocaleString('es-CO')}`;
-        document.getElementById("stat-workers-count")!.textContent = wTotal.toString();
-        
+        document.getElementById("stat-inv-value")!.textContent =
+          `$${vTotal.toLocaleString("es-CO")}`;
+        document.getElementById("stat-inv-items")!.textContent =
+          sTotal.toLocaleString("es-CO");
+        document.getElementById("stat-payroll-value")!.textContent =
+          `$${nTotal.toLocaleString("es-CO")}`;
+        document.getElementById("stat-workers-count")!.textContent =
+          wTotal.toString();
+
         // Sedes Activas
         if (filter === "todos") {
-           document.getElementById("stat-negocios-count")!.textContent = globalNegocios.length.toString();
+          document.getElementById("stat-negocios-count")!.textContent =
+            globalNegocios.length.toString();
         } else {
-           document.getElementById("stat-negocios-count")!.textContent = "1";
+          document.getElementById("stat-negocios-count")!.textContent = "1";
         }
 
         renderCharts(mInv, mWork, filter);
@@ -303,27 +563,60 @@ import Navbar from "../components/navbar.astro";
         if (chartInv) chartInv.destroy();
         if (chartWork) chartWork.destroy();
 
-        const ctxI = (document.getElementById("mini-chart-inventory") as HTMLCanvasElement).getContext("2d");
-        const ctxW = (document.getElementById("mini-chart-workers") as HTMLCanvasElement).getContext("2d");
+        const ctxI = (
+          document.getElementById("mini-chart-inventory") as HTMLCanvasElement
+        ).getContext("2d");
+        const ctxW = (
+          document.getElementById("mini-chart-workers") as HTMLCanvasElement
+        ).getContext("2d");
 
         const months = Object.keys(iData).sort().slice(-6);
         chartInv = new ChartRef(ctxI, {
-          type: 'line',
+          type: "line",
           data: {
             labels: months,
-            datasets: [{ label: 'Valor', data: months.map(m => iData[m]), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4, fill: true }]
+            datasets: [
+              {
+                label: "Valor",
+                data: months.map((m) => iData[m]),
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+                tension: 0.4,
+                fill: true,
+              },
+            ],
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+          },
         });
 
         const negs = Object.keys(wData);
         chartWork = new ChartRef(ctxW, {
-          type: filter === 'todos' ? 'doughnut' : 'bar',
+          type: filter === "todos" ? "doughnut" : "bar",
           data: {
             labels: negs,
-            datasets: [{ data: negs.map(n => wData[n]), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#a78bfa', '#ef4444'], borderWidth: 0 }]
+            datasets: [
+              {
+                data: negs.map((n) => wData[n]),
+                backgroundColor: [
+                  "#3b82f6",
+                  "#10b981",
+                  "#f59e0b",
+                  "#a78bfa",
+                  "#ef4444",
+                ],
+                borderWidth: 0,
+              },
+            ],
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } },
+          },
         });
       }
 
