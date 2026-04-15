@@ -2,34 +2,54 @@
 import Navbar from "../components/navbar.astro";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es-co">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reportes de Inventario Mensual</title>
-    
+
     <!-- Premium Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
       body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
         margin: 0;
         color: #1e293b;
         background-color: #faf5ff;
         background-image:
-          radial-gradient(ellipse 80% 50% at 50% -20%, rgba(124, 58, 237, 0.15), transparent),
+          radial-gradient(
+            ellipse 80% 50% at 50% -20%,
+            rgba(124, 58, 237, 0.15),
+            transparent
+          ),
           linear-gradient(180deg, #f5f3ff 0%, #fafafa 35%, #f4f4f5 100%);
         min-height: 100vh;
       }
-      .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px 48px; }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 24px 48px;
+      }
 
       .report-hero {
-        background: linear-gradient(125deg, #4c1d95 0%, #6d28d9 40%, #7c3aed 100%);
+        background: linear-gradient(
+          125deg,
+          #4c1d95 0%,
+          #6d28d9 40%,
+          #7c3aed 100%
+        );
         color: #fff;
         border-radius: 24px;
         padding: 32px 36px;
@@ -46,7 +66,11 @@ import Navbar from "../components/navbar.astro";
         opacity: 0.9;
         pointer-events: none;
       }
-      .report-hero__inner { position: relative; z-index: 1; max-width: 640px; }
+      .report-hero__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 640px;
+      }
       .report-hero__badge {
         display: inline-block;
         font-size: 0.68rem;
@@ -74,14 +98,53 @@ import Navbar from "../components/navbar.astro";
         line-height: 1.55;
         font-weight: 500;
       }
-      .report-hero__desc strong { color: #fff; font-weight: 700; }
+      .report-hero__desc strong {
+        color: #fff;
+        font-weight: 700;
+      }
 
-      .filters-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; box-shadow: 0 10px 30px -8px rgba(124, 58, 237, 0.12); margin-bottom: 32px; }
-      .filters { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end; }
-      label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 1rem; width: 100%; transition: all 0.2s; background: #f9fafb; }
-      input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
-      
+      .filters-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #e9d5ff;
+        box-shadow: 0 10px 30px -8px rgba(124, 58, 237, 0.12);
+        margin-bottom: 32px;
+      }
+      .filters {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-weight: 800;
+        color: #6b7280;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      input,
+      select {
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.2s;
+        background: #f9fafb;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: white;
+      }
+
       .btn {
         padding: 12px 32px;
         background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
@@ -100,24 +163,103 @@ import Navbar from "../components/navbar.astro";
         box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.5);
       }
 
-      .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .stat-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #ede9fe; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06); }
-      .stat-card h4 { margin: 0; color: #6b7280; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 800; }
-      .stat-card .value { font-size: 1.8rem; font-weight: 800; color: #111827; }
+      .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .stat-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #ede9fe;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
+      }
+      .stat-card h4 {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+        font-weight: 800;
+      }
+      .stat-card .value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #111827;
+      }
 
-      .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; margin-bottom: 32px; }
-      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06); }
-      .chart-container { height: 320px; position: relative; margin-top: 16px; }
-      .chart-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0; }
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      .chart-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #e9d5ff;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06);
+      }
+      .chart-container {
+        height: 320px;
+        position: relative;
+        margin-top: 16px;
+      }
+      .chart-card h3 {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin: 0;
+      }
 
-      .results-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #e9d5ff; overflow: hidden; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06); }
-      .results-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 20px; }
-      
-      table { width: 100%; border-collapse: collapse; }
-      th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-      th { color: #64748b; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; background: #f8fafc; }
-      td { font-size: 0.95rem; color: #374151; }
-      .badge-code { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #64748b; font-size: 0.85rem; }
+      .results-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #e9d5ff;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.06);
+      }
+      .results-card h3 {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+      }
+      th {
+        color: #64748b;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        background: #f8fafc;
+      }
+      td {
+        font-size: 0.95rem;
+        color: #374151;
+      }
+      .badge-code {
+        font-family: monospace;
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #64748b;
+        font-size: 0.85rem;
+      }
     </style>
   </head>
   <body>
@@ -129,7 +271,9 @@ import Navbar from "../components/navbar.astro";
           <span class="report-hero__badge">Análisis · Solo lectura</span>
           <h1>Reportes de inventario</h1>
           <p class="report-hero__desc">
-            Visualiza <strong>valorización, categorías y ranking</strong> a partir de los datos ya cargados. Para editar filas o stock, usa <strong>Base de datos → Inventario</strong>.
+            Visualiza <strong>valorización, categorías y ranking</strong> a partir
+            de los datos ya cargados. Para editar filas o productos registrados, usa
+            <strong>Base de datos → Inventario</strong>.
           </p>
         </div>
       </header>
@@ -152,7 +296,10 @@ import Navbar from "../components/navbar.astro";
         </div>
       </div>
 
-      <div id="no-data-msg" style="padding: 80px; text-align: center; color: #94a3b8; font-style: italic; font-weight: 500;">
+      <div
+        id="no-data-msg"
+        style="padding: 80px; text-align: center; color: #94a3b8; font-style: italic; font-weight: 500;"
+      >
         Ingresa los parámetros para generar el reporte de existencias.
       </div>
 
@@ -203,26 +350,41 @@ import Navbar from "../components/navbar.astro";
       let chartInstBar: any = null;
       let cacheMaster: any[] = [];
 
-      const negocioSelect = document.getElementById("report-negocio") as HTMLSelectElement;
-      const mesInput = document.getElementById("report-mes") as HTMLInputElement;
+      const negocioSelect = document.getElementById(
+        "report-negocio",
+      ) as HTMLSelectElement;
+      const mesInput = document.getElementById(
+        "report-mes",
+      ) as HTMLInputElement;
 
       async function init() {
         const session = await getSession();
-        if (!session) { window.location.replace("/"); return; }
+        if (!session) {
+          window.location.replace("/");
+          return;
+        }
         const role = await getUserRole(session.user.id);
-        if (role !== "admin") { window.location.replace("/init"); return; }
+        if (role !== "admin") {
+          window.location.replace("/init");
+          return;
+        }
 
         const now = new Date();
-        mesInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        mesInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
         try {
           cacheMaster = await getMasterProductos();
           const negocios = await getNegocios();
           if (negocioSelect) {
-            negocioSelect.innerHTML = `<option value="GLOBAL">Todos los Negocios (Global)</option>` + 
-              negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+            negocioSelect.innerHTML =
+              `<option value="GLOBAL">Todos los Negocios (Global)</option>` +
+              negocios
+                .map((n) => `<option value="${n.nombre}">${n.nombre}</option>`)
+                .join("");
           }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+        }
       }
 
       async function runReport() {
@@ -235,7 +397,7 @@ import Navbar from "../components/navbar.astro";
 
         try {
           const stockData = await getStockFiltrado(nVal, mVal);
-          
+
           if (stockData.length === 0) {
             msgEl!.innerHTML = `No se encontraron datos para <strong>${nVal}</strong> en <strong>${mVal}</strong>.`;
             msgEl!.style.display = "block";
@@ -247,27 +409,29 @@ import Navbar from "../components/navbar.astro";
           contEl!.style.display = "block";
 
           const finalReportMap = new Map();
-          stockData.forEach(s => {
-              const master = cacheMaster.find(m => m.codigo === s.codigo);
-              const p = master ? Number(master.precio) : 0;
-              const nombre = master ? master.nombre : s.nombre;
-              const categoria = master ? (master.categoria || 'Sin Categoría') : 'S/C';
-              const cantidadStr = Number(s.cantidad) || 0;
+          stockData.forEach((s) => {
+            const master = cacheMaster.find((m) => m.codigo === s.codigo);
+            const p = master ? Number(master.precio) : 0;
+            const nombre = master ? master.nombre : s.nombre;
+            const categoria = master
+              ? master.categoria || "Sin Categoría"
+              : "S/C";
+            const cantidadStr = Number(s.cantidad) || 0;
 
-              if(finalReportMap.has(s.codigo)) {
-                  const existing = finalReportMap.get(s.codigo);
-                  existing.cantidad += cantidadStr;
-                  existing.total += cantidadStr * p;
-              } else {
-                  finalReportMap.set(s.codigo, {
-                      codigo: s.codigo,
-                      nombre: nombre,
-                      categoria: categoria,
-                      precio: p,
-                      cantidad: cantidadStr,
-                      total: cantidadStr * p
-                  });
-              }
+            if (finalReportMap.has(s.codigo)) {
+              const existing = finalReportMap.get(s.codigo);
+              existing.cantidad += cantidadStr;
+              existing.total += cantidadStr * p;
+            } else {
+              finalReportMap.set(s.codigo, {
+                codigo: s.codigo,
+                nombre: nombre,
+                categoria: categoria,
+                precio: p,
+                cantidad: cantidadStr,
+                total: cantidadStr * p,
+              });
+            }
           });
           const finalReport = Array.from(finalReportMap.values());
 
@@ -284,45 +448,69 @@ import Navbar from "../components/navbar.astro";
         let totalMoney = 0;
         let totalUnits = 0;
         const catValueMap: Record<string, number> = {};
-        
-        data.forEach(item => {
-           totalMoney += item.total;
-           totalUnits += item.cantidad;
-           catValueMap[item.categoria] = (catValueMap[item.categoria] || 0) + item.total;
+
+        data.forEach((item) => {
+          totalMoney += item.total;
+          totalUnits += item.cantidad;
+          catValueMap[item.categoria] =
+            (catValueMap[item.categoria] || 0) + item.total;
         });
 
-        document.getElementById("val-total-prods")!.textContent = data.length.toLocaleString();
-        document.getElementById("val-total-units")!.textContent = totalUnits.toLocaleString();
-        document.getElementById("val-total-money")!.textContent = `$${totalMoney.toLocaleString('es-CO')}`;
+        document.getElementById("val-total-prods")!.textContent =
+          data.length.toLocaleString();
+        document.getElementById("val-total-units")!.textContent =
+          totalUnits.toLocaleString();
+        document.getElementById("val-total-money")!.textContent =
+          `$${totalMoney.toLocaleString("es-CO")}`;
 
         const ChartJs = (window as any).Chart;
 
         chartInstPie = new ChartJs(document.getElementById("chart-pie-cats"), {
-          type: 'doughnut',
+          type: "doughnut",
           data: {
             labels: Object.keys(catValueMap),
-            datasets: [{
-              data: Object.values(catValueMap),
-              backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'],
-              borderWidth: 0
-            }]
+            datasets: [
+              {
+                data: Object.values(catValueMap),
+                backgroundColor: [
+                  "#3b82f6",
+                  "#10b981",
+                  "#f59e0b",
+                  "#ef4444",
+                  "#8b5cf6",
+                  "#64748b",
+                ],
+                borderWidth: 0,
+              },
+            ],
           },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: "bottom" } },
+          },
         });
 
-        const top5 = [...data].sort((a,b) => b.total - a.total).slice(0, 5);
+        const top5 = [...data].sort((a, b) => b.total - a.total).slice(0, 5);
         chartInstBar = new ChartJs(document.getElementById("chart-bar-top"), {
-          type: 'bar',
+          type: "bar",
           data: {
-            labels: top5.map(i => i.nombre),
-            datasets: [{
-              label: 'Valor en Pesos',
-              data: top5.map(i => i.total),
-              backgroundColor: '#3b82f6',
-              borderRadius: 8
-            }]
+            labels: top5.map((i) => i.nombre),
+            datasets: [
+              {
+                label: "Valor en Pesos",
+                data: top5.map((i) => i.total),
+                backgroundColor: "#3b82f6",
+                borderRadius: 8,
+              },
+            ],
           },
-          options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: "y",
+            plugins: { legend: { display: false } },
+          },
         });
 
         const tableDiv = document.getElementById("report-table-div");
@@ -338,21 +526,27 @@ import Navbar from "../components/navbar.astro";
               </tr>
             </thead>
             <tbody>
-              ${data.map(i => `
+              ${data
+                .map(
+                  (i) => `
                 <tr>
                   <td><span class="badge-code">${i.codigo}</span></td>
                   <td><strong>${i.nombre}</strong><br/><small style="color:#64748b;">${i.categoria}</small></td>
                   <td>${i.cantidad.toLocaleString()} und.</td>
                   <td>$${Number(i.precio).toLocaleString()}</td>
-                  <td><strong>$${i.total.toLocaleString('es-CO')}</strong></td>
+                  <td><strong>$${i.total.toLocaleString("es-CO")}</strong></td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
         `;
       }
 
-      document.getElementById("btn-generate")?.addEventListener("click", runReport);
+      document
+        .getElementById("btn-generate")
+        ?.addEventListener("click", runReport);
       init();
     </script>
   </body>

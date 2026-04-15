@@ -2,35 +2,55 @@
 import Navbar from "../components/navbar.astro";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es-co">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Reportes de Nómina</title>
-    
+
     <!-- Premium Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
       body {
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
         margin: 0;
         color: #1e293b;
         background-color: #fffbeb;
         background-image:
-          radial-gradient(ellipse 70% 45% at 80% -10%, rgba(245, 158, 11, 0.18), transparent),
+          radial-gradient(
+            ellipse 70% 45% at 80% -10%,
+            rgba(245, 158, 11, 0.18),
+            transparent
+          ),
           linear-gradient(180deg, #fff7ed 0%, #fafafa 40%, #f4f4f5 100%);
         min-height: 100vh;
       }
-      .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px 48px; }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 24px 48px;
+      }
 
       .report-hero {
-        background: linear-gradient(125deg, #9a3412 0%, #c2410c 38%, #ea580c 100%);
+        background: linear-gradient(
+          125deg,
+          #9a3412 0%,
+          #c2410c 38%,
+          #ea580c 100%
+        );
         color: #fff;
         border-radius: 24px;
         padding: 32px 36px;
@@ -46,7 +66,11 @@ import Navbar from "../components/navbar.astro";
         background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40h40V0H0v40z' fill='none'/%3E%3Cpath d='M20 0v40M0 20h40' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/%3E%3C/svg%3E");
         pointer-events: none;
       }
-      .report-hero__inner { position: relative; z-index: 1; max-width: 620px; }
+      .report-hero__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 620px;
+      }
       .report-hero__badge {
         display: inline-block;
         font-size: 0.68rem;
@@ -74,36 +98,161 @@ import Navbar from "../components/navbar.astro";
         line-height: 1.55;
         font-weight: 500;
       }
-      .report-hero__desc strong { color: #fff; font-weight: 700; }
+      .report-hero__desc strong {
+        color: #fff;
+        font-weight: 700;
+      }
 
-      .main-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; box-shadow: 0 10px 30px -8px rgba(234, 88, 12, 0.12); margin-bottom: 32px; }
-      .filters { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
-      label { display: flex; flex-direction: column; gap: 8px; font-weight: 800; color: #6b7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
-      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 0.95rem; background: #f9fafb; transition: all 0.2s; }
-      input:focus, select:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
-      
-      .btn { padding: 12px 24px; background-color: #3b82f6; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 0.95rem; transition: all 0.2s; }
-      .btn:hover:not(:disabled) { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25); }
-      .btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+      .main-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #fed7aa;
+        box-shadow: 0 10px 30px -8px rgba(234, 88, 12, 0.12);
+        margin-bottom: 32px;
+      }
+      .filters {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-weight: 800;
+        color: #6b7280;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      input,
+      select {
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        background: #f9fafb;
+        transition: all 0.2s;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: white;
+      }
 
-      .charts-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
-      @media (min-width: 900px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
-      
-      .chart-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; height: 400px; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06); }
-      .chart-card h3 { font-size: 1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; color: #374151; }
-      .chart-wrap { height: 320px; position: relative; }
+      .btn {
+        padding: 12px 24px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+      }
+      .btn:hover:not(:disabled) {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);
+      }
+      .btn:disabled {
+        background-color: #94a3b8;
+        cursor: not-allowed;
+      }
 
-      .table-card { background: white; padding: 24px; border-radius: 20px; border: 1px solid #fed7aa; overflow: hidden; box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06); }
-      .table-card h3 { font-size: 1.1rem; font-weight: 800; margin-top: 0; margin-bottom: 16px; }
-      
-      table { width: 100%; border-collapse: collapse; }
-      th, td { padding: 16px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-      th { color: #64748b; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; background: #f8fafc; }
-      td { font-size: 0.95rem; }
-      .msg { color: #94a3b8; margin-top: 12px; font-weight: 500; text-align: center; padding: 20px; font-style: italic; }
-      
-      .payroll-val { color: #059669; font-weight: 800; }
-      .badge-mes { font-family: monospace; background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-weight: 600; color: #475569; }
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+      }
+      @media (min-width: 900px) {
+        .charts-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .chart-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #fed7aa;
+        height: 400px;
+        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06);
+      }
+      .chart-card h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: #374151;
+      }
+      .chart-wrap {
+        height: 320px;
+        position: relative;
+      }
+
+      .table-card {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        border: 1px solid #fed7aa;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.06);
+      }
+      .table-card h3 {
+        font-size: 1.1rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+      }
+      th {
+        color: #64748b;
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        background: #f8fafc;
+      }
+      td {
+        font-size: 0.95rem;
+      }
+      .msg {
+        color: #94a3b8;
+        margin-top: 12px;
+        font-weight: 500;
+        text-align: center;
+        padding: 20px;
+        font-style: italic;
+      }
+
+      .payroll-val {
+        color: #059669;
+        font-weight: 800;
+      }
+      .badge-mes {
+        font-family: monospace;
+        background: #e2e8f0;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #475569;
+      }
     </style>
   </head>
   <body>
@@ -115,7 +264,8 @@ import Navbar from "../components/navbar.astro";
           <span class="report-hero__badge">Análisis · Nómina</span>
           <h1>Reportes de personal y nómina</h1>
           <p class="report-hero__desc">
-            Gráficos y resúmenes por periodo. Para dar de alta o editar personas, <strong>Base de datos → Trabajadores</strong>.
+            Gráficos y resúmenes por periodo. Para dar de alta o editar
+            personas, <strong>Base de datos → Trabajadores</strong>.
           </p>
         </div>
       </header>
@@ -141,12 +291,17 @@ import Navbar from "../components/navbar.astro";
 
           <label style="min-width: 140px;">
             Valor Hora Extra
-            <input id="rep-trab-val-extra" type="number" value="6000" step="100" />
+            <input
+              id="rep-trab-val-extra"
+              type="number"
+              value="7000"
+              step="100"
+            />
           </label>
 
           <label style="min-width: 140px;">
             Deducciones (%)
-            <input id="rep-trab-deduccion" type="number" value="8" step="0.1" />
+            <input id="rep-trab-deduccion" type="number" value="0" step="0.1" />
           </label>
 
           <button id="btn-trab-aplicar" class="btn">Actualizar Vista</button>
@@ -155,7 +310,11 @@ import Navbar from "../components/navbar.astro";
         <div id="rep-trab-msg" class="msg" style="display:none;"></div>
       </div>
 
-      <h2 style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 24px; margin-top: 24px;">Resumen del Análisis de Nómina</h2>
+      <h2
+        style="font-size: 1.4rem; font-weight: 800; color: #1e293b; margin-bottom: 24px; margin-top: 24px;"
+      >
+        Resumen del Análisis de Nómina
+      </h2>
 
       <div class="charts-grid">
         <div class="chart-card">
@@ -188,11 +347,21 @@ import Navbar from "../components/navbar.astro";
       let chartCantidad: any = null;
 
       const msgEl = document.getElementById("rep-trab-msg");
-      const negocioSelect = document.getElementById("rep-trab-negocio") as HTMLSelectElement;
-      const mesDesdeInput = document.getElementById("rep-trab-mes-desde") as HTMLInputElement;
-      const mesHastaInput = document.getElementById("rep-trab-mes-hasta") as HTMLInputElement;
-      const valExtraInput = document.getElementById("rep-trab-val-extra") as HTMLInputElement;
-      const deduccionInput = document.getElementById("rep-trab-deduccion") as HTMLInputElement;
+      const negocioSelect = document.getElementById(
+        "rep-trab-negocio",
+      ) as HTMLSelectElement;
+      const mesDesdeInput = document.getElementById(
+        "rep-trab-mes-desde",
+      ) as HTMLInputElement;
+      const mesHastaInput = document.getElementById(
+        "rep-trab-mes-hasta",
+      ) as HTMLInputElement;
+      const valExtraInput = document.getElementById(
+        "rep-trab-val-extra",
+      ) as HTMLInputElement;
+      const deduccionInput = document.getElementById(
+        "rep-trab-deduccion",
+      ) as HTMLInputElement;
       const btnAplicar = document.getElementById("btn-trab-aplicar");
       const tablaEl = document.getElementById("tabla-trab-mensual");
 
@@ -205,9 +374,15 @@ import Navbar from "../components/navbar.astro";
 
       async function checkAccess() {
         const session = await getSession();
-        if (!session) { window.location.replace("/"); return false; }
+        if (!session) {
+          window.location.replace("/");
+          return false;
+        }
         const role = await getUserRole(session.user.id);
-        if (role !== "admin") { window.location.replace("/init"); return false; }
+        if (role !== "admin") {
+          window.location.replace("/init");
+          return false;
+        }
         return true;
       }
 
@@ -219,11 +394,17 @@ import Navbar from "../components/navbar.astro";
           return;
         }
 
-        const negocios = Array.from(new Set(trabajadores.map(normalizeNegocio))).sort();
-        negocioSelect.innerHTML = `<option value="GLOBAL">Todos los Negocios (Global)</option>` + 
-          negocios.map(n => `<option value="${n}">${n}</option>`).join("");
+        const negocios = Array.from(
+          new Set(trabajadores.map(normalizeNegocio)),
+        ).sort();
+        negocioSelect.innerHTML =
+          `<option value="GLOBAL">Todos los Negocios (Global)</option>` +
+          negocios.map((n) => `<option value="${n}">${n}</option>`).join("");
 
-        const meses = trabajadores.map(r => normalizeMes(r.mes || r.created_at)).filter(m => m).sort();
+        const meses = trabajadores
+          .map((r) => normalizeMes(r.mes || r.created_at))
+          .filter((m) => m)
+          .sort();
         if (meses.length > 0) {
           mesDesdeInput.value = meses[0].slice(0, 7);
           mesHastaInput.value = meses[meses.length - 1].slice(0, 7);
@@ -242,16 +423,24 @@ import Navbar from "../components/navbar.astro";
         const valorHoraExtra = parseFloat(valExtraInput.value) || 0;
         const deduccionesPorcentaje = parseFloat(deduccionInput.value) || 0;
 
-        const grupos: Record<string, { cantidad: number; salarioTotal: number }> = {};
+        const grupos: Record<
+          string,
+          { cantidad: number; salarioTotal: number }
+        > = {};
         const detalleEmpleados: any[] = [];
-        
+
         let granTotalNegocio = 0;
         const limiteHasta = mesHasta ? mesHasta + "-31" : ""; // Para soportar días de corte > 10, 20
 
-        trabajadores.forEach(row => {
+        trabajadores.forEach((row) => {
           if (negocio !== "GLOBAL" && normalizeNegocio(row) !== negocio) return;
           const mesKey = normalizeMes(row.mes || row.created_at);
-          if (!mesKey || mesKey < mesDesde || (limiteHasta && mesKey > limiteHasta)) return;
+          if (
+            !mesKey ||
+            mesKey < mesDesde ||
+            (limiteHasta && mesKey > limiteHasta)
+          )
+            return;
 
           const salarioBase = Number(row.salario_base || 0);
           const horasTrabajadas = Number(row.horas_trabajadas || 0);
@@ -261,13 +450,14 @@ import Navbar from "../components/navbar.astro";
           // Total a Pagar = (Salario Base / 240 * Horas Trab) + (Horas Extras * Valor Hora Extra) - Deuda
           const pagoBase = (salarioBase / 240) * horasTrabajadas;
           const pagoExtras = horasExtras * valorHoraExtra;
-          
+
           // Deducciones calculadas a partir del pago base
           const valorDeducciones = pagoBase * (deduccionesPorcentaje / 100);
-          
+
           const totalPagar = pagoBase + pagoExtras - deuda - valorDeducciones;
 
-          if (!grupos[mesKey]) grupos[mesKey] = { cantidad: 0, salarioTotal: 0 };
+          if (!grupos[mesKey])
+            grupos[mesKey] = { cantidad: 0, salarioTotal: 0 };
           grupos[mesKey].cantidad += 1;
           grupos[mesKey].salarioTotal += totalPagar;
         });
@@ -288,43 +478,69 @@ import Navbar from "../components/navbar.astro";
               </tr>
             </thead>
             <tbody>
-              ${mesesOrdenados.map(m => `
+              ${mesesOrdenados
+                .map(
+                  (m) => `
                 <tr>
                   <td><span class="badge-mes">${m}</span></td>
                   <td><strong>${grupos[m].cantidad}</strong> colaboradores</td>
-                  <td class="payroll-val">$${grupos[m].salarioTotal.toLocaleString('es-CO', { maximumFractionDigits: 0 })}</td>
+                  <td class="payroll-val">$${grupos[m].salarioTotal.toLocaleString("es-CO", { maximumFractionDigits: 0 })}</td>
                 </tr>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </tbody>
           </table>
         `;
 
-
-
         const ChartRef = (window as any).Chart;
         const opts = { responsive: true, maintainAspectRatio: false };
 
-        chartSalario = new ChartRef(document.getElementById("chart-trab-salario"), {
-          type: "line",
-          data: {
-            labels: mesesOrdenados,
-            datasets: [{ label: "Nómina ($)", data: mesesOrdenados.map(m => grupos[m].salarioTotal), borderColor: "#f59e0b", backgroundColor: "rgba(245, 158, 11, 0.1)", fill: true, tension: 0.3 }]
+        chartSalario = new ChartRef(
+          document.getElementById("chart-trab-salario"),
+          {
+            type: "line",
+            data: {
+              labels: mesesOrdenados,
+              datasets: [
+                {
+                  label: "Nómina ($)",
+                  data: mesesOrdenados.map((m) => grupos[m].salarioTotal),
+                  borderColor: "#f59e0b",
+                  backgroundColor: "rgba(245, 158, 11, 0.1)",
+                  fill: true,
+                  tension: 0.3,
+                },
+              ],
+            },
+            options: opts,
           },
-          options: opts
-        });
+        );
 
-        chartCantidad = new ChartRef(document.getElementById("chart-trab-cantidad"), {
-          type: "bar",
-          data: {
-            labels: mesesOrdenados,
-            datasets: [{ label: "Empleados", data: mesesOrdenados.map(m => grupos[m].cantidad), backgroundColor: "#10b981", borderRadius: 8 }]
+        chartCantidad = new ChartRef(
+          document.getElementById("chart-trab-cantidad"),
+          {
+            type: "bar",
+            data: {
+              labels: mesesOrdenados,
+              datasets: [
+                {
+                  label: "Empleados",
+                  data: mesesOrdenados.map((m) => grupos[m].cantidad),
+                  backgroundColor: "#10b981",
+                  borderRadius: 8,
+                },
+              ],
+            },
+            options: opts,
           },
-          options: opts
-        });
+        );
       }
 
       btnAplicar?.addEventListener("click", aplicar);
-      checkAccess().then(ok => { if (ok) load(); });
+      checkAccess().then((ok) => {
+        if (ok) load();
+      });
     </script>
   </body>
 </html>

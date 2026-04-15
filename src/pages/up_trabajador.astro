@@ -2,121 +2,376 @@
 import Navbar from "../components/navbar.astro";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es-co">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Subir Trabajadores</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- SheetJS (XLSX) vía CDN para evitar errores de empaquetado -->
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script
+      src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"
+    ></script>
 
     <style>
-      body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f3f4f6; margin: 0; color: #1f2937; }
-      .container { padding: 24px; max-width: 1100px; margin: 0 auto; }
-      
-      .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
-      h1 { font-size: 1.8rem; font-weight: 800; color: #111827; margin: 0; letter-spacing: -0.025em; }
-      
-      .main-card { background: white; padding: 32px; border-radius: 20px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 32px; }
-      
-      .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
-      .form-group { display: flex; flex-direction: column; gap: 8px; }
-      label { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
-      input, select { padding: 12px; border: 1px solid #d1d5db; border-radius: 12px; font-size: 1rem; background: #f9fafb; transition: all 0.2s; }
-      input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); background: white; }
-      
-      .btn { padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.95rem; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-      .btn-gray { background: #64748b; color: white; }
-      .btn-gray:hover { background: #475569; transform: translateY(-1px); }
-      .btn-success { background: #10b981; color: white; }
-      .btn-success:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); }
+      body {
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        color: #1f2937;
+      }
+      .container {
+        padding: 24px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
 
-      .upload-zone { border: 2px dashed #cbd5e1; padding: 50px 32px; text-align: center; border-radius: 16px; background: #f8fafc; cursor: pointer; transition: all 0.3s ease; margin-bottom: 32px; }
-      .upload-zone:hover { border-color: #3b82f6; background-color: #eff6ff; }
-      .upload-icon { width: 56px; height: 56px; color: #94a3b8; margin: 0 auto 12px; }
-      #file-input { display: none; }
+      .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      h1 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #111827;
+        margin: 0;
+        letter-spacing: -0.025em;
+      }
 
-      .preview-section { display: none; margin-top: 32px; animation: slideUp 0.4s ease-out; }
-      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+      .main-card {
+        background: white;
+        padding: 32px;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 32px;
+      }
+      .info-banner {
+        background-color: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1e40af;
+        padding: 16px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      input,
+      select {
+        padding: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        font-size: 1rem;
+        background: #f9fafb;
+        transition: all 0.2s;
+      }
+      input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        background: white;
+      }
 
-      .preview-list { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 16px; max-height: 500px; overflow-y: auto; padding-right: 8px; }
-      .worker-preview-card { background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 120px; align-items: center; gap: 16px; }
-      
-      .worker-name { font-weight: 700; color: #1e293b; font-size: 1rem; }
-      .worker-doc { font-family: monospace; color: #64748b; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
-      .salary-val { color: #059669; font-weight: 700; }
-      .status-pill { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px; text-align: center; }
-      .status-new { background: #d1fae5; color: #065f46; }
-      .status-update { background: #fef3c7; color: #92400e; }
-      .status-error { background: #fee2e2; color: #b91c1c; }
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn-gray {
+        background: #64748b;
+        color: white;
+      }
+      .btn-gray:hover {
+        background: #475569;
+        transform: translateY(-1px);
+      }
+      .btn-success {
+        background: #10b981;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #059669;
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
+      }
 
-      .actions-footer { margin-top: 24px; display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 2px solid #f1f5f9; }
-      #loading-msg { text-align: center; color: #64748b; font-weight: 600; margin-top: 20px; display: none; }
+      .upload-zone {
+        border: 2px dashed #cbd5e1;
+        padding: 50px 32px;
+        text-align: center;
+        border-radius: 16px;
+        background: #f8fafc;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-bottom: 32px;
+      }
+      .upload-zone:hover {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+      }
+      .upload-icon {
+        width: 56px;
+        height: 56px;
+        color: #94a3b8;
+        margin: 0 auto 12px;
+      }
+      #file-input {
+        display: none;
+      }
+
+      .preview-section {
+        display: none;
+        margin-top: 32px;
+        animation: slideUp 0.4s ease-out;
+      }
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .preview-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin-top: 16px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 8px;
+      }
+      .worker-preview-card {
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 120px;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .worker-name {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 1rem;
+      }
+      .worker-doc {
+        font-family: monospace;
+        color: #64748b;
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+      .salary-val {
+        color: #059669;
+        font-weight: 700;
+      }
+      .status-pill {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        text-align: center;
+      }
+      .status-new {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .status-update {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .status-error {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .actions-footer {
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 24px;
+        border-top: 2px solid #f1f5f9;
+      }
+      #loading-msg {
+        text-align: center;
+        color: #64748b;
+        font-weight: 600;
+        margin-top: 20px;
+        display: none;
+      }
     </style>
   </head>
   <body>
     <Navbar />
-    
+
     <div class="container">
       <div class="header-flex">
         <h1>Carga Masiva de Trabajadores</h1>
-        <a href="/plantilla_trabajadores.xlsx" download="plantilla_trabajadores.xlsx" class="btn btn-gray" style="text-decoration: none;">
-          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <a
+          href="/plantilla_trabajadores.xlsx"
+          download="plantilla_trabajadores.xlsx"
+          class="btn btn-gray"
+          style="text-decoration: none;"
+        >
+          <svg
+            style="width:20px; height:20px;"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            ></path></svg
+          >
           Descargar Plantilla
         </a>
       </div>
 
       <div class="main-card">
         <div class="form-grid">
-            <div class="form-group">
-                <label>Negocio / Sede</label>
-                <input id="worker-negocio" type="text" list="negocios-list" placeholder="Selecciona el negocio" required />
-                <datalist id="negocios-list"></datalist>
-            </div>
-            <div class="form-group">
-                <label>Mes de Registro</label>
-                <input id="worker-mes" type="month" required />
-            </div>
-            <div class="form-group">
-                <label>Día de Corte</label>
-                <select id="worker-corte" required>
-                  <option value="10">Día 10</option>
-                  <option value="20">Día 20</option>
-                  <option value="30">Día 30</option>
-                </select>
-            </div>
+          <div class="form-group">
+            <label>Negocio / Sede</label>
+            <input
+              id="worker-negocio"
+              type="text"
+              list="negocios-list"
+              placeholder="Selecciona el negocio"
+              required
+            />
+            <datalist id="negocios-list"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Mes de Registro</label>
+            <input id="worker-mes" type="month" required />
+          </div>
+          <div class="form-group">
+            <label>Día de Corte</label>
+            <select id="worker-corte" required>
+              <option value="10">Día 10</option>
+              <option value="20">Día 20</option>
+              <option value="30">Día 30</option>
+            </select>
+          </div>
         </div>
-
-        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-            <svg class="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <p style="font-size: 1.1rem; color: #1e293b; margin:0;"><strong>Haz clic o arrastra tu archivo Excel</strong></p>
-            <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">Columnas: Nombre, Documento, Cargo, Horas Trabajadas, Extras, Deuda.</p>
-            <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
+        <div class="info-banner">
+          <span style="font-size: 1.5rem;">💡</span>
+          <div>
+            <strong>Sincronización Inteligente Activada:</strong> El sistema actualizará
+            automáticamente la <strong>Base de Datos</strong> general y sumará las
+            existencias al mes actual. Asegúrate de que las columnas tengan los nombres
+            correctos: <i>Código, Nombre, Cantidad, Precio</i>.
+          </div>
+        </div>
+        <div
+          class="upload-zone"
+          id="drop-zone"
+          onclick="document.getElementById('file-input').click()"
+        >
+          <svg
+            class="upload-icon"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            ></path></svg
+          >
+          <p style="font-size: 1.1rem; color: #1e293b; margin:0;">
+            <strong>Haz clic o arrastra tu archivo Excel</strong>
+          </p>
+          <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px;">
+            Columnas: Nombre, Documento, Cargo, Horas Trabajadas, Extras, Deuda.
+          </p>
+          <input type="file" id="file-input" accept=".xlsx, .xls, .csv" />
         </div>
 
         <p id="loading-msg">Validando información con el sistema...</p>
 
         <div class="preview-section" id="preview-section">
-            <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: #4b5563;">Confirmación de Trabajadores Próximos a Cargar</h3>
-            
-            <div class="preview-list" id="preview-list"></div>
+          <h3 style="margin-bottom: 16px; font-size: 1.1rem; color: #4b5563;">
+            Confirmación de Trabajadores Próximos a Cargar
+          </h3>
 
-            <div class="actions-footer">
-                <p id="result-msg" style="font-weight: 700; margin: 0;"></p>
-                <button id="btn-confirm" class="btn btn-success">Finalizar e Importar Datos</button>
-            </div>
+          <div class="preview-list" id="preview-list"></div>
+
+          <div class="actions-footer">
+            <p id="result-msg" style="font-weight: 700; margin: 0;"></p>
+            <button id="btn-confirm" class="btn btn-success"
+              >Finalizar e Importar Datos</button
+            >
+          </div>
         </div>
       </div>
     </div>
 
     <script>
-      import { getTrabajadoresFiltrados, getTrabajadores, addTrabajador, updateTrabajador } from "../lib/workers";
+      import {
+        getTrabajadoresFiltrados,
+        getTrabajadores,
+        addTrabajador,
+        updateTrabajador,
+      } from "../lib/workers";
       import { getNegocios } from "../lib/negocios";
       import { getSession } from "../lib/auth";
 
@@ -135,105 +390,166 @@ import Navbar from "../components/navbar.astro";
       }
       checkAuth();
 
-      const fileInput = document.getElementById("file-input") as HTMLInputElement;
+      const fileInput = document.getElementById(
+        "file-input",
+      ) as HTMLInputElement;
       const dropZone = document.getElementById("drop-zone");
       const loadingMsg = document.getElementById("loading-msg");
       const previewSection = document.getElementById("preview-section");
       const previewList = document.getElementById("preview-list");
-      const btnConfirm = document.getElementById("btn-confirm") as HTMLButtonElement;
+      const btnConfirm = document.getElementById(
+        "btn-confirm",
+      ) as HTMLButtonElement;
       const resultMsg = document.getElementById("result-msg");
-      const negocioInput = document.getElementById("worker-negocio") as HTMLInputElement;
+      const negocioInput = document.getElementById(
+        "worker-negocio",
+      ) as HTMLInputElement;
       const negociosDatalist = document.getElementById("negocios-list");
-      const mesInput = document.getElementById("worker-mes") as HTMLInputElement;
-      const corteInput = document.getElementById("worker-corte") as HTMLSelectElement;
+      const mesInput = document.getElementById(
+        "worker-mes",
+      ) as HTMLInputElement;
+      const corteInput = document.getElementById(
+        "worker-corte",
+      ) as HTMLSelectElement;
 
       async function loadNegocios() {
         try {
           const negs = await getNegocios();
           if (negociosDatalist) {
-            negociosDatalist.innerHTML = negs.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+            negociosDatalist.innerHTML = negs
+              .map((n) => `<option value="${n.nombre}">${n.nombre}</option>`)
+              .join("");
           }
-        } catch (error) { console.error(error); }
+        } catch (error) {
+          console.error(error);
+        }
       }
       loadNegocios();
 
-      dropZone?.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.style.borderColor = "#3b82f6"; });
-      dropZone?.addEventListener("dragleave", () => { dropZone.style.borderColor = "#cbd5e1"; });
+      dropZone?.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = "#3b82f6";
+      });
+      dropZone?.addEventListener("dragleave", () => {
+        dropZone.style.borderColor = "#cbd5e1";
+      });
       dropZone?.addEventListener("drop", (e) => {
         e.preventDefault();
         if (e.dataTransfer?.files.length) handleFile(e.dataTransfer.files[0]);
       });
-      fileInput?.addEventListener("change", (e: any) => { if (e.target.files?.length) handleFile(e.target.files[0]); });
+      fileInput?.addEventListener("change", (e: any) => {
+        if (e.target.files?.length) handleFile(e.target.files[0]);
+      });
 
       async function handleFile(file: File) {
         negocioSeleccionado = negocioInput.value.trim();
-        
+
         const corte = corteInput.value;
-        mesSeleccionado = mesInput.value.trim() ? `${mesInput.value.trim()}-${corte}` : "";
+        mesSeleccionado = mesInput.value.trim()
+          ? `${mesInput.value.trim()}-${corte}`
+          : "";
 
         if (!negocioSeleccionado || !mesSeleccionado) {
-          alert("Selecciona Negocio, Mes y Día de Corte."); return;
+          alert("Selecciona Negocio, Mes y Día de Corte.");
+          return;
         }
 
         loadingMsg!.style.display = "block";
         previewSection!.style.display = "none";
-        
+
         try {
-          trabajadoresActuales = await getTrabajadoresFiltrados(negocioSeleccionado, mesSeleccionado);
+          trabajadoresActuales = await getTrabajadoresFiltrados(
+            negocioSeleccionado,
+            mesSeleccionado,
+          );
           const reader = new FileReader();
           reader.onload = (e: any) => {
             try {
               const XLSX_LIB = (window as any).XLSX;
-              if (!XLSX_LIB) throw new Error("Motor de Excel aún cargando. Intenta otra vez.");
-              
+              if (!XLSX_LIB)
+                throw new Error(
+                  "Motor de Excel aún cargando. Intenta otra vez.",
+                );
+
               const data = new Uint8Array(e.target.result);
               const wb = XLSX_LIB.read(data, { type: "array" });
-              const json = XLSX_LIB.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "" });
+              const json = XLSX_LIB.utils.sheet_to_json(
+                wb.Sheets[wb.SheetNames[0]],
+                { defval: "" },
+              );
               procesarJSON(json);
             } catch (err: any) {
               console.error(err);
-              alert("Error procesando Excel: " + (err.message || "Archivo corrupto."));
+              alert(
+                "Error procesando Excel: " +
+                  (err.message || "Archivo corrupto."),
+              );
               loadingMsg!.style.display = "none";
             }
           };
           reader.readAsArrayBuffer(file);
-        } catch (error: any) { alert(error.message); loadingMsg!.style.display = "none"; }
+        } catch (error: any) {
+          alert(error.message);
+          loadingMsg!.style.display = "none";
+        }
       }
 
       function procesarJSON(data: any[]) {
         previewList!.innerHTML = "";
         datosAProcesar = data.map((row: any) => {
           const r: any = {};
-          Object.keys(row).forEach(k => r[k.toLowerCase().trim()] = row[k]);
-          
+          Object.keys(row).forEach((k) => (r[k.toLowerCase().trim()] = row[k]));
+
           const nombre = String(r["nombre"] || "").trim();
-          const documento = String(r["documento"] || r["cédula"] || r["cedula"] || r["doc"] || "").trim();
-          const rawExtras = r["horas_extras"] ?? r["horas extras"] ?? r["extras"] ?? r["he"] ?? r["hora extra"] ?? r["ext"] ?? 0;
+          const documento = String(
+            r["documento"] || r["cédula"] || r["cedula"] || r["doc"] || "",
+          ).trim();
+          const rawExtras =
+            r["horas_extras"] ??
+            r["horas extras"] ??
+            r["extras"] ??
+            r["he"] ??
+            r["hora extra"] ??
+            r["ext"] ??
+            0;
           const extras = parseFloat(rawExtras) || 0;
-          
-          const rawHoras = r["horas_trabajadas"] ?? r["horas trabajadas"] ?? r["horas"] ?? r["ht"] ?? 0;
+
+          const rawHoras =
+            r["horas_trabajadas"] ??
+            r["horas trabajadas"] ??
+            r["horas"] ??
+            r["ht"] ??
+            0;
           const horasTrabajadas = parseFloat(rawHoras) || 0;
 
           const deuda = parseFloat(r["deuda"] || 0);
 
-          const existing = trabajadoresActuales.find(t => String(t.documento).trim() === documento);
-          
-          const isValid = (nombre !== "" && documento !== "");
+          const existing = trabajadoresActuales.find(
+            (t) => String(t.documento).trim() === documento,
+          );
+
+          const isValid = nombre !== "" && documento !== "";
 
           return {
             dbId: existing?.id,
-            nombre: nombre || "SIN NOMBRE", 
-            documento: documento || "SIN CÉDULA", 
+            nombre: nombre || "SIN NOMBRE",
+            documento: documento || "SIN CÉDULA",
             tel: r["teléfono"] || r["telefono"] || "",
             cargo: r["cargo"] || "",
-            horasTrabajadas, extras, deuda,
+            horasTrabajadas,
+            extras,
+            deuda,
             isValid,
-            status: !isValid ? "status-error" : (existing ? "status-update" : "status-new"),
-            statusText: !isValid ? "Omitido" : (existing ? "Existente" : "Nuevo")
+            status: !isValid
+              ? "status-error"
+              : existing
+                ? "status-update"
+                : "status-new",
+            statusText: !isValid ? "Omitido" : existing ? "Existente" : "Nuevo",
           };
         });
 
-        datosAProcesar.forEach(item => {
+        datosAProcesar.forEach((item) => {
           const card = document.createElement("div");
           card.className = "worker-preview-card";
           if (!item.isValid) {
@@ -255,7 +571,7 @@ import Navbar from "../components/navbar.astro";
                   <div class="worker-name">${item.nombre}</div>
                   <span class="worker-doc">${item.documento}</span>
               </div>
-              <div style="font-size:0.85rem; color:#64748b;">${item.cargo || '-'}</div>
+              <div style="font-size:0.85rem; color:#64748b;">${item.cargo || "-"}</div>
               <div style="font-size:0.85rem;">Horas Trab: <strong>${item.horasTrabajadas}</strong> | Extras: <strong>${item.extras}</strong></div>
               <div style="color:#ef4444; font-weight:700;">Deuda: $${item.deuda.toLocaleString()}</div>
               <div class="status-pill ${item.status}">${item.statusText}</div>
@@ -264,14 +580,21 @@ import Navbar from "../components/navbar.astro";
           previewList!.appendChild(card);
         });
 
-        const errores = datosAProcesar.filter(i => !i.isValid).length;
-        const validos = datosAProcesar.filter(i => i.isValid).length;
-        const totalExtras = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.extras, 0);
-        const totalTrabajadas = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.horasTrabajadas, 0);
-        const totalDeudas = datosAProcesar.filter(i => i.isValid).reduce((sum, i) => sum + i.deuda, 0);
+        const errores = datosAProcesar.filter((i) => !i.isValid).length;
+        const validos = datosAProcesar.filter((i) => i.isValid).length;
+        const totalExtras = datosAProcesar
+          .filter((i) => i.isValid)
+          .reduce((sum, i) => sum + i.extras, 0);
+        const totalTrabajadas = datosAProcesar
+          .filter((i) => i.isValid)
+          .reduce((sum, i) => sum + i.horasTrabajadas, 0);
+        const totalDeudas = datosAProcesar
+          .filter((i) => i.isValid)
+          .reduce((sum, i) => sum + i.deuda, 0);
 
         const totalBanner = document.createElement("div");
-        totalBanner.style.background = "linear-gradient(135deg, #10b981 0%, #059669 100%)";
+        totalBanner.style.background =
+          "linear-gradient(135deg, #10b981 0%, #059669 100%)";
         totalBanner.style.color = "white";
         totalBanner.style.padding = "20px 24px";
         totalBanner.style.borderRadius = "16px";
@@ -279,11 +602,11 @@ import Navbar from "../components/navbar.astro";
         totalBanner.style.display = "flex";
         totalBanner.style.justifyContent = "space-between";
         totalBanner.style.alignItems = "center";
-        
+
         totalBanner.innerHTML = `
            <div>
              <h3 style="margin:0; font-size:1.15rem; font-weight:800;">Resumen del Archivo</h3>
-             <p style="margin:4px 0 0 0; opacity:0.9; font-size:0.9rem;">${validos} trabajadores válidos ${errores > 0 ? '<strong style="color:#fee2e2;">(' + errores + ' errores omitidos)</strong>' : ""}</p>
+             <p style="margin:4px 0 0 0; opacity:0.9; font-size:0.9rem;">${validos} trabajadores válidos ${errores > 0 ? '<strong style="color:#fee2e2;">(' + errores + " errores omitidos)</strong>" : ""}</p>
            </div>
            <div style="display:flex; gap: 24px; text-align:right;">
              <div>
@@ -292,7 +615,7 @@ import Navbar from "../components/navbar.astro";
              </div>
              <div>
                <div style="font-size:0.75rem; text-transform:uppercase; font-weight:700; opacity:0.9;">Total Deudas</div>
-               <div style="font-size:1.4rem; font-weight:800; letter-spacing:-0.03em;">$${totalDeudas.toLocaleString('es-CO')}</div>
+               <div style="font-size:1.4rem; font-weight:800; letter-spacing:-0.03em;">$${totalDeudas.toLocaleString("es-CO")}</div>
              </div>
            </div>
         `;
@@ -305,54 +628,65 @@ import Navbar from "../components/navbar.astro";
       btnConfirm?.addEventListener("click", async () => {
         btnConfirm.disabled = true;
         resultMsg!.textContent = "Sincronizando nómina...";
-        
+
         let count = 0;
         let dbErrores = 0;
         let dbErrorMsg = "";
-        
-        const validItems = datosAProcesar.filter(i => i.isValid);
+
+        const validItems = datosAProcesar.filter((i) => i.isValid);
 
         if (validItems.length === 0) {
-           resultMsg!.textContent = "No hay ningún trabajador válido para sincronizar. Todos están omitidos.";
-           resultMsg!.style.color = "#ef4444";
-           btnConfirm.disabled = false;
-           return;
+          resultMsg!.textContent =
+            "No hay ningún trabajador válido para sincronizar. Todos están omitidos.";
+          resultMsg!.style.color = "#ef4444";
+          btnConfirm.disabled = false;
+          return;
         }
 
         const CHUNK_SIZE = 20;
 
         for (let i = 0; i < validItems.length; i += CHUNK_SIZE) {
           const chunk = validItems.slice(i, i + CHUNK_SIZE);
-          await Promise.all(chunk.map(async (item) => {
-            try {
-              const payload = {
-                nombre: item.nombre, documento: item.documento,
-                telefono: item.tel, cargo: item.cargo,
-                horas_trabajadas: item.horasTrabajadas,
-                horas_extras: item.extras, deuda: item.deuda,
-                negocio: negocioSeleccionado, mes: mesSeleccionado
-              };
-              if (item.dbId) await updateTrabajador(item.dbId, payload);
-              else await addTrabajador(payload as any);
-              count++;
-            } catch (e: any) {
-              console.error("Error BD Trabajador:", e);
-              dbErrores++;
-              if (!dbErrorMsg) dbErrorMsg = e.message || "Error desconocido BD";
-            }
-          }));
+          await Promise.all(
+            chunk.map(async (item) => {
+              try {
+                const payload = {
+                  nombre: item.nombre,
+                  documento: item.documento,
+                  telefono: item.tel,
+                  cargo: item.cargo,
+                  horas_trabajadas: item.horasTrabajadas,
+                  horas_extras: item.extras,
+                  deuda: item.deuda,
+                  negocio: negocioSeleccionado,
+                  mes: mesSeleccionado,
+                };
+                if (item.dbId) await updateTrabajador(item.dbId, payload);
+                else await addTrabajador(payload as any);
+                count++;
+              } catch (e: any) {
+                console.error("Error BD Trabajador:", e);
+                dbErrores++;
+                if (!dbErrorMsg)
+                  dbErrorMsg = e.message || "Error desconocido BD";
+              }
+            }),
+          );
         }
-        
+
         if (dbErrores > 0) {
-           resultMsg!.textContent = `Atención: ${count} guardados, pero fallaron ${dbErrores} por error: ${dbErrorMsg}`;
-           resultMsg!.style.color = "#ef4444";
-           btnConfirm.disabled = false;
-           return;
+          resultMsg!.textContent = `Atención: ${count} guardados, pero fallaron ${dbErrores} por error: ${dbErrorMsg}`;
+          resultMsg!.style.color = "#ef4444";
+          btnConfirm.disabled = false;
+          return;
         }
 
         resultMsg!.textContent = `✓ ¡Sincronizado! ${count} trabajadores procesados.`;
         resultMsg!.style.color = "#059669";
-        setTimeout(() => window.location.replace("/reportes_trabajadores"), 2000);
+        setTimeout(
+          () => window.location.replace("/reportes_trabajadores"),
+          2000,
+        );
       });
     </script>
   </body>
