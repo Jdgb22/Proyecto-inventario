@@ -327,7 +327,7 @@ import Navbar from "../components/navbar.astro";
           return false;
         }
         const role = await getUserRole(session.user.id);
-        if (role !== "admin") {
+        if (role !== "admin" && role !== "superadmin") {
           window.location.replace("/init");
           return false;
         }

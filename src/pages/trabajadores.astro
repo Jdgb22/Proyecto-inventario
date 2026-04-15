@@ -390,7 +390,7 @@ import Navbar from "../components/navbar.astro";
         const session = await getSession();
         if (!session) { window.location.replace("/"); return; }
         const role = await getUserRole(session.user.id);
-        if (role !== "admin") { window.location.replace("/init"); return; }
+        if (role !== "admin" && role !== "superadmin") { window.location.replace("/init"); return; }
         
         await loadNegocios();
         

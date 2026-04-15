@@ -433,7 +433,7 @@ import Navbar from "../components/navbar.astro";
           const role = await getUserRole(session.user.id);
           loading!.style.display = "none";
 
-          if (role === "admin") {
+          if (role === "admin" || role === "superadmin") {
             adminUI!.style.display = "block";
             const [inv, workers, negs] = await Promise.all([
               getInventario().catch(() => []),
