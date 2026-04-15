@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCurrentEmpresaId } from "./empresas";
 
 export interface MasterProducto {
   id?: string;
@@ -24,20 +25,20 @@ export interface StockEntry {
  */
 export async function getMasterProductos() {
   try {
-    const { data, error } = await supabase
-      .from("productos")
-      .select("*")
-      .order("nombre", { ascending: true });
+    const empresaId = await getCurrentEmpresaId();
+    let query = supabase.from("productos").select("*");
+    if (empresaId) query = query.eq("empresa_id", empresaId);
+    const { data, error } = await query.order("nombre", { ascending: true });
 
     if (error) {
-      // Si la tabla no existe o hay un error de permisos, intentamos el fallback
       console.warn("ADVERTENCIA DE TABLA: Intentando fallback a inventario [MASTER]", error.message);
       
-      const { data: fallback, error: err2 } = await supabase
+      let fbQuery = supabase
           .from("inventario")
           .select("*")
-          .eq("mes", "MASTER")
-          .order("nombre", { ascending: true });
+          .eq("mes", "MASTER");
+      if (empresaId) fbQuery = fbQuery.eq("empresa_id", empresaId);
+      const { data: fallback, error: err2 } = await fbQuery.order("nombre", { ascending: true });
           
       if (err2) {
         console.error("ERROR CRÍTICO: Fallback fallido", err2.message);
@@ -96,10 +97,12 @@ export async function upsertMasterProducto(item: MasterProducto) {
  * GESTIÓN DE INVENTARIO MENSUAL (EXISTENCIAS)
  */
 export async function getStockFiltrado(negocio: string, mes: string) {
+    const empresaId = await getCurrentEmpresaId();
     let query = supabase.from("inventario").select("*").eq("mes", mes);
     if (negocio && negocio !== "GLOBAL") {
         query = query.eq("negocio", negocio);
     }
+    if (empresaId) query = query.eq("empresa_id", empresaId);
     
     const { data: stock, error } = await query;
     if (error) throw error;
@@ -107,24 +110,26 @@ export async function getStockFiltrado(negocio: string, mes: string) {
 }
 
 export async function getInventario() {
-    const { data, error } = await supabase
-        .from("inventario")
-        .select("*")
-        .neq("mes", "MASTER");
+    const empresaId = await getCurrentEmpresaId();
+    let query = supabase.from("inventario").select("*").neq("mes", "MASTER");
+    if (empresaId) query = query.eq("empresa_id", empresaId);
+    const { data, error } = await query;
 
     if (error) throw error;
     return data || [];
 }
 
 export async function addStockEntry(item: StockEntry) {
+    const empresaId = await getCurrentEmpresaId();
     // Buscamos si ya existe una entrada para este código, negocio y mes
-    const { data: exist } = await supabase
+    let existQuery = supabase
         .from("inventario")
         .select("*")
         .eq("codigo", item.codigo)
         .eq("negocio", item.negocio)
-        .eq("mes", item.mes)
-        .maybeSingle();
+        .eq("mes", item.mes);
+    if (empresaId) existQuery = existQuery.eq("empresa_id", empresaId);
+    const { data: exist } = await existQuery.maybeSingle();
 
     if (exist) {
         const { data, error } = await supabase
@@ -136,25 +141,28 @@ export async function addStockEntry(item: StockEntry) {
         if (error) throw error;
         return data;
     } else {
-        // Necesitamos traer el nombre y precio del MASTER para que el registro sea completo visualmente
-        const { data: master } = await supabase
+        let masterQuery = supabase
             .from("inventario")
             .select("*")
             .eq("codigo", item.codigo)
-            .eq("mes", "MASTER")
-            .maybeSingle();
+            .eq("mes", "MASTER");
+        if (empresaId) masterQuery = masterQuery.eq("empresa_id", empresaId);
+        const { data: master } = await masterQuery.maybeSingle();
+
+        const insertPayload: any = {
+            nombre: item.nombre || master?.nombre || "Producto Desconocido",
+            codigo: item.codigo.trim(),
+            precio: item.precio ?? master?.precio ?? 0,
+            categoria: item.categoria || master?.categoria || "",
+            cantidad: item.cantidad,
+            negocio: item.negocio,
+            mes: item.mes,
+        };
+        if (empresaId) insertPayload.empresa_id = empresaId;
 
         const { data, error } = await supabase
             .from("inventario")
-            .insert([{
-                nombre: item.nombre || master?.nombre || "Producto Desconocido",
-                codigo: item.codigo.trim(),
-                precio: item.precio ?? master?.precio ?? 0,
-                categoria: item.categoria || master?.categoria || "",
-                cantidad: item.cantidad,
-                negocio: item.negocio,
-                mes: item.mes
-            }])
+            .insert([insertPayload])
             .select()
             .single();
         if (error) throw error;

@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { clearEmpresaCache } from "./empresas";
 
 /**
  * Registra un nuevo usuario en Supabase con correo y contraseña.
@@ -43,6 +44,7 @@ export async function signOutUser() {
     console.error("Error al cerrar sesión:", error.message);
     throw error;
   }
+  clearEmpresaCache();
 }
 
 /**

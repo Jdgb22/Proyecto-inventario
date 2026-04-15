@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCurrentEmpresaId } from "./empresas";
 
 export interface Trabajador {
   id?: string;
@@ -29,10 +30,10 @@ export interface PagoTrabajador {
 // --- TRABAJADORES ---
 
 export async function getTrabajadores() {
-  const { data, error } = await supabase
-    .from("trabajadores")
-    .select("*")
-    .order("nombre", { ascending: true });
+  const empresaId = await getCurrentEmpresaId();
+  let query = supabase.from("trabajadores").select("*");
+  if (empresaId) query = query.eq("empresa_id", empresaId);
+  const { data, error } = await query.order("nombre", { ascending: true });
 
   if (error) {
     console.error("Error al obtener trabajadores:", error.message);
@@ -43,7 +44,9 @@ export async function getTrabajadores() {
 
 export async function getTrabajadoresFiltrados(negocio?: string, mes?: string) {
   try {
+    const empresaId = await getCurrentEmpresaId();
     let query = supabase.from("trabajadores").select("*");
+    if (empresaId) query = query.eq("empresa_id", empresaId);
     if (negocio) query = query.eq("negocio", negocio);
     if (mes) query = query.eq("mes", mes);
     const { data, error } = await query.order("nombre", { ascending: true });
@@ -60,9 +63,11 @@ export async function getTrabajadoresFiltrados(negocio?: string, mes?: string) {
 }
 
 export async function addTrabajador(trabajador: Trabajador) {
+  const empresaId = await getCurrentEmpresaId();
+  const payload = empresaId ? { ...trabajador, empresa_id: empresaId } : trabajador;
   const { data, error } = await supabase
     .from("trabajadores")
-    .insert([trabajador])
+    .insert([payload])
     .select()
     .single();
 
@@ -104,8 +109,9 @@ export async function deleteTrabajador(id: string) {
 // --- PAGOS ---
 
 export async function getPagos(trabajadorId?: string) {
+  const empresaId = await getCurrentEmpresaId();
   let query = supabase.from("pagos_trabajadores").select("*, trabajadores(nombre, documento)");
-  
+  if (empresaId) query = query.eq("empresa_id", empresaId);
   if (trabajadorId) {
     query = query.eq("trabajador_id", trabajadorId);
   }
@@ -120,9 +126,11 @@ export async function getPagos(trabajadorId?: string) {
 }
 
 export async function addPago(pago: PagoTrabajador) {
+  const empresaId = await getCurrentEmpresaId();
+  const payload = empresaId ? { ...pago, empresa_id: empresaId } : pago;
   const { data, error } = await supabase
     .from("pagos_trabajadores")
-    .insert([pago])
+    .insert([payload])
     .select()
     .single();
 

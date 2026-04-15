@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCurrentEmpresaId } from "./empresas";
 
 export interface Personal {
   id?: string;
@@ -18,7 +19,9 @@ export interface Personal {
 
 export async function getPersonalFiltrado(negocio?: string) {
   try {
+    const empresaId = await getCurrentEmpresaId();
     let query = supabase.from("personal").select("*");
+    if (empresaId) query = query.eq("empresa_id", empresaId);
     if (negocio) query = query.eq("negocio", negocio);
     const { data, error } = await query.order("nombre", { ascending: true });
 
@@ -31,9 +34,11 @@ export async function getPersonalFiltrado(negocio?: string) {
 }
 
 export async function addPersonal(persona: Personal) {
+  const empresaId = await getCurrentEmpresaId();
+  const payload = empresaId ? { ...persona, empresa_id: empresaId } : persona;
   const { data, error } = await supabase
     .from("personal")
-    .upsert([persona], { onConflict: 'documento' })
+    .upsert([payload], { onConflict: 'documento' })
     .select()
     .single();
 

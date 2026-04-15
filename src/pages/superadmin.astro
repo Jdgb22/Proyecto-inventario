@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SuperAdmin — Panel de Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #020617;
+        color: #e2e8f0;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* ── Animated Background ─────────────────────── */
+      .bg-mesh {
+        position: fixed; inset: 0; z-index: 0; overflow: hidden;
+        background: radial-gradient(ellipse at 20% 50%, #0f172a 0%, #020617 70%);
+      }
+      .blob {
+        position: absolute; border-radius: 50%;
+        filter: blur(120px); opacity: 0.25;
+        animation: drift 20s infinite alternate ease-in-out;
+      }
+      .blob-1 { width: 600px; height: 600px; background: #1e3a8a; top: -15%; left: -10%; }
+      .blob-2 { width: 500px; height: 500px; background: #4c1d95; bottom: -10%; right: -10%; animation-delay: -7s; }
+      .blob-3 { width: 400px; height: 400px; background: #0c4a6e; top: 40%; left: 40%; animation-delay: -14s; }
+      @keyframes drift {
+        from { transform: translate(0, 0) scale(1); }
+        to   { transform: translate(80px, 60px) scale(1.08); }
+      }
+
+      /* ── Layout ───────────────────────────────────── */
+      .wrapper {
+        position: relative; z-index: 1;
+        max-width: 1300px; margin: 0 auto;
+        padding: 32px 24px;
+      }
+
+      /* ── Top Bar ──────────────────────────────────── */
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 40px; flex-wrap: wrap; gap: 16px;
+      }
+      .topbar-left { display: flex; align-items: center; gap: 16px; }
+      .sa-badge {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white; font-size: 0.7rem; font-weight: 700;
+        padding: 4px 10px; border-radius: 999px;
+        letter-spacing: 0.1em; text-transform: uppercase;
+      }
+      .topbar h1 {
+        font-size: 1.75rem; font-weight: 800;
+        background: linear-gradient(135deg, #e2e8f0 0%, #94a3b8 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        letter-spacing: -0.03em;
+      }
+      .btn-back {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        color: #94a3b8; padding: 10px 18px; border-radius: 10px;
+        font-size: 0.875rem; font-weight: 600; cursor: pointer;
+        text-decoration: none; transition: all 0.2s ease;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .btn-back:hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+
+      /* ── Stats Row ────────────────────────────────── */
+      .stats-row {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px; margin-bottom: 32px;
+      }
+      .stat-pill {
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; padding: 20px 24px;
+        display: flex; flex-direction: column; gap: 6px;
+        backdrop-filter: blur(12px);
+      }
+      .stat-pill .label {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.1em; color: #64748b;
+      }
+      .stat-pill .value {
+        font-size: 2rem; font-weight: 800; color: #f1f5f9;
+      }
+
+      /* ── Section Header ───────────────────────────── */
+      .section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+      }
+      .section-title {
+        font-size: 1rem; font-weight: 700; color: #94a3b8;
+        text-transform: uppercase; letter-spacing: 0.08em;
+      }
+      .btn-new {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white; border: none; padding: 10px 20px;
+        border-radius: 10px; font-weight: 700; font-size: 0.875rem;
+        cursor: pointer; display: flex; align-items: center; gap: 8px;
+        transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+      }
+      .btn-new:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,0.4); }
+
+      /* ── Cards Grid ───────────────────────────────── */
+      #empresas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        gap: 20px;
+      }
+
+      .empresa-card {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px; padding: 24px;
+        backdrop-filter: blur(16px);
+        transition: all 0.3s ease;
+        animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      .empresa-card:hover { border-color: rgba(124, 58, 237, 0.3); transform: translateY(-2px); }
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card-header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .card-title { font-size: 1.1rem; font-weight: 800; color: #f1f5f9; }
+      .card-email { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+
+      /* Plan badge */
+      .plan-badge {
+        font-size: 0.65rem; font-weight: 700; padding: 4px 10px;
+        border-radius: 999px; text-transform: uppercase; letter-spacing: 0.08em;
+        white-space: nowrap;
+      }
+      .plan-basico   { background: rgba(100,116,139,0.2); color: #94a3b8; border: 1px solid rgba(100,116,139,0.3); }
+      .plan-pro      { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+      .plan-enterprise { background: rgba(124,58,237,0.15); color: #c4b5fd; border: 1px solid rgba(124,58,237,0.3); }
+
+      /* Toggle Switch */
+      .toggle-row {
+        display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+      }
+      .toggle-item {
+        display: flex; align-items: center; gap: 8px;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 8px; padding: 7px 12px;
+        font-size: 0.78rem; font-weight: 600; color: #94a3b8;
+        cursor: pointer; transition: all 0.2s ease;
+        user-select: none;
+      }
+      .toggle-item:hover { background: rgba(255,255,255,0.08); }
+      .toggle-item.active { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4); color: #c4b5fd; }
+
+      /* Main toggle — Activo/Inactivo */
+      .main-toggle-row {
+        display: flex; align-items: center; justify-content: space-between;
+        padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);
+        margin-top: 4px;
+      }
+      .main-toggle-label { font-size: 0.85rem; font-weight: 600; color: #64748b; }
+
+      .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+      .switch input { opacity: 0; width: 0; height: 0; }
+      .slider {
+        position: absolute; cursor: pointer; inset: 0;
+        background: rgba(255,255,255,0.1); border-radius: 999px;
+        transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
+      }
+      .slider:before {
+        content: ""; position: absolute;
+        width: 18px; height: 18px; left: 3px; bottom: 2px;
+        background: white; border-radius: 50%;
+        transition: 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+      input:checked + .slider { background: #7c3aed; border-color: #7c3aed; }
+      input:checked + .slider:before { transform: translateX(20px); }
+
+      .card-inactive { opacity: 0.5; filter: grayscale(0.5); }
+
+      /* ── Modal — Nueva Empresa ────────────────────── */
+      .modal-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(2, 6, 23, 0.85);
+        backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        padding: 24px;
+      }
+      .modal-overlay.open { opacity: 1; pointer-events: auto; }
+      .modal {
+        background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px; padding: 36px; width: 100%; max-width: 500px;
+        transform: scale(0.95); transition: transform 0.3s;
+      }
+      .modal-overlay.open .modal { transform: scale(1); }
+      .modal h2 { font-size: 1.4rem; font-weight: 800; color: #f1f5f9; margin-bottom: 24px; }
+
+      .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+      .field label { font-size: 0.8rem; font-weight: 600; color: #94a3b8; }
+      .field input, .field select {
+        background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; padding: 12px 14px; color: #f1f5f9;
+        font-size: 0.9rem; font-family: inherit; width: 100%;
+        transition: border-color 0.2s;
+      }
+      .field input:focus, .field select:focus {
+        outline: none; border-color: #7c3aed;
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+      }
+      .field select option { background: #0f172a; }
+      .field input::placeholder { color: #475569; }
+
+      .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
+      .btn-cancel {
+        background: transparent; border: 1px solid rgba(255,255,255,0.1);
+        color: #64748b; padding: 10px 20px; border-radius: 10px;
+        font-weight: 600; cursor: pointer; font-family: inherit;
+        transition: all 0.2s;
+      }
+      .btn-cancel:hover { background: rgba(255,255,255,0.06); color: #94a3b8; }
+      .btn-create {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white; border: none; padding: 10px 24px;
+        border-radius: 10px; font-weight: 700; cursor: pointer;
+        font-family: inherit; transition: all 0.2s;
+      }
+      .btn-create:hover { filter: brightness(1.1); }
+      .btn-create:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      /* ── Loading & Empty ─────────────────────────── */
+      .center-msg {
+        text-align: center; padding: 80px 24px;
+        color: #475569; font-size: 1.1rem; font-weight: 600;
+      }
+
+      /* ── Toast ────────────────────────────────────── */
+      .toast {
+        position: fixed; bottom: 24px; right: 24px; z-index: 300;
+        background: #0f172a; border: 1px solid rgba(124,58,237,0.4);
+        border-radius: 12px; padding: 14px 20px;
+        color: #c4b5fd; font-weight: 600; font-size: 0.875rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        transform: translateY(80px); opacity: 0;
+        transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex; align-items: center; gap: 10px;
+      }
+      .toast.show { transform: translateY(0); opacity: 1; }
+      .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+      @media (max-width: 600px) {
+        #empresas-grid { grid-template-columns: 1fr; }
+        .topbar h1 { font-size: 1.4rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-mesh">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+
+    <div class="wrapper">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="sa-badge">⚡ SuperAdmin</span>
+          <h1>Panel de Control Maestro</h1>
+        </div>
+        <a href="/init" class="btn-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Volver al Panel
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-pill">
+          <span class="label">Total Empresas</span>
+          <span class="value" id="stat-total">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Empresas Activas</span>
+          <span class="value" id="stat-activas" style="color:#4ade80;">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Plan Enterprise</span>
+          <span class="value" id="stat-enterprise" style="color:#c4b5fd;">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="label">Plan Pro</span>
+          <span class="value" id="stat-pro" style="color:#60a5fa;">—</span>
+        </div>
+      </div>
+
+      <!-- Section Header -->
+      <div class="section-header">
+        <span class="section-title">🏢 Empresas Registradas</span>
+        <button class="btn-new" id="btn-nueva-empresa">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva Empresa
+        </button>
+      </div>
+
+      <!-- Grid de empresas -->
+      <div id="empresas-grid">
+        <div class="center-msg">Cargando empresas...</div>
+      </div>
+    </div>
+
+    <!-- Modal nueva empresa -->
+    <div class="modal-overlay" id="modal-overlay">
+      <div class="modal">
+        <h2>✨ Registrar Nueva Empresa</h2>
+        <div class="field">
+          <label for="inp-nombre">Nombre de la Empresa</label>
+          <input id="inp-nombre" type="text" placeholder="Ej: Distribuidora López" />
+        </div>
+        <div class="field">
+          <label for="inp-email">Correo de Contacto</label>
+          <input id="inp-email" type="email" placeholder="admin@empresa.com" />
+        </div>
+        <div class="field">
+          <label for="sel-plan">Plan</label>
+          <select id="sel-plan">
+            <option value="basico">Básico — Inventario + Subida de archivos</option>
+            <option value="pro">Pro — + Nómina + Reportes</option>
+            <option value="enterprise">Enterprise — Todo activo</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="btn-cancelar">Cancelar</button>
+          <button class="btn-create" id="btn-crear">Crear Empresa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import {
+        getAllEmpresas,
+        createEmpresa,
+        toggleEmpresaActivo,
+        updatePlanEmpresa,
+        type Empresa,
+        type PlanEmpresa,
+      } from "../lib/empresas";
+
+      // ─── Guard: solo superadmin ───────────────────────────
+      async function guard() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return false; }
+        const role = await getUserRole(session.user.id);
+        if (role !== "superadmin") { window.location.replace("/init"); return false; }
+        return true;
+      }
+
+      // ─── Toast ────────────────────────────────────────────
+      function showToast(msg: string, error = false) {
+        const t = document.getElementById("toast")!;
+        t.textContent = msg;
+        t.className = `toast${error ? " error" : ""}`;
+        requestAnimationFrame(() => t.classList.add("show"));
+        setTimeout(() => t.classList.remove("show"), 3500);
+      }
+
+      // ─── Render de Feature Flags ──────────────────────────
+      function renderFlags(plan: PlanEmpresa, empresaId: string) {
+        const flags: {key: keyof PlanEmpresa; label: string}[] = [
+          { key: "modulo_inventario",  label: "📦 Inventario" },
+          { key: "modulo_trabajadores",label: "👷 Nómina" },
+          { key: "modulo_personal",    label: "🧑‍💼 Personal" },
+          { key: "modulo_reportes",    label: "📊 Reportes" },
+          { key: "modulo_pagos",       label: "💳 Pagos" },
+          { key: "modulo_subida_masiva", label: "📤 Subida Masiva" },
+        ];
+
+        return flags.map(({ key, label }) => {
+          const active = !!plan[key];
+          return `<span
+            class="toggle-item${active ? " active" : ""}"
+            data-empresa="${empresaId}"
+            data-flag="${key}"
+            data-active="${active}"
+            title="${active ? "Desactivar" : "Activar"} módulo"
+          >${label}</span>`;
+        }).join("");
+      }
+
+      // ─── Render Tarjeta ───────────────────────────────────
+      function renderCard(empresa: Empresa) {
+        const plan = empresa.planes_empresa?.[0];
+        const planClass = `plan-${empresa.plan}`;
+        const planLabel = empresa.plan.charAt(0).toUpperCase() + empresa.plan.slice(1);
+        const fecha = new Date(empresa.created_at).toLocaleDateString("es-CO");
+
+        return `
+          <div class="empresa-card${empresa.activo ? "" : " card-inactive"}" id="card-${empresa.id}">
+            <div class="card-header">
+              <div>
+                <div class="card-title">${empresa.nombre}</div>
+                <div class="card-email">${empresa.email_contacto || "Sin correo"} · Desde ${fecha}</div>
+              </div>
+              <span class="plan-badge ${planClass}">${planLabel}</span>
+            </div>
+
+            ${plan ? `
+              <div class="toggle-row" id="flags-${empresa.id}">
+                ${renderFlags(plan, empresa.id)}
+              </div>
+            ` : `<div style="color:#475569;font-size:0.8rem;margin-bottom:16px;">Sin plan configurado</div>`}
+
+            <div class="main-toggle-row">
+              <span class="main-toggle-label">${empresa.activo ? "✅ Empresa activa" : "⛔ Empresa inactiva"}</span>
+              <label class="switch">
+                <input
+                  type="checkbox"
+                  ${empresa.activo ? "checked" : ""}
+                  data-empresa-id="${empresa.id}"
+                  class="empresa-toggle"
+                />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        `;
+      }
+
+      // ─── Actualizar stats ─────────────────────────────────
+      function updateStats(empresas: Empresa[]) {
+        document.getElementById("stat-total")!.textContent = String(empresas.length);
+        document.getElementById("stat-activas")!.textContent = String(empresas.filter(e => e.activo).length);
+        document.getElementById("stat-enterprise")!.textContent = String(empresas.filter(e => e.plan === "enterprise").length);
+        document.getElementById("stat-pro")!.textContent = String(empresas.filter(e => e.plan === "pro").length);
+      }
+
+      // ─── Cargar y renderizar empresas ────────────────────
+      async function loadEmpresas() {
+        const grid = document.getElementById("empresas-grid")!;
+        try {
+          const empresas = await getAllEmpresas();
+          updateStats(empresas);
+
+          if (!empresas.length) {
+            grid.innerHTML = `<div class="center-msg">No hay empresas registradas aún.<br>Crea una con el botón "+ Nueva Empresa".</div>`;
+            return;
+          }
+
+          grid.innerHTML = empresas.map(renderCard).join("");
+          attachCardListeners();
+        } catch (e: any) {
+          grid.innerHTML = `<div class="center-msg" style="color:#f87171;">Error al cargar empresas: ${e.message}</div>`;
+        }
+      }
+
+      // ─── Eventos en tarjetas ──────────────────────────────
+      function attachCardListeners() {
+        // Toggle activo/inactivo
+        document.querySelectorAll(".empresa-toggle").forEach((el) => {
+          el.addEventListener("change", async (ev) => {
+            const chk = ev.target as HTMLInputElement;
+            const empresaId = chk.dataset.empresaId!;
+            try {
+              await toggleEmpresaActivo(empresaId, chk.checked);
+              const card = document.getElementById(`card-${empresaId}`);
+              if (card) card.classList.toggle("card-inactive", !chk.checked);
+              // Actualizar label
+              const row = chk.closest(".main-toggle-row");
+              const label = row?.querySelector(".main-toggle-label");
+              if (label) label.textContent = chk.checked ? "✅ Empresa activa" : "⛔ Empresa inactiva";
+              showToast(chk.checked ? "✅ Empresa activada" : "⛔ Empresa desactivada");
+            } catch (e: any) {
+              showToast("Error: " + e.message, true);
+              chk.checked = !chk.checked; // revertir
+            }
+          });
+        });
+
+        // Toggle feature flags
+        document.querySelectorAll(".toggle-item").forEach((el) => {
+          el.addEventListener("click", async () => {
+            const span = el as HTMLElement;
+            const empresaId = span.dataset.empresa!;
+            const flag = span.dataset.flag as keyof PlanEmpresa;
+            const current = span.dataset.active === "true";
+            const next = !current;
+
+            span.dataset.active = String(next);
+            span.classList.toggle("active", next);
+            span.title = next ? "Desactivar módulo" : "Activar módulo";
+
+            try {
+              await updatePlanEmpresa(empresaId, { [flag]: next } as any);
+              showToast(next ? `✅ Módulo activado` : `🔒 Módulo desactivado`);
+            } catch (e: any) {
+              // Revertir
+              span.dataset.active = String(current);
+              span.classList.toggle("active", current);
+              showToast("Error: " + e.message, true);
+            }
+          });
+        });
+      }
+
+      // ─── Modal nueva empresa ──────────────────────────────
+      function setupModal() {
+        const overlay = document.getElementById("modal-overlay")!;
+        const btnNueva = document.getElementById("btn-nueva-empresa")!;
+        const btnCancelar = document.getElementById("btn-cancelar")!;
+        const btnCrear = document.getElementById("btn-crear") as HTMLButtonElement;
+
+        btnNueva.addEventListener("click", () => overlay.classList.add("open"));
+        btnCancelar.addEventListener("click", () => overlay.classList.remove("open"));
+        overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
+
+        btnCrear.addEventListener("click", async () => {
+          const nombre = (document.getElementById("inp-nombre") as HTMLInputElement).value.trim();
+          const email  = (document.getElementById("inp-email")  as HTMLInputElement).value.trim();
+          const plan   = (document.getElementById("sel-plan")   as HTMLSelectElement).value;
+
+          if (!nombre) { showToast("⚠️ El nombre es obligatorio", true); return; }
+
+          btnCrear.disabled = true;
+          btnCrear.textContent = "Creando...";
+
+          try {
+            await createEmpresa(nombre, email, plan);
+            overlay.classList.remove("open");
+            (document.getElementById("inp-nombre") as HTMLInputElement).value = "";
+            (document.getElementById("inp-email")  as HTMLInputElement).value = "";
+            showToast("🎉 Empresa creada exitosamente");
+            await loadEmpresas();
+          } catch (e: any) {
+            showToast("Error: " + e.message, true);
+          } finally {
+            btnCrear.disabled = false;
+            btnCrear.textContent = "Crear Empresa";
+          }
+        });
+      }
+
+      // ─── Init ─────────────────────────────────────────────
+      async function init() {
+        const ok = await guard();
+        if (!ok) return;
+        setupModal();
+        await loadEmpresas();
+      }
+
+      init();
+    </script>
+  </body>
+</html>

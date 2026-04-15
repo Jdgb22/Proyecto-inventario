@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { getCurrentEmpresaId } from "./empresas";
 
 export interface Negocio {
   id: string;
@@ -7,10 +8,10 @@ export interface Negocio {
 }
 
 export async function getNegocios() {
-  const { data, error } = await supabase
-    .from("negocios")
-    .select("*")
-    .order("nombre", { ascending: true });
+  const empresaId = await getCurrentEmpresaId();
+  let query = supabase.from("negocios").select("*");
+  if (empresaId) query = query.eq("empresa_id", empresaId);
+  const { data, error } = await query.order("nombre", { ascending: true });
 
   if (error) {
     console.error("Error al obtener negocios:", error.message);
@@ -24,11 +25,12 @@ export async function getNegocios() {
 }
 
 export async function addNegocio(nombre: string) {
+  const empresaId = await getCurrentEmpresaId();
+  const payload: any = { nombre: nombre.trim() };
+  if (empresaId) payload.empresa_id = empresaId;
   const { data, error } = await supabase
     .from("negocios")
-    .insert([{ 
-      nombre: nombre.trim()
-    }])
+    .insert([payload])
     .select()
     .single();
 

@@ -32,19 +32,19 @@
       <div class="nav-group">
         <span class="group-label">Operaciones</span>
         <ul class="nav-links">
-          <li class="admin-only">
+          <li class="admin-only feature-inventario">
             <a href="/inven" class="link-item">Inventario</a>
           </li>
-          <li><a href="/productos" class="link-item">Productos</a></li>
-          <li><a href="/up_inven" class="link-item">Subir Inv.</a></li>
-          <li class="admin-only">
+          <li class="feature-inventario"><a href="/productos" class="link-item">Productos</a></li>
+          <li class="feature-subida_masiva"><a href="/up_inven" class="link-item">Subir Inv.</a></li>
+          <li class="admin-only feature-trabajadores">
             <a href="/trabajadores" class="link-item">Nómina</a>
           </li>
-          <li><a href="/up_trabajador" class="link-item">Subir Trab.</a></li>
-          <li class="admin-only">
+          <li class="feature-subida_masiva"><a href="/up_trabajador" class="link-item">Subir Trab.</a></li>
+          <li class="admin-only feature-inventario">
             <a href="/negocios" class="link-item">Negocios</a>
           </li>
-          <li class="admin-only">
+          <li class="admin-only feature-personal">
             <a href="/personal" class="link-item">Personal</a>
           </li>
         </ul>
@@ -56,7 +56,7 @@
       <div class="nav-group group-analytics admin-only">
         <span class="group-label label-analytics">Análisis Estratégico</span>
         <ul class="nav-links">
-          <li>
+          <li class="feature-reportes">
             <a href="/reportes" class="link-item item-analytics">
               <svg
                 xmlns="http://www.w3.org/2007/svg"
@@ -77,7 +77,7 @@
               Inv.
             </a>
           </li>
-          <li>
+          <li class="feature-reportes">
             <a href="/reportes_trabajadores" class="link-item item-analytics">
               <svg
                 xmlns="http://www.w3.org/2007/svg"
@@ -97,7 +97,7 @@
               Nómina
             </a>
           </li>
-          <li>
+          <li class="feature-pagos">
             <a href="/pagos" class="link-item item-analytics" style="color: #059669;">
               <svg
                 xmlns="http://www.w3.org/2007/svg"
@@ -176,27 +176,26 @@
       <div class="mobile-group">
         <h4 class="mobile-label">Operaciones</h4>
         <div class="mobile-links">
-          <a href="/inven" class="mobile-link admin-only">Inventario</a>
-          <a href="/productos" class="mobile-link">Productos</a>
-          <a href="/up_inven" class="mobile-link">Subir Inventario</a>
-          <a href="/trabajadores" class="mobile-link admin-only">Trabajadores</a
-          >
-          <a href="/up_trabajador" class="mobile-link">Subir Trabajadores</a>
-          <a href="/negocios" class="mobile-link admin-only">Negocios</a>
-          <a href="/personal" class="mobile-link admin-only">Personal</a>
+          <a href="/inven" class="mobile-link admin-only feature-inventario">Inventario</a>
+          <a href="/productos" class="mobile-link feature-inventario">Productos</a>
+          <a href="/up_inven" class="mobile-link feature-subida_masiva">Subir Inventario</a>
+          <a href="/trabajadores" class="mobile-link admin-only feature-trabajadores">Trabajadores</a>
+          <a href="/up_trabajador" class="mobile-link feature-subida_masiva">Subir Trabajadores</a>
+          <a href="/negocios" class="mobile-link admin-only feature-inventario">Negocios</a>
+          <a href="/personal" class="mobile-link admin-only feature-personal">Personal</a>
         </div>
       </div>
 
       <div class="mobile-group mobile-group-analytics admin-only">
         <h4 class="mobile-label">Análisis Estratégico</h4>
         <div class="mobile-links">
-          <a href="/reportes" class="mobile-link analytics-link"
+          <a href="/reportes" class="mobile-link analytics-link feature-reportes"
             >Reportes de Inventario</a
           >
-          <a href="/reportes_trabajadores" class="mobile-link analytics-link"
+          <a href="/reportes_trabajadores" class="mobile-link analytics-link feature-reportes"
             >Reportes de Nómina</a
           >
-          <a href="/pagos" class="mobile-link analytics-link" style="color: #059669;"
+          <a href="/pagos" class="mobile-link analytics-link feature-pagos" style="color: #059669;"
             >Total Pagos</a
           >
         </div>
@@ -551,16 +550,47 @@
 
 <script>
   import { signOutUser, getSession, getUserRole } from "../lib/auth";
+  import { getCurrentPlan } from "../lib/empresas";
 
-  // Función para aplicar roles a la barra de navegación limitando acceso de trabajadores
+  // Aplica roles Y feature flags al navbar
   async function applyNavSecurity() {
     try {
       const session = await getSession();
       if (!session) return;
+
       const role = await getUserRole(session.user.id);
+
+      // 1. Ocultar elementos admin-only si es trabajador
       if (role === "trabajador") {
         document.querySelectorAll(".admin-only").forEach((el: any) => {
           el.style.display = "none";
+        });
+      }
+
+      // 2. Mostrar enlace a superadmin si tiene ese rol
+      if (role === "superadmin") {
+        const saLink = document.getElementById("superadmin-link");
+        if (saLink) saLink.style.display = "block";
+      }
+
+      // 3. Ocultar módulos según feature flags del plan
+      const plan = await getCurrentPlan();
+      if (plan) {
+        const featureMap: Record<string, boolean> = {
+          inventario: plan.modulo_inventario,
+          trabajadores: plan.modulo_trabajadores,
+          personal: plan.modulo_personal,
+          reportes: plan.modulo_reportes,
+          pagos: plan.modulo_pagos,
+          subida_masiva: plan.modulo_subida_masiva,
+        };
+
+        Object.entries(featureMap).forEach(([feature, enabled]) => {
+          if (!enabled) {
+            document.querySelectorAll(`.feature-${feature}`).forEach((el: any) => {
+              el.style.display = "none";
+            });
+          }
         });
       }
     } catch (e) {
