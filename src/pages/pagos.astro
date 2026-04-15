@@ -315,7 +315,7 @@ import Navbar from "../components/navbar.astro";
 
       const normalizeMes = (value: any) => {
         const str = String(value ?? "").trim();
-        return str || "";
+        return str.slice(0, 7);
       };
 
       const normalizeNegocio = (row: any) => (row?.negocio || "General").trim();
