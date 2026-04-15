@@ -158,6 +158,21 @@ export async function updatePlanEmpresa(
 }
 
 /**
+ * Actualiza los datos básicos de una empresa (nombre, email, plan).
+ */
+export async function updateEmpresa(
+  empresaId: string,
+  data: { nombre?: string; email_contacto?: string; plan?: string }
+): Promise<void> {
+  const { error } = await supabase
+    .from("empresas")
+    .update(data)
+    .eq("id", empresaId);
+
+  if (error) throw error;
+}
+
+/**
  * Elimina una empresa y todos sus datos relacionados (cascade).
  */
 export async function deleteEmpresa(empresaId: string): Promise<void> {

@@ -1,0 +1,634 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!doctype html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Usuarios — Gestión de Equipo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #020617;
+        color: #e2e8f0;
+        min-height: 100vh;
+      }
+
+      .page {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 32px 24px 60px;
+      }
+
+      /* ── Page header ────────────────────────────────── */
+      .page-header {
+        display: flex; align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+      }
+      .page-title {
+        font-size: 1.6rem; font-weight: 800;
+        color: #f1f5f9; letter-spacing: -0.03em;
+      }
+      .page-subtitle { font-size: 0.875rem; color: #64748b; margin-top: 5px; }
+
+      /* ── Stats row ──────────────────────────────────── */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px; margin-bottom: 28px;
+      }
+      .stat-pill {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; padding: 16px 20px;
+        display: flex; flex-direction: column; gap: 4px;
+      }
+      .stat-label {
+        font-size: 0.68rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #475569;
+      }
+      .stat-value { font-size: 1.75rem; font-weight: 800; color: #f1f5f9; }
+
+      /* ── Section toolbar ───────────────────────────── */
+      .btn-primary {
+        background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white; border: none; padding: 10px 20px;
+        border-radius: 9999px; font-weight: 700; font-size: 0.85rem;
+        cursor: pointer; font-family: inherit; transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+      }
+      .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.1); }
+
+      .toolbar {
+        display: flex; align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+      }
+      .filter-row { display: flex; gap: 6px; }
+      .filter-tab {
+        padding: 7px 16px; border-radius: 999px;
+        font-size: 0.78rem; font-weight: 700;
+        cursor: pointer; transition: all 0.2s;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.04); color: #64748b;
+        font-family: inherit;
+      }
+      .filter-tab.active {
+        background: rgba(124,58,237,0.15);
+        border-color: rgba(124,58,237,0.4); color: #c4b5fd;
+      }
+
+      /* ── User cards grid ───────────────────────────── */
+      #users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+
+      .user-card {
+        background: rgba(15,23,42,0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px; padding: 20px;
+        backdrop-filter: blur(12px);
+        transition: all 0.25s ease;
+        animation: fadeUp 0.3s cubic-bezier(0.16,1,0.3,1) both;
+      }
+      .user-card:hover {
+        border-color: rgba(124,58,237,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      }
+      .user-card.inactive { opacity: 0.5; filter: grayscale(0.4); }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card-top {
+        display: flex; align-items: flex-start;
+        justify-content: space-between; margin-bottom: 14px;
+      }
+      .user-avatar {
+        width: 44px; height: 44px; border-radius: 12px;
+        background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; font-weight: 800; color: white;
+        flex-shrink: 0;
+      }
+      .avatar-trabajador { background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); }
+
+      .role-badge {
+        font-size: 0.65rem; font-weight: 700; padding: 3px 9px;
+        border-radius: 999px; text-transform: uppercase;
+        letter-spacing: 0.07em; white-space: nowrap;
+      }
+      .badge-admin { background: rgba(124,58,237,0.15); color: #c4b5fd; border: 1px solid rgba(124,58,237,0.3); }
+      .badge-trabajador { background: rgba(14,165,233,0.1); color: #38bdf8; border: 1px solid rgba(14,165,233,0.25); }
+
+      .card-body { margin-bottom: 16px; }
+      .user-email {
+        font-size: 0.875rem; font-weight: 700; color: #f1f5f9;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .user-meta {
+        font-size: 0.75rem; color: #475569; margin-top: 4px;
+        display: flex; align-items: center; gap: 8px;
+      }
+      .status-dot {
+        width: 6px; height: 6px; border-radius: 50%; display: inline-block;
+      }
+      .dot-active { background: #4ade80; }
+      .dot-inactive { background: #f87171; }
+
+      /* ── Card action buttons ────────────────────────── */
+      .card-actions { display: flex; gap: 8px; }
+
+      .btn-action {
+        flex: 1; padding: 8px 12px; border-radius: 9px;
+        font-size: 0.78rem; font-weight: 700; cursor: pointer;
+        font-family: inherit; transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        border: 1px solid transparent;
+      }
+      .btn-edit-user {
+        background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25);
+        color: #818cf8;
+      }
+      .btn-edit-user:hover { background: rgba(99,102,241,0.2); }
+
+      .btn-delete-user {
+        background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #f87171;
+      }
+      .btn-delete-user:hover { background: rgba(239,68,68,0.15); }
+
+      /* ── Modal ─────────────────────────────────────── */
+      .modal-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        background: rgba(2,6,23,0.85); backdrop-filter: blur(10px);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        padding: 24px;
+      }
+      .modal-overlay.open { opacity: 1; pointer-events: auto; }
+      .modal {
+        background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 22px; padding: 32px; width: 100%; max-width: 420px;
+        transform: scale(0.95); transition: transform 0.25s;
+      }
+      .modal-overlay.open .modal { transform: scale(1); }
+      .modal-title { font-size: 1.2rem; font-weight: 800; color: #f1f5f9; margin-bottom: 6px; }
+      .modal-email { font-size: 0.85rem; color: #7c3aed; font-weight: 600; margin-bottom: 22px; }
+
+      .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+      .field label { font-size: 0.78rem; font-weight: 600; color: #64748b; }
+      .field select, .field input {
+        background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 10px; padding: 11px 14px; color: #f1f5f9;
+        font-size: 0.9rem; font-family: inherit; width: 100%;
+        transition: border-color 0.2s;
+      }
+      .field select:focus, .field input:focus { outline: none; border-color: #7c3aed; }
+      .field select option { background: #0f172a; }
+
+      .modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+      .btn-modal-cancel {
+        flex: 1; background: transparent; border: 1px solid rgba(255,255,255,0.1);
+        color: #64748b; padding: 11px; border-radius: 10px;
+        font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s;
+      }
+      .btn-modal-cancel:hover { background: rgba(255,255,255,0.06); }
+      .btn-modal-save {
+        flex: 2; background: linear-gradient(135deg, #7c3aed, #4f46e5);
+        color: white; border: none; padding: 11px; border-radius: 10px;
+        font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+      }
+      .btn-modal-save:hover { filter: brightness(1.1); }
+      .btn-modal-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      /* ── Toast ─────────────────────────────────────── */
+      .toast {
+        position: fixed; bottom: 24px; right: 24px; z-index: 300;
+        background: #0f172a; border: 1px solid rgba(124,58,237,0.4);
+        border-radius: 12px; padding: 13px 18px;
+        color: #c4b5fd; font-weight: 600; font-size: 0.875rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        transform: translateY(80px); opacity: 0;
+        transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+      }
+      .toast.show { transform: translateY(0); opacity: 1; }
+      .toast.error { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+
+      .empty-msg {
+        grid-column: 1/-1; text-align: center;
+        padding: 60px 24px; color: #475569;
+        font-size: 1rem; font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+
+    <div class="page">
+
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <div class="page-title">👥 Gestión de Usuarios</div>
+          <div class="page-subtitle">Administra el equipo de tu empresa</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-pill">
+          <span class="stat-label">Total</span>
+          <span class="stat-value" id="stat-total">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Admins</span>
+          <span class="stat-value" id="stat-admins" style="color:#c4b5fd;">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Trabajadores</span>
+          <span class="stat-value" id="stat-workers" style="color:#38bdf8;">—</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Activos</span>
+          <span class="stat-value" id="stat-activos" style="color:#4ade80;">—</span>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="filter-row">
+          <button class="filter-tab active" data-filter="todos">Todos</button>
+          <button class="filter-tab" data-filter="admin">👑 Admins</button>
+          <button class="filter-tab" data-filter="trabajador">👷 Trabajadores</button>
+        </div>
+        <button class="btn-primary" id="btn-open-add">+ Agregar Usuario</button>
+      </div>
+
+      <!-- Cards grid -->
+      <div id="users-grid">
+        <div class="empty-msg">Cargando usuarios...</div>
+      </div>
+    </div>
+
+    <!-- Modal agregar usuario -->
+    <div class="modal-overlay" id="modal-add">
+      <div class="modal">
+        <div class="modal-title">✨ Añadir Usuario</div>
+        <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 22px;">Completa los datos para dar acceso a tu empresa.</div>
+
+        <div class="field">
+          <label for="add-nombre">Nombre completo</label>
+          <input id="add-nombre" type="text" placeholder="Ej: Ana Gómez" />
+        </div>
+        <div class="field">
+          <label for="add-email">Correo electrónico</label>
+          <input id="add-email" type="email" placeholder="usuario@correo.com" />
+        </div>
+        <div class="field">
+          <label for="add-password">Contraseña (Mín. 6 caracteres)</label>
+          <input id="add-password" type="password" placeholder="******" />
+        </div>
+        <div class="field">
+          <label for="add-role">Rol del usuario</label>
+          <select id="add-role">
+            <option value="admin">👑 Admin — acceso completo</option>
+            <option value="trabajador" selected>👷 Trabajador — acceso limitado</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" id="btn-cancel-add">Cancelar</button>
+          <button class="btn-modal-save" id="btn-save-add">Crear Usuario</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal editar usuario -->
+    <div class="modal-overlay" id="modal-edit">
+      <div class="modal">
+        <div class="modal-title">✏️ Editar Usuario</div>
+        <div class="modal-email" id="modal-email-display"></div>
+        <input type="hidden" id="edit-user-id" />
+
+        <div class="field">
+          <label for="edit-nombre">Nombre completo</label>
+          <input id="edit-nombre" type="text" placeholder="Nombre completo" />
+        </div>
+
+        <div class="field">
+          <label for="edit-role">Rol del usuario</label>
+          <select id="edit-role">
+            <option value="admin">👑 Admin — acceso completo</option>
+            <option value="trabajador">👷 Trabajador — acceso limitado</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="edit-activo">Estado de la cuenta</label>
+          <select id="edit-activo">
+            <option value="true">✅ Activo — puede iniciar sesión</option>
+            <option value="false">⛔ Inactivo — sin acceso</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-modal-cancel" id="btn-cancel-modal">Cancelar</button>
+          <button class="btn-modal-save" id="btn-save-modal">💾 Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      import { createClient } from "@supabase/supabase-js";
+      import { supabase } from "../lib/supabase";
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getCurrentEmpresaId } from "../lib/empresas";
+
+      // Ghost client para crear usuarios sin perder la sesión activa del administrador
+      const supaUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+      const supaKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+      const ghostClient = createClient(supaUrl, supaKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+
+      let currentFilter = "todos";
+      let allUsers: any[] = [];
+      let empresaId = "";
+
+      // ── Guard ─────────────────────────────────────────
+      async function guard() {
+        const session = await getSession();
+        if (!session) { window.location.replace("/"); return false; }
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin" && role !== "superadmin") {
+          window.location.replace("/init"); return false;
+        }
+        return true;
+      }
+
+      // ── Toast ─────────────────────────────────────────
+      function showToast(msg: string, error = false) {
+        const t = document.getElementById("toast")!;
+        t.textContent = msg;
+        t.className = `toast${error ? " error" : ""}`;
+        requestAnimationFrame(() => t.classList.add("show"));
+        setTimeout(() => t.classList.remove("show"), 3500);
+      }
+
+      // ── Stats ─────────────────────────────────────────
+      function updateStats(users: any[]) {
+        document.getElementById("stat-total")!.textContent   = String(users.length);
+        document.getElementById("stat-admins")!.textContent  = String(users.filter(u => u.role === "admin").length);
+        document.getElementById("stat-workers")!.textContent = String(users.filter(u => u.role === "trabajador").length);
+        document.getElementById("stat-activos")!.textContent = String(users.filter(u => u.activo !== false).length);
+      }
+
+      // ── Render cards ──────────────────────────────────
+      function renderUsers() {
+        const grid = document.getElementById("users-grid")!;
+        const show = currentFilter === "todos" ? allUsers : allUsers.filter(u => u.role === currentFilter);
+
+        if (!show.length) {
+          grid.innerHTML = `<div class="empty-msg">No hay usuarios${currentFilter !== "todos" ? " con ese rol" : ""} en tu empresa.</div>`;
+          return;
+        }
+
+        grid.innerHTML = show.map(u => {
+          const isAdmin = u.role === "admin";
+          const isActive = u.activo !== false;
+          const userNombre = u.nombre || "Usuario Nuevo";
+          const initials = userNombre.charAt(0).toUpperCase() || (u.email || "?")[0].toUpperCase();
+          const shortEmail = u.email?.length > 28 ? u.email.slice(0, 26) + "…" : (u.email || "Sin email");
+
+          return `
+            <div class="user-card${isActive ? "" : " inactive"}" id="ucard-${u.id}">
+              <div class="card-top">
+                <div class="user-avatar${isAdmin ? "" : " avatar-trabajador"}">${initials}</div>
+                <span class="role-badge ${isAdmin ? "badge-admin" : "badge-trabajador"}">
+                  ${isAdmin ? "👑 Admin" : "👷 Trabajador"}
+                </span>
+              </div>
+
+              <div class="card-body">
+                <div class="user-email" style="font-size:1rem;color:#f1f5f9;margin-bottom:2px;">${userNombre}</div>
+                <div class="user-meta" style="margin-top:0;">${shortEmail}</div>
+                <div class="user-meta">
+                  <span class="status-dot ${isActive ? "dot-active" : "dot-inactive"}"></span>
+                  ${isActive ? "Activo" : "Inactivo"}
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button class="btn-action btn-edit-user"
+                  data-id="${u.id}"
+                  data-email="${u.email || ""}"
+                  data-nombre="${u.nombre || ""}"
+                  data-role="${u.role}"
+                  data-activo="${isActive}"
+                  onclick="openEdit(this)"
+                >
+                  ✏️ Editar
+                </button>
+                <button class="btn-action btn-delete-user"
+                  data-id="${u.id}"
+                  onclick="deleteUser(this)"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // ── Eliminar usuario ───────────────────────────────
+      (window as any).deleteUser = async function(btn: HTMLButtonElement) {
+        if (!confirm("⚠️ ¿Seguro que deseas eliminar a este usuario permanentemente? Perderá el acceso y desaparecerá de la lista.")) return;
+        const id = btn.dataset.id!;
+        btn.disabled = true;
+
+        try {
+          const { error } = await supabase
+            .from("profiles")
+            .delete()
+            .eq("id", id)
+            .eq("empresa_id", empresaId);
+
+          if (error) throw error;
+          showToast("🗑️ Usuario eliminado correctamente");
+          await loadUsers();
+        } catch (e: any) {
+          showToast("Error: " + e.message, true);
+          btn.disabled = false;
+        }
+      };
+
+      // ── Modal agregar ──────────────────────────────────
+      document.getElementById("btn-open-add")!.addEventListener("click", () => {
+        (document.getElementById("add-nombre") as HTMLInputElement).value = "";
+        (document.getElementById("add-email") as HTMLInputElement).value = "";
+        (document.getElementById("add-password") as HTMLInputElement).value = "";
+        document.getElementById("modal-add")!.classList.add("open");
+      });
+
+      document.getElementById("btn-cancel-add")!.addEventListener("click", () => {
+        document.getElementById("modal-add")!.classList.remove("open");
+      });
+
+      document.getElementById("modal-add")!.addEventListener("click", (e) => {
+        if (e.target === document.getElementById("modal-add")) {
+          document.getElementById("modal-add")!.classList.remove("open");
+        }
+      });
+
+      document.getElementById("btn-save-add")!.addEventListener("click", async () => {
+        const nombre = (document.getElementById("add-nombre") as HTMLInputElement).value.trim();
+        const email  = (document.getElementById("add-email") as HTMLInputElement).value.trim();
+        const pass   = (document.getElementById("add-password") as HTMLInputElement).value;
+        const role   = (document.getElementById("add-role") as HTMLSelectElement).value;
+        const saveBtn = document.getElementById("btn-save-add") as HTMLButtonElement;
+
+        if (!nombre || !email || pass.length < 6) {
+          showToast("⚠️ Revisa los datos (Contraseña mín. 6 caracteres)", true);
+          return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Creando...";
+
+        try {
+          // Crea con el cliente secundario silencioso
+          const { data, error } = await ghostClient.auth.signUp({
+            email,
+            password: pass,
+            options: {
+              data: {
+                empresa_id: empresaId,
+                role: role,
+                nombre: nombre
+              }
+            }
+          });
+
+          if (error) throw error;
+          document.getElementById("modal-add")!.classList.remove("open");
+          showToast("✅ Usuario creado exitosamente");
+          await loadUsers();
+        } catch (e: any) {
+          showToast("Error: " + e.message, true);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "Crear Usuario";
+        }
+      });
+
+      // ── Modal editar ──────────────────────────────────
+      (window as any).openEdit = function(btn: HTMLElement) {
+        (document.getElementById("edit-user-id")      as HTMLInputElement).value  = btn.dataset.id!;
+        (document.getElementById("modal-email-display") as HTMLElement).textContent = btn.dataset.email || "Sin email";
+        (document.getElementById("edit-nombre")       as HTMLInputElement).value = btn.dataset.nombre || "";
+        (document.getElementById("edit-role")          as HTMLSelectElement).value = btn.dataset.role!;
+        (document.getElementById("edit-activo")        as HTMLSelectElement).value = btn.dataset.activo!;
+        document.getElementById("modal-edit")!.classList.add("open");
+      };
+
+      document.getElementById("btn-cancel-modal")!.addEventListener("click", () => {
+        document.getElementById("modal-edit")!.classList.remove("open");
+      });
+
+      document.getElementById("modal-edit")!.addEventListener("click", (e) => {
+        if (e.target === document.getElementById("modal-edit")) {
+          document.getElementById("modal-edit")!.classList.remove("open");
+        }
+      });
+
+      document.getElementById("btn-save-modal")!.addEventListener("click", async () => {
+        const id     = (document.getElementById("edit-user-id")  as HTMLInputElement).value;
+        const nombre = (document.getElementById("edit-nombre")   as HTMLInputElement).value.trim();
+        const role   = (document.getElementById("edit-role")     as HTMLSelectElement).value;
+        const activo = (document.getElementById("edit-activo")   as HTMLSelectElement).value === "true";
+        const saveBtn = document.getElementById("btn-save-modal") as HTMLButtonElement;
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Guardando...";
+
+        try {
+          const { error } = await supabase
+            .from("profiles")
+            .update({ nombre, role, activo })
+            .eq("id", id)
+            .eq("empresa_id", empresaId);
+
+          if (error) throw error;
+          document.getElementById("modal-edit")!.classList.remove("open");
+          showToast("✅ Usuario actualizado correctamente");
+          await loadUsers();
+        } catch (e: any) {
+          showToast("Error: " + e.message, true);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = "💾 Guardar cambios";
+        }
+      });
+
+      // ── Filtros ───────────────────────────────────────
+      document.querySelectorAll(".filter-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          currentFilter = (tab as HTMLElement).dataset.filter!;
+          renderUsers();
+        });
+      });
+
+      // ── Load ──────────────────────────────────────────
+      async function loadUsers() {
+        const grid = document.getElementById("users-grid")!;
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("id, email, nombre, role, activo")
+            .eq("empresa_id", empresaId)
+            .order("role");
+          if (error) throw error;
+          allUsers = data || [];
+          updateStats(allUsers);
+          renderUsers();
+        } catch (e: any) {
+          grid.innerHTML = `<div class="empty-msg" style="color:#f87171;">Error: ${e.message}</div>`;
+        }
+      }
+
+      // ── Init ──────────────────────────────────────────
+      async function init() {
+        const ok = await guard();
+        if (!ok) return;
+        const eid = await getCurrentEmpresaId();
+        if (!eid) { window.location.replace("/init"); return; }
+        empresaId = eid;
+        await loadUsers();
+      }
+
+      init();
+    </script>
+  </body>
+</html>
