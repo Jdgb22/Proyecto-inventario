@@ -15,6 +15,7 @@ import Navbar from "../components/navbar.astro";
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <style is:global>
       body {
         font-family:
@@ -583,11 +584,19 @@ import Navbar from "../components/navbar.astro";
         <!-- Left Column: List Section -->
         <div class="list-section">
           <div class="filter-section">
-            <div class="form-group">
+            <div class="form-group" style="flex: 1; min-width: 150px;">
               <label for="filter-negocio">Filtrar Sede</label>
               <select id="filter-negocio"></select>
             </div>
-            <button id="btn-search" class="btn-search">Actualizar Vista</button>
+            <div class="form-group" style="flex: 2; min-width: 250px;">
+              <label for="search-input">🔍 Buscar por nombre o ID...</label>
+              <input type="text" id="search-input" placeholder="Buscar personal..." style="width: 100%; box-sizing: border-box;" />
+            </div>
+            <div style="display: flex; gap: 8px;">
+               <button id="btn-search" class="btn-search">Actualizar Vista</button>
+               <input type="file" id="file-upload" accept=".xlsx, .xls, .csv" style="display: none;" />
+               <button id="btn-upload" class="btn-search" style="background: #10b981;" onclick="document.getElementById('file-upload').click()">📥 Subir Masivo</button>
+            </div>
           </div>
 
           <div class="list-header" id="list-header" style="display: none;">
@@ -742,6 +751,8 @@ import Navbar from "../components/navbar.astro";
       const state = {
         editingId: null as string | null,
       };
+      
+      let personalOriginales: any[] = [];
 
       async function init() {
         const session = await getSession();
@@ -788,18 +799,15 @@ import Navbar from "../components/navbar.astro";
 
       async function loadNegocios() {
         const negs = await getNegocios();
-        const opts =
+        const optsSede =
           negs.length > 0
-            ? negs
-                .map((n) => `<option value="${n.nombre}">${n.nombre}</option>`)
-                .join("")
+            ? negs.map((n) => `<option value="${n.nombre}">${n.nombre}</option>`).join("")
             : `<option value="">Sin sedes disponibles</option>`;
+            
+        const optsFilter = `<option value="General">Todas / General</option>` + (negs.length > 0 ? optsSede : "");
 
-        (document.getElementById("t-sede") as HTMLSelectElement).innerHTML =
-          opts;
-        (
-          document.getElementById("filter-negocio") as HTMLSelectElement
-        ).innerHTML = opts;
+        (document.getElementById("t-sede") as HTMLSelectElement).innerHTML = optsSede;
+        (document.getElementById("filter-negocio") as HTMLSelectElement).innerHTML = optsFilter;
       }
 
       function startEdit(item: any) {
@@ -893,8 +901,11 @@ import Navbar from "../components/navbar.astro";
         const fNeg = (
           document.getElementById("filter-negocio") as HTMLSelectElement
         ).value;
-        if (fNeg)
+        if (fNeg && fNeg !== "General")
           (document.getElementById("t-sede") as HTMLSelectElement).value = fNeg;
+          
+        const searchInput = document.getElementById("search-input") as HTMLInputElement;
+        if (searchInput) searchInput.value = "";
 
         document
           .querySelectorAll(".worker-card")
@@ -905,132 +916,226 @@ import Navbar from "../components/navbar.astro";
         .getElementById("btn-cancel-edit")
         ?.addEventListener("click", cancelEdit);
 
+      function renderList(data: any[]) {
+        const lista = document.getElementById("lista-personal")!;
+        const count = document.getElementById("list-count")!;
+        
+        count.textContent = `${data.length} ${data.length === 1 ? "persona" : "personas"}`;
+
+        if (data.length === 0) {
+          lista.innerHTML = `
+             <li class="empty-state">
+               <span class="empty-text">No hay personal registrado o que coincida.</span>
+             </li>`;
+          return;
+        }
+
+        lista.innerHTML = "";
+
+        data.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "worker-card";
+          li.id = `card-${item.id}`;
+          if (state.editingId === item.id) li.classList.add("is-editing");
+
+          const doc = item.identificacion ?? item.documento ?? "Sin ID";
+
+          function makeBadge(label: string, bol: boolean) {
+            if (bol)
+              return `<span class="badge-item badge-req-yes"><svg style="width:12px;height:12px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>${label}</span>`;
+            return `<span class="badge-item badge-req-no">${label}</span>`;
+          }
+
+          const badges = `
+            ${makeBadge("Prima", item.prima)}
+            ${makeBadge("Liq.", item.liquidacion)}
+            ${makeBadge("Cesant.", item.cesantias)}
+          `;
+
+          const ingreso = item.fecha_entrada
+            ? new Date(item.fecha_entrada).toLocaleDateString("es-CO")
+            : "No definida";
+
+          li.innerHTML = `
+               <div class="card-info">
+                 <span class="prod-sku">ID: ${doc}</span>
+                 <span class="prod-name">${item.nombre}</span>
+                 
+                 <div class="card-stats">
+                   <div class="stat-item">
+                     <span class="stat-label">Ingreso</span>
+                     <span style="font-weight: 700; color: #334155; font-size: 0.8rem;">${ingreso}</span>
+                   </div>
+                   <div class="stat-item" style="align-items: flex-end;">
+                     <span class="stat-label">Salario</span>
+                     <span class="price-tag">$${Number(item.salario_base || 0).toLocaleString()}</span>
+                   </div>
+                 </div>
+                 
+                 <div class="badges-container">
+                   ${badges}
+                 </div>
+               </div>
+               <div class="card-actions">
+                 <button class="btn-edit" data-item='${JSON.stringify(item)}'>Detalles</button>
+                 <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
+               </div>
+             `;
+          lista.appendChild(li);
+        });
+
+        document.querySelectorAll(".btn-edit").forEach((btn) => {
+          btn.addEventListener("click", (e: any) => {
+            const itemData = JSON.parse(e.target.dataset.item);
+            startEdit(itemData);
+          });
+        });
+
+        document.querySelectorAll(".btn-delete").forEach((btn) => {
+          btn.addEventListener("click", async (e: any) => {
+            if (
+              confirm(
+                `¿Eliminar definitivamente a "${e.target.dataset.nombre}"?`,
+              )
+            ) {
+              await deletePersonal(e.target.dataset.id);
+              if (state.editingId === e.target.dataset.id) cancelEdit();
+              loadData();
+            }
+          });
+        });
+      }
+
       async function loadData() {
         const lista = document.getElementById("lista-personal")!;
-        const fNeg = (
-          document.getElementById("filter-negocio") as HTMLSelectElement
-        ).value;
         const header = document.getElementById("list-header")!;
         const hint = document.getElementById("context-hint")!;
         const count = document.getElementById("list-count")!;
+        const fNeg = (
+          document.getElementById("filter-negocio") as HTMLSelectElement
+        ).value;
 
         if (!fNeg) {
           header.style.display = "none";
           lista.innerHTML = `
-            <li class="empty-state">
-              <span style="font-size: 24px;">⚠️</span>
-              <span style="color: #64748b; font-weight: 500;">Primero configura negocios en la tabla sede para listar el personal.</span>
-            </li>`;
+             <li class="empty-state">
+               <span style="font-size: 24px;">⚠️</span>
+               <span style="color: #64748b; font-weight: 500;">Primero selecciona una sede en los filtros.</span>
+             </li>`;
           return;
         }
 
         header.style.display = "flex";
-        hint.innerHTML = `Personal filtrado: <strong>${fNeg}</strong>`;
+        hint.innerHTML = `Sede actual: <strong>${fNeg}</strong>`;
         count.textContent = "Cargando...";
 
         try {
-          if (!state.editingId) {
-            (document.getElementById("t-sede") as HTMLSelectElement).value =
-              fNeg;
+          if (!state.editingId && fNeg !== "General") {
+            (document.getElementById("t-sede") as HTMLSelectElement).value = fNeg;
           }
 
-          let data = await getPersonalFiltrado(fNeg);
-
-          count.textContent = `${data.length} ${data.length === 1 ? "persona" : "personas"}`;
-
-          if (data.length === 0) {
-            lista.innerHTML = `
-              <li class="empty-state">
-                <span class="empty-text">No hay personal para la sede seleccionada.</span>
-              </li>`;
-            return;
+          let data;
+          if (fNeg === "General") {
+              data = await getPersonalFiltrado("");
+          } else {
+              data = await getPersonalFiltrado(fNeg);
           }
-
-          lista.innerHTML = "";
-
-          data.forEach((item) => {
-            const li = document.createElement("li");
-            li.className = "worker-card";
-            li.id = `card-${item.id}`;
-            if (state.editingId === item.id) li.classList.add("is-editing");
-
-            const doc = item.documento || "Sin ID";
-            const dtIngreso = item.fecha_entrada || "Sin fecha asignada";
-
-            // Build Badges
-            const primaBadge = item.prima
-              ? `<span class="badge-item badge-req-yes">✓ Prima : ${item.fecha_prima || "Sin Fecha"}</span>`
-              : `<span class="badge-item badge-req-no">⨯ Prima</span>`;
-
-            const liquidacionBadge = item.liquidacion
-              ? `<span class="badge-item badge-req-yes">✓ Liquidación : ${item.fecha_liquidacion || "Sin Fecha"}</span>`
-              : `<span class="badge-item badge-req-no">⨯ Liquidación</span>`;
-
-            const cesantiasBadge = item.cesantias
-              ? `<span class="badge-item badge-req-yes">✓ Cesantías : ${item.fecha_cesantias || "Sin Fecha"}</span>`
-              : `<span class="badge-item badge-req-no">⨯ Cesantías</span>`;
-
-            li.innerHTML = `
-              <div class="card-info">
-                <span class="prod-sku">ID: ${doc}</span>
-                <span class="prod-name">${item.nombre}</span>
-                
-                <div class="card-stats">
-                  <div class="stat-item">
-                    <span class="stat-label">Ingreso</span>
-                    <span style="font-weight: 700; color: #334155; font-size: 0.85rem;">${dtIngreso}</span>
-                  </div>
-                  <div class="stat-item" style="align-items: flex-end;">
-                    <span class="stat-label">Salario</span>
-                    <span class="price-tag">$${Number(item.salario_base || 0).toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div class="badges-container">
-                    ${primaBadge}
-                    ${liquidacionBadge}
-                    ${cesantiasBadge}
-                </div>
-              </div>
-              <div class="card-actions">
-                <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar Datos</button>
-                <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Remover</button>
-              </div>
-            `;
-            lista.appendChild(li);
-          });
-
-          // Bind Edit
-          document.querySelectorAll(".btn-edit").forEach((btn) => {
-            btn.addEventListener("click", (e: any) => {
-              const itemData = JSON.parse(e.target.dataset.item);
-              startEdit(itemData);
-            });
-          });
-
-          // Bind Delete
-          document.querySelectorAll(".btn-delete").forEach((btn) => {
-            btn.addEventListener("click", async (e: any) => {
-              if (
-                confirm(
-                  `¿Eliminar definitivamente a "${e.target.dataset.nombre}"?`,
-                )
-              ) {
-                await deletePersonal(e.target.dataset.id);
-                if (state.editingId === e.target.dataset.id) cancelEdit();
-                loadData();
-              }
-            });
-          });
-        } catch (e) {
-          console.error(e);
-          count.textContent = "Error";
+          personalOriginales = data || [];
+          
+          const q = (document.getElementById("search-input") as HTMLInputElement).value.toLowerCase();
+          const filtrados = personalOriginales.filter(t => 
+            (t.nombre && String(t.nombre).toLowerCase().includes(q)) || 
+            (t.identificacion && String(t.identificacion).toLowerCase().includes(q)) || 
+            (t.documento && String(t.documento).toLowerCase().includes(q))
+          );
+          renderList(filtrados);
+        } catch (e: any) {
+          console.error("DEBUG LOAD ERROR:", e);
+          alert("Error en loadData: " + (e?.message || JSON.stringify(e) || String(e)));
+          count.textContent = "Error: " + (e?.message || "Desconocido");
         }
       }
 
       document.getElementById("btn-search")?.addEventListener("click", () => {
         cancelEdit();
         loadData();
+      });
+
+      document.getElementById("search-input")?.addEventListener("input", (e: any) => {
+        const q = e.target.value.toLowerCase();
+        const filtrados = personalOriginales.filter(t => 
+          (t.nombre && String(t.nombre).toLowerCase().includes(q)) || 
+          (t.identificacion && String(t.identificacion).toLowerCase().includes(q)) || 
+          (t.documento && String(t.documento).toLowerCase().includes(q))
+        );
+        renderList(filtrados);
+      });
+
+      document.getElementById("file-upload")?.addEventListener("change", (e: any) => {
+        const fNeg = (document.getElementById("filter-negocio") as HTMLSelectElement).value;
+        if (!fNeg) {
+           alert("Por favor, selecciona una sede en los filtros antes de subir un archivo.");
+           e.target.value = "";
+           return;
+        }
+
+        if (!e.target.files.length) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        const btnUpload = document.getElementById("btn-upload")!;
+        const originalText = btnUpload.textContent;
+        btnUpload.textContent = "Procesando...";
+        
+        reader.onload = async (ev: any) => {
+          try {
+            const XLSX = (window as any).XLSX;
+            if (!XLSX) throw new Error("Cargando libreria de Excel...");
+            
+            const data = new Uint8Array(ev.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            
+            let procesados = 0;
+            for (const row of json as any[]) {
+              const r: any = {};
+              Object.keys(row).forEach(k => r[k.toLowerCase().trim()] = row[k]);
+              
+              const nombre = r["nombre"];
+              const documento = r["documento"] || r["id"] || r["identificacion"] || r["cédula"] || r["cedula"];
+              const cargo = r["cargo"] || "";
+              const salario = parseFloat(r["salario base"] || r["salario"] || r["salario_base"] || "0");
+              
+              if (nombre && documento) {
+                const existing = personalOriginales.find(t => String(t.documento) === String(documento) || String(t.identificacion) === String(documento));
+                const payload = {
+                   nombre: String(nombre),
+                   documento: String(documento),
+                   cargo: String(cargo),
+                   salario_base: isNaN(salario) ? 0 : salario,
+                   negocio: fNeg,
+                   fecha_entrada: null,
+                   prima: false,
+                   liquidacion: false,
+                   cesantias: false
+                };
+                if (existing) {
+                   await updatePersonal(existing.id, payload);
+                } else {
+                   await addPersonal(payload as any);
+                }
+                procesados++;
+              }
+            }
+            alert(`¡Se procesaron ${procesados} personas exitosamente para la sede ${fNeg}!`);
+            loadData();
+          } catch(err: any) {
+            alert("Error: " + err.message);
+          } finally {
+            btnUpload.textContent = originalText;
+            e.target.value = "";
+          }
+        };
+        reader.readAsArrayBuffer(file);
       });
 
       document

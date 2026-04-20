@@ -15,6 +15,7 @@ import Navbar from "../components/navbar.astro";
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
     <style is:global>
       body {
@@ -412,6 +413,11 @@ import Navbar from "../components/navbar.astro";
 
       <div class="split-layout">
         <div class="list-section">
+          <div style="background: white; padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; gap: 16px; align-items: center;">
+             <input type="text" id="search-input" placeholder="🔍 Buscar por nombre o código..." style="flex: 1; margin: 0; padding: 12px 16px;" />
+             <input type="file" id="file-upload" accept=".xlsx, .xls, .csv" style="display: none;" />
+             <button id="btn-upload" style="background: #1e293b; color: white; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer;" onclick="document.getElementById('file-upload').click()">📥 Subir Masivo</button>
+          </div>
           <div class="list-header">
             <h2 style="margin:0; font-size:1.1rem; font-weight:800;">
               Directorio de Productos
@@ -496,6 +502,7 @@ import Navbar from "../components/navbar.astro";
       } from "../lib/inventory";
 
       const state = { editingId: null as string | null };
+      let productosOriginales: any[] = [];
 
       async function init() {
         const session = await getSession();
@@ -507,32 +514,22 @@ import Navbar from "../components/navbar.astro";
       }
 
       function startEdit(item: any) {
-        (document.getElementById("edit-id") as HTMLInputElement).value =
-          item.id;
-        (document.getElementById("p-nombre") as HTMLInputElement).value =
-          item.nombre;
-        (document.getElementById("p-codigo") as HTMLInputElement).value =
-          item.codigo;
-        (document.getElementById("p-precio") as HTMLInputElement).value =
-          item.precio;
+        (document.getElementById("edit-id") as HTMLInputElement).value = item.id;
+        (document.getElementById("p-nombre") as HTMLInputElement).value = item.nombre;
+        (document.getElementById("p-codigo") as HTMLInputElement).value = item.codigo;
+        (document.getElementById("p-precio") as HTMLInputElement).value = item.precio;
 
-        // Deshabilitar el código SKU para evitar que cambien la llave principal de todos los inventarios
-        (document.getElementById("p-codigo") as HTMLInputElement).disabled =
-          true;
+        (document.getElementById("p-codigo") as HTMLInputElement).disabled = true;
 
         const formCard = document.getElementById("main-form-card")!;
         formCard.classList.add("edit-mode");
-        document.getElementById("form-title")!.textContent =
-          "Modificar Catálogo";
-        document.getElementById("form-desc")!.textContent =
-          `Actualizando producto SKU: ${item.codigo}`;
+        document.getElementById("form-title")!.textContent = "Modificar Catálogo";
+        document.getElementById("form-desc")!.textContent = `Actualizando producto SKU: ${item.codigo}`;
         document.getElementById("btn-submit")!.textContent = "Guardar Cambios";
 
         state.editingId = item.id;
 
-        document
-          .querySelectorAll(".producto-card")
-          .forEach((el) => el.classList.remove("is-editing"));
+        document.querySelectorAll(".producto-card").forEach((el) => el.classList.remove("is-editing"));
         document.getElementById(`card-${item.id}`)?.classList.add("is-editing");
 
         if (window.innerWidth <= 1024)
@@ -542,97 +539,151 @@ import Navbar from "../components/navbar.astro";
 
       function cancelEdit() {
         state.editingId = null;
-        const form = document.getElementById(
-          "form-producto",
-        ) as HTMLFormElement;
+        const form = document.getElementById("form-producto") as HTMLFormElement;
         form.reset();
         (document.getElementById("edit-id") as HTMLInputElement).value = "";
-
-        (document.getElementById("p-codigo") as HTMLInputElement).disabled =
-          false;
+        (document.getElementById("p-codigo") as HTMLInputElement).disabled = false;
 
         const formCard = document.getElementById("main-form-card")!;
         formCard.classList.remove("edit-mode");
         document.getElementById("form-title")!.textContent = "Registrar Nuevo";
-        document.getElementById("form-desc")!.textContent =
-          "Añade un producto al catálogo maestro.";
-        document.getElementById("btn-submit")!.textContent =
-          "Añadir al Catálogo";
+        document.getElementById("form-desc")!.textContent = "Añade un producto al catálogo maestro.";
+        document.getElementById("btn-submit")!.textContent = "Añadir al Catálogo";
 
-        document
-          .querySelectorAll(".producto-card")
-          .forEach((el) => el.classList.remove("is-editing"));
+        const searchInput = document.getElementById("search-input") as HTMLInputElement;
+        if (searchInput) searchInput.value = "";
+
+        document.querySelectorAll(".producto-card").forEach((el) => el.classList.remove("is-editing"));
       }
 
-      document
-        .getElementById("btn-cancel-edit")
-        ?.addEventListener("click", cancelEdit);
+      document.getElementById("btn-cancel-edit")?.addEventListener("click", cancelEdit);
 
-      async function loadData() {
+      function renderList(data: any[]) {
         const lista = document.getElementById("lista-productos")!;
         const count = document.getElementById("list-count")!;
 
+        count.textContent = `${data.length} ${data.length === 1 ? "producto" : "productos"}`;
+
+        if (data.length === 0) {
+          lista.innerHTML = `
+            <li class="empty-state">
+              <span class="empty-text">El catálogo está vacío o no hay coincidencias.</span>
+            </li>`;
+          return;
+        }
+
+        lista.innerHTML = "";
+
+        data.forEach((item) => {
+          const li = document.createElement("li");
+          li.className = "producto-card";
+          li.id = `card-${item.id}`;
+          if (state.editingId === item.id) li.classList.add("is-editing");
+
+          li.innerHTML = `
+            <div class="card-info">
+              <span class="prod-sku">${item.codigo}</span>
+              <span class="prod-name">${item.nombre}</span>
+              <span class="price-tag"><span class="price-label">Precio</span>$${Number(item.precio || 0).toLocaleString()}</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar</button>
+              <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
+            </div>
+          `;
+          lista.appendChild(li);
+        });
+
+        document.querySelectorAll(".btn-edit").forEach((btn) => {
+          btn.addEventListener("click", (e: any) => {
+            const itemData = JSON.parse(e.target.dataset.item);
+            startEdit(itemData);
+          });
+        });
+
+        document.querySelectorAll(".btn-delete").forEach((btn) => {
+          btn.addEventListener("click", async (e: any) => {
+            const target = e.target as HTMLButtonElement;
+            if (
+              confirm(
+                `¿Estás seguro de que deseas eliminar permanentemente "${target.dataset.nombre}"?`,
+              )
+            ) {
+              await deleteMasterProducto(target.dataset.id!);
+              if (state.editingId === target.dataset.id) cancelEdit();
+              loadData();
+            }
+          });
+        });
+      }
+
+      async function loadData() {
+        const count = document.getElementById("list-count")!;
         try {
-          const data = await getMasterProductos();
-          count.textContent = `${data.length} ${data.length === 1 ? "producto" : "productos"}`;
-
-          if (data.length === 0) {
-            lista.innerHTML = `
-              <li class="empty-state">
-                <span style="font-size: 24px;">📝</span>
-                <span class="empty-text">El catálogo está vacío. Añade el primer producto.</span>
-              </li>`;
-            return;
-          }
-
-          lista.innerHTML = "";
-
-          data.forEach((item) => {
-            const li = document.createElement("li");
-            li.className = "producto-card";
-            li.id = `card-${item.id}`;
-            if (state.editingId === item.id) li.classList.add("is-editing");
-
-            li.innerHTML = `
-              <div class="card-info">
-                <span class="prod-sku">${item.codigo}</span>
-                <span class="prod-name">${item.nombre}</span>
-                <span class="price-tag"><span class="price-label">Precio</span>$${Number(item.precio || 0).toLocaleString()}</span>
-              </div>
-              <div class="card-actions">
-                <button class="btn-edit" data-item='${JSON.stringify(item)}'>Editar</button>
-                <button class="btn-delete" data-id="${item.id}" data-nombre="${item.nombre}">Eliminar</button>
-              </div>
-            `;
-            lista.appendChild(li);
-          });
-
-          document.querySelectorAll(".btn-edit").forEach((btn) => {
-            btn.addEventListener("click", (e: any) => {
-              const itemData = JSON.parse(e.target.dataset.item);
-              startEdit(itemData);
-            });
-          });
-
-          document.querySelectorAll(".btn-delete").forEach((btn) => {
-            btn.addEventListener("click", async (e: any) => {
-              const target = e.target as HTMLButtonElement;
-              if (
-                confirm(
-                  `¿Estás seguro de que deseas eliminar permanentemente "${target.dataset.nombre}"?`,
-                )
-              ) {
-                await deleteMasterProducto(target.dataset.id!);
-                if (state.editingId === target.dataset.id) cancelEdit();
-                loadData();
-              }
-            });
-          });
+          productosOriginales = await getMasterProductos();
+          const q = (document.getElementById("search-input") as HTMLInputElement).value.toLowerCase();
+          const filtrados = productosOriginales.filter(p => 
+            (p.nombre && String(p.nombre).toLowerCase().includes(q)) || 
+            (p.codigo && String(p.codigo).toLowerCase().includes(q))
+          );
+          renderList(filtrados);
         } catch (e) {
           console.error(e);
           count.textContent = "Error";
         }
       }
+
+      document.getElementById("search-input")?.addEventListener("input", (e: any) => {
+        const q = e.target.value.toLowerCase();
+        const filtrados = productosOriginales.filter(p => 
+          (p.nombre && String(p.nombre).toLowerCase().includes(q)) || 
+          (p.codigo && String(p.codigo).toLowerCase().includes(q))
+        );
+        renderList(filtrados);
+      });
+
+      document.getElementById("file-upload")?.addEventListener("change", (e: any) => {
+        if (!e.target.files.length) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        const btnUpload = document.getElementById("btn-upload")!;
+        const originalText = btnUpload.textContent;
+        btnUpload.textContent = "Procesando...";
+        
+        reader.onload = async (ev: any) => {
+          try {
+            const XLSX = (window as any).XLSX;
+            if (!XLSX) throw new Error("Cargando libreria de Excel...");
+            
+            const data = new Uint8Array(ev.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+            
+            let procesados = 0;
+            for (const row of json as any[]) {
+              const r: any = {};
+              Object.keys(row).forEach(k => r[k.toLowerCase().trim()] = row[k]);
+              
+              const nombre = r["nombre"] || r["producto"];
+              const codigo = r["codigo"] || r["código"] || r["sku"];
+              const precio = parseFloat(r["precio"] || r["valor"] || "0");
+              
+              if (nombre && codigo) {
+                await upsertMasterProducto({ nombre: String(nombre), codigo: String(codigo), precio: isNaN(precio) ? 0 : precio, categoria: "" });
+                procesados++;
+              }
+            }
+            alert(`¡Se procesaron ${procesados} productos exitosamente!`);
+            loadData();
+          } catch(err: any) {
+            alert("Error: " + err.message);
+          } finally {
+            btnUpload.textContent = originalText;
+            (document.getElementById("file-upload") as HTMLInputElement).value = "";
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      });
 
       document
         .getElementById("form-producto")

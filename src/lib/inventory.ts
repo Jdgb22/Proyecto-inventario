@@ -54,14 +54,54 @@ export async function getMasterProductos() {
 }
 
 export async function upsertMasterProducto(item: MasterProducto) {
-    const { data: exist } = await supabase
-        .from("inventario")
-        .select("*")
-        .eq("codigo", item.codigo)
-        .eq("mes", "MASTER")
-        .maybeSingle();
+    const empresaId = await getCurrentEmpresaId();
+    
+    // 1. Intentar con la tabla nueva "productos"
+    let checkQuery = supabase.from("productos").select("*").eq("codigo", item.codigo);
+    if (empresaId) checkQuery = checkQuery.eq("empresa_id", empresaId);
+    
+    const { data: existProd, error: fetchErr } = await checkQuery.maybeSingle();
 
-    if (exist) {
+    if (!fetchErr) {
+        // La tabla existe, trabajamos con 'productos'
+        if (existProd) {
+            const { data, error } = await supabase
+                .from("productos")
+                .update({
+                    nombre: item.nombre.trim(),
+                    precio: item.precio,
+                    categoria: item.categoria?.trim() || ""
+                })
+                .eq("id", existProd.id)
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        } else {
+            const payload: any = {
+                nombre: item.nombre.trim(),
+                codigo: item.codigo.trim(),
+                precio: item.precio,
+                categoria: item.categoria?.trim() || ""
+            };
+            if (empresaId) payload.empresa_id = empresaId;
+            
+            const { data, error } = await supabase
+                .from("productos")
+                .insert([payload])
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        }
+    }
+
+    // 2. Fallback al sistema viejo "inventario [MASTER]"
+    let fbExistQ = supabase.from("inventario").select("*").eq("codigo", item.codigo).eq("mes", "MASTER");
+    if (empresaId) fbExistQ = fbExistQ.eq("empresa_id", empresaId);
+    const { data: existMaster } = await fbExistQ.maybeSingle();
+
+    if (existMaster) {
         const { data, error } = await supabase
             .from("inventario")
             .update({
@@ -69,23 +109,26 @@ export async function upsertMasterProducto(item: MasterProducto) {
                 precio: item.precio,
                 categoria: item.categoria?.trim() || ""
             })
-            .eq("id", exist.id)
+            .eq("id", existMaster.id)
             .select()
             .single();
         if (error) throw error;
         return data;
     } else {
+        const payloadFb: any = {
+            nombre: item.nombre.trim(),
+            codigo: item.codigo.trim(),
+            precio: item.precio,
+            categoria: item.categoria?.trim() || "",
+            cantidad: 0,
+            negocio: "GLOBAL",
+            mes: "MASTER"
+        };
+        if (empresaId) payloadFb.empresa_id = empresaId;
+        
         const { data, error } = await supabase
             .from("inventario")
-            .insert([{
-                nombre: item.nombre.trim(),
-                codigo: item.codigo.trim(),
-                precio: item.precio,
-                categoria: item.categoria?.trim() || "",
-                cantidad: 0,
-                negocio: "GLOBAL",
-                mes: "MASTER"
-            }])
+            .insert([payloadFb])
             .select()
             .single();
         if (error) throw error;
@@ -177,8 +220,11 @@ export async function deleteRegistro(id: string) {
 }
 
 export async function deleteMasterProducto(id: string) {
-    // En nuestro sistema actual, los productos master están en la tabla 'inventario' con mes='MASTER'
-    // o en la tabla 'productos' si ya se migró. deleteRegistro ya maneja el ID.
+    // Intenta borrar primero de 'productos' si existe
+    const { error } = await supabase.from("productos").delete().eq("id", id);
+    if (!error) return true;
+    
+    // Si falló, asume fallback a inventario
     return await deleteRegistro(id);
 }
 
