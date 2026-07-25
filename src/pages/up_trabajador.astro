@@ -377,7 +377,7 @@ import Navbar from "../components/navbar.astro";
         const session = await getSession();
         if (!session) window.location.replace("/");
       } catch (e) {
-        console.warn("Auth check failed:", e);
+        // console.warn("Auth check failed:", e);
       }
     }
     checkAuth();
@@ -413,7 +413,7 @@ import Navbar from "../components/navbar.astro";
               .join("");
         }
       } catch (error) {
-        console.error(error);
+        // console.warn(error);
       }
     }
     loadNegocios();
@@ -469,7 +469,7 @@ import Navbar from "../components/navbar.astro";
             );
             procesarJSON(json);
           } catch (err: any) {
-            console.error(err);
+            // console.warn(err);
             alert(
               "Error procesando Excel: " + (err.message || "Archivo corrupto."),
             );
@@ -654,7 +654,7 @@ import Navbar from "../components/navbar.astro";
               else await addTrabajador(payload as any);
               count++;
             } catch (e: any) {
-              console.error("Error BD Trabajador:", e);
+              // console.warn("Error BD Trabajador:", e);
               dbErrores++;
               if (!dbErrorMsg) dbErrorMsg = e.message || "Error desconocido BD";
             }

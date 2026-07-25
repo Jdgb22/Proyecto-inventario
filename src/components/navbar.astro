@@ -32,9 +32,13 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
       {!isSuperAdminView && (
         <>
           <!-- Database Group -->
-          <div class="nav-group">
-            <span class="group-label">Operaciones</span>
-            <ul class="nav-links">
+          <div class="nav-group dropdown">
+            <button class="link-item dropdown-trigger">
+              Operaciones
+              <svg xmlns="http://www.w3.org/2007/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="dropdown-menu">
+              <ul class="nav-links vertical">
           <li class="admin-only feature-inventario">
             <a href="/inven" class="link-item">Inventario</a>
           </li>
@@ -54,14 +58,36 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
             <a href="/usuarios" class="link-item" style="color:#a78bfa;">👥 Usuarios</a>
           </li>
         </ul>
+        </div>
       </div>
 
       <div class="nav-divider admin-only"></div>
 
       <!-- Analytics Group -->
-      <div class="nav-group group-analytics admin-only">
-        <span class="group-label label-analytics">Análisis Estratégico</span>
-        <ul class="nav-links">
+      <div class="nav-group group-analytics admin-only dropdown">
+        <button class="link-item item-analytics dropdown-trigger">
+          Análisis Estratégico
+          <svg xmlns="http://www.w3.org/2007/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="dropdown-menu">
+          <ul class="nav-links vertical">
+          <li class="feature-reportes">
+            <a href="/dashboard" class="link-item item-analytics">
+              <svg
+                xmlns="http://www.w3.org/2007/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                ><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg
+              >
+              Dashboard
+            </a>
+          </li>
           <li class="feature-reportes">
             <a href="/reportes" class="link-item item-analytics">
               <svg
@@ -120,6 +146,7 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
             </a>
           </li>
         </ul>
+        </div>
       </div>
 
       <div class="nav-divider"></div>
@@ -220,6 +247,9 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
       <div class="mobile-group mobile-group-analytics admin-only">
         <h4 class="mobile-label">Análisis Estratégico</h4>
         <div class="mobile-links">
+          <a href="/dashboard" class="mobile-link analytics-link feature-reportes"
+            >Dashboard Financiero</a
+          >
           <a href="/reportes" class="mobile-link analytics-link feature-reportes"
             >Reportes de Inventario</a
           >
@@ -281,7 +311,7 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
 <style>
   :root {
     --nav-bg: rgba(255, 255, 255, 0.85);
-    --nav-border: rgba(226, 232, 240, 0.6);
+    --nav-border: rgba(226, 232, 240, 0.7);
     --text-primary: #0f172a;
     --text-secondary: #64748b;
     --accent-blue: #0ea5e9;
@@ -290,273 +320,299 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
     --gradient-analytics: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
   }
 
-  /* Reset & Base */
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
+  ul { list-style: none; padding: 0; margin: 0; }
+  a  { text-decoration: none; color: inherit; }
 
+  /* ── OUTER WRAPPER ── sticky band that's full-width */
   .navbar {
     position: sticky;
     top: 0;
     z-index: 100;
+    padding: 0.6rem 1rem;
+    /* transparent background so the pill floats */
+    background: transparent;
+    pointer-events: none;   /* allow clicks through the gap */
+  }
+
+  /* ── PILL CONTAINER ── the actual visible bar */
+  .nav-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 0 0.5rem 0 0.75rem;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
     background: var(--nav-bg);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 1px solid var(--nav-border);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    border: 1px solid var(--nav-border);
+    border-radius: 999px;
+    box-shadow:
+      0 4px 24px -4px rgba(15, 23, 42, 0.08),
+      0 1px 4px rgba(15, 23, 42, 0.04);
+    pointer-events: auto;   /* re-enable clicks on the pill */
+    transition: box-shadow 0.3s ease;
+  }
+  .nav-container:hover {
+    box-shadow:
+      0 8px 32px -4px rgba(15, 23, 42, 0.12),
+      0 2px 8px rgba(15, 23, 42, 0.06);
   }
 
-  .nav-container {
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 0.6rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  /* Brand Logo */
+  /* ── BRAND ── */
   .brand {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 101;
+    gap: 0.5rem;
+    flex-shrink: 0;
   }
 
   .brand-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 30px;
+    height: 30px;
     background: var(--gradient-brand);
     color: white;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-    transition:
-      transform 0.3s ease,
-      box-shadow 0.3s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    flex-shrink: 0;
   }
-
   .brand:hover .brand-icon {
-    transform: rotate(-5deg) scale(1.05);
-    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+    transform: rotate(-8deg) scale(1.08);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.45);
   }
-
-  .brand-icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
+  .brand-icon svg { width: 15px; height: 15px; }
 
   .brand-text {
-    font-size: 1.15rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .brand-highlight { color: var(--accent-blue); font-weight: 800; }
+
+  /* ── SEPARATOR ── */
+  .pill-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--nav-border);
+    flex-shrink: 0;
+    margin: 0 0.25rem;
   }
 
-  .brand-highlight {
-    color: var(--accent-blue);
-    font-weight: 800;
-  }
-
-  /* Desktop Nav */
+  /* ── DESKTOP NAV ── */
   .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.2rem;
     flex: 1;
-    justify-content: flex-end;
+    /* overflow: hidden removed to allow dropdowns to show */
   }
 
+  /* ── DROPDOWN MENUS ── */
+  .dropdown {
+    position: relative;
+  }
+  .dropdown-trigger {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    /* Analytics group sets its own hover */
+  }
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--nav-border);
+    border-radius: 12px;
+    padding: 0.5rem;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 170px;
+    pointer-events: none;
+  }
+  .dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+  
+  .nav-links.vertical {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nav-links.vertical .link-item {
+    width: 100%;
+  }
+
+  /* hide old group-label concept */
   .nav-group {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.15rem;
   }
-
-  .group-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-secondary);
-    padding-left: 0.5rem;
-  }
-
-  .label-analytics {
-    color: var(--accent-purple);
-  }
+  .group-label { display: none; }
 
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
+    gap: 0.15rem;
   }
 
   .link-item {
-    font-size: 0.8rem;
+    font-size: 0.76rem;
     font-weight: 600;
     color: var(--text-secondary);
-    padding: 0.4rem 0.6rem;
-    border-radius: 0.4rem;
-    transition: all 0.2s ease;
+    padding: 0.3rem 0.55rem;
+    border-radius: 999px;
+    transition: all 0.18s ease;
     display: flex;
     align-items: center;
     gap: 0.25rem;
+    white-space: nowrap;
+    cursor: pointer;
   }
-
   .link-item:hover {
     color: var(--accent-blue);
-    background: rgba(14, 165, 233, 0.08);
+    background: rgba(14, 165, 233, 0.09);
   }
 
-  .nav-divider {
-    width: 1px;
-    height: 2.5rem;
-    background: var(--nav-border);
-  }
+  /* old nav-divider becomes thinner */
+  .nav-divider { display: none; }
 
-  /* Analytics Links Custom Style */
+  /* ── ANALYTICS ITEMS ── */
   .group-analytics {
-    background: rgba(139, 92, 246, 0.04);
-    padding: 0.375rem 0.6rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(139, 92, 246, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    background: rgba(139, 92, 246, 0.05);
+    padding: 0.2rem 0.35rem;
+    border-radius: 999px;
+    border: 1px solid rgba(139, 92, 246, 0.12);
   }
 
   .item-analytics {
     color: var(--accent-purple);
-    background: white;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(139, 92, 246, 0.1);
+    background: transparent;
   }
-
   .item-analytics:hover {
     color: white;
     background: var(--gradient-analytics);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
-    border-color: transparent;
+    box-shadow: 0 3px 10px rgba(139, 92, 246, 0.25);
   }
 
-  /* Mobile Elements */
-  .mobile-trigger {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 0.5rem;
-    z-index: 101;
-    transition: background 0.2s ease;
-  }
-
-  .mobile-trigger:hover {
-    background: rgba(15, 23, 42, 0.05);
-  }
-
-  .mobile-nav-wrapper {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--nav-border);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-    opacity: 0;
-    transform: translateY(-10px);
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .mobile-nav-wrapper.is-open {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-  }
-
-  .mobile-nav-content {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .mobile-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .mobile-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-secondary);
-    margin: 0;
-  }
-
-  .mobile-links {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 0.5rem;
-  }
-
-  .mobile-link {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    padding: 0.75rem 1rem;
-    background: #f8fafc;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    text-align: center;
-  }
-
-  .mobile-link:active {
-    background: #e2e8f0;
-  }
-
-  .mobile-group-analytics .mobile-label {
-    color: var(--accent-purple);
-  }
-
-  .analytics-link {
-    background: rgba(139, 92, 246, 0.08);
-    color: var(--accent-purple);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-  }
-
-  .analytics-link:active {
-    background: rgba(139, 92, 246, 0.15);
-  }
-
+  /* ── LOGOUT BUTTON ── */
   .btn-logout {
     background: transparent;
     border: none;
     cursor: pointer;
     font-family: inherit;
     color: var(--text-secondary);
+    margin-left: auto;
+    flex-shrink: 0;
   }
-
   .btn-logout:hover {
     color: #ef4444;
     background: #fef2f2;
   }
+
+  /* ── MOBILE TRIGGER ── */
+  .mobile-trigger {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 0.35rem;
+    border-radius: 50%;
+    transition: background 0.2s;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .mobile-trigger:hover { background: rgba(15, 23, 42, 0.06); }
+
+  /* ── MOBILE DROPDOWN ── */
+  .mobile-nav-wrapper {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    width: min(92vw, 480px);
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--nav-border);
+    border-radius: 20px;
+    box-shadow: 0 16px 40px -8px rgba(15, 23, 42, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .mobile-nav-wrapper.is-open {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
+  .mobile-nav-content {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .mobile-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .mobile-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin: 0;
+    padding-left: 4px;
+  }
+  .mobile-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 0.4rem;
+  }
+  .mobile-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 0.6rem 0.75rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    transition: all 0.18s ease;
+    text-align: center;
+    border: 1px solid transparent;
+  }
+  .mobile-link:hover { background: #f1f5f9; border-color: #e2e8f0; }
+
+  .mobile-group-analytics .mobile-label { color: var(--accent-purple); }
+  .analytics-link {
+    background: rgba(139, 92, 246, 0.06);
+    color: var(--accent-purple);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+  }
+  .analytics-link:hover { background: rgba(139, 92, 246, 0.12); }
 
   .logout-link {
     background: #fef2f2;
@@ -565,35 +621,17 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
     font-family: inherit;
   }
+  .logout-link:hover { background: #fee2e2; }
 
-  .logout-link:active {
-    background: #fee2e2;
-  }
-
-  /* Responsive breakpoints */
-  @media (max-width: 1150px) {
-    .link-item {
-      padding: 0.4rem 0.5rem;
-      font-size: 0.8rem;
-    }
-  }
-
-  @media (max-width: 991px) {
-    .desktop-nav {
-      display: none;
-    }
-
-    .mobile-trigger {
-      display: block;
-    }
-
-    .mobile-nav-wrapper {
-      display: block;
-    }
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .desktop-nav { display: none; }
+    .mobile-trigger { display: flex; }
+    .mobile-nav-wrapper { display: block; }
   }
 </style>
 
@@ -646,7 +684,7 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
         });
       }
     } catch (e) {
-      console.error("Error validando perfil en menú", e);
+      // console.warn("Error validando perfil en menu", e);
     }
   }
 
@@ -691,7 +729,7 @@ const isSuperAdminView = pathname.startsWith("/superadmin");
         await signOutUser();
         window.location.href = "/";
       } catch (error) {
-        console.error("Error al cerrar sesión", error);
+        // console.warn("Error al cerrar sesión", error);
       }
     };
 

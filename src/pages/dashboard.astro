@@ -1,0 +1,1286 @@
+---
+import Navbar from "../components/navbar.astro";
+---
+
+<!doctype html>
+<html lang="es-co">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard Financiero | Análisis de Costos</title>
+    <meta
+      name="description"
+      content="Visualiza compras de materia prima, inventario físico y costos operativos (fijos y muertos) con cálculos dinámicos en pesos COP."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ── RESET & TOKENS ─────────────────────────────── */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      :root {
+        --purple-900: #4c1d95;
+        --purple-700: #6d28d9;
+        --purple-500: #8b5cf6;
+        --purple-100: #ede9fe;
+        --purple-50: #f5f3ff;
+        --amber-600: #d97706;
+        --amber-500: #f59e0b;
+        --amber-100: #fef3c7;
+        --amber-50: #fffbeb;
+        --red-600: #dc2626;
+        --red-500: #ef4444;
+        --red-100: #fee2e2;
+        --red-50: #fef2f2;
+        --green-700: #047857;
+        --green-500: #10b981;
+        --green-100: #d1fae5;
+        --slate-900: #0f172a;
+        --slate-700: #334155;
+        --slate-500: #64748b;
+        --slate-300: #cbd5e1;
+        --slate-200: #e2e8f0;
+        --slate-100: #f1f5f9;
+        --slate-50: #f8fafc;
+        --white: #ffffff;
+        --radius-xl: 20px;
+        --radius-lg: 14px;
+        --radius-md: 10px;
+        --shadow-card: 0 4px 16px -4px rgba(15, 23, 42, 0.08);
+        --shadow-card-hover: 0 12px 28px -6px rgba(15, 23, 42, 0.14);
+      }
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+        margin: 0;
+        background: var(--purple-50);
+        background-image: radial-gradient(
+          ellipse 80% 50% at 50% -10%,
+          rgba(109, 40, 217, 0.1),
+          transparent
+        );
+        color: var(--slate-900);
+        min-height: 100vh;
+      }
+
+      /* ── LAYOUT ─────────────────────────────────────── */
+      .dash-container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 28px 24px 60px;
+      }
+
+      /* ── HERO HEADER ───────────────────────────────── */
+      .dash-hero {
+        background: linear-gradient(125deg, #3b0764 0%, #6d28d9 45%, #7c3aed 100%);
+        border-radius: 26px;
+        padding: 36px 40px;
+        margin-bottom: 28px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 24px 48px -12px rgba(91, 33, 182, 0.5);
+      }
+      .dash-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='0.055'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        pointer-events: none;
+      }
+      .dash-hero__inner {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .dash-hero__left {
+        max-width: 600px;
+      }
+      .dash-hero__badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: #e9d5ff;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      .dash-hero__badge::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #a78bfa;
+        box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+      }
+      .dash-hero h1 {
+        margin: 0 0 10px;
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.04em;
+        line-height: 1.15;
+      }
+      .dash-hero p {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.97rem;
+        line-height: 1.6;
+      }
+
+      /* ── FILTERS CARD ──────────────────────────────── */
+      .filters-card {
+        background: var(--white);
+        border: 1px solid var(--purple-100);
+        border-radius: var(--radius-xl);
+        padding: 22px 28px;
+        margin-bottom: 28px;
+        box-shadow: var(--shadow-card);
+      }
+      .filters-row {
+        display: flex;
+        gap: 18px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        flex: 1;
+        min-width: 200px;
+      }
+      .filter-label {
+        font-size: 0.68rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--slate-500);
+      }
+      .filter-select,
+      .filter-input {
+        padding: 11px 14px;
+        border: 1.5px solid var(--slate-200);
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-family: inherit;
+        background: var(--slate-50);
+        color: var(--slate-900);
+        transition: all 0.2s;
+      }
+      .filter-select:focus,
+      .filter-input:focus {
+        outline: none;
+        border-color: var(--purple-500);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+        background: var(--white);
+      }
+      .btn-gen {
+        padding: 11px 30px;
+        background: linear-gradient(135deg, var(--purple-700) 0%, var(--purple-500) 100%);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 800;
+        font-size: 0.9rem;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 8px 20px -6px rgba(109, 40, 217, 0.45);
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+      .btn-gen:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px -6px rgba(109, 40, 217, 0.5);
+      }
+
+      /* ── EMPTY / LOADING STATE ─────────────────────── */
+      .empty-msg {
+        text-align: center;
+        padding: 80px 24px;
+        color: var(--slate-500);
+        font-style: italic;
+        font-size: 1rem;
+      }
+
+      /* ── TOP SPLIT GRID ────────────────────────────── */
+      .top-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+      @media (max-width: 900px) {
+        .top-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── CARD WRAPPER ──────────────────────────────── */
+      .dash-card {
+        background: var(--white);
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--slate-200);
+        box-shadow: var(--shadow-card);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .dash-card__header {
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--slate-100);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .card-icon--purple {
+        background: var(--purple-100);
+      }
+      .card-icon--amber {
+        background: var(--amber-100);
+      }
+      .card-icon--red {
+        background: var(--red-100);
+      }
+      .card-icon--green {
+        background: var(--green-100);
+      }
+      .card-header-text h2 {
+        margin: 0 0 3px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--slate-900);
+      }
+      .card-header-text p {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--slate-500);
+      }
+      .card-body {
+        overflow-x: auto;
+        flex: 1;
+      }
+
+      /* ── TABLES ────────────────────────────────────── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      thead tr {
+        background: var(--slate-50);
+      }
+      th {
+        padding: 10px 16px;
+        text-align: left;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--slate-500);
+        border-bottom: 1px solid var(--slate-200);
+        white-space: nowrap;
+      }
+      th.right,
+      td.right {
+        text-align: right;
+      }
+      td {
+        padding: 11px 16px;
+        font-size: 0.875rem;
+        color: var(--slate-700);
+        border-bottom: 1px solid var(--slate-100);
+        vertical-align: middle;
+      }
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover td {
+        background: rgba(139, 92, 246, 0.03);
+      }
+
+      /* Category section header inside table */
+      .tbl-section-header td {
+        background: linear-gradient(90deg, var(--purple-50), transparent);
+        color: var(--purple-700);
+        font-weight: 800;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 8px 16px;
+        border-bottom: 2px solid var(--purple-100);
+      }
+      .tbl-section-header--amber td {
+        background: linear-gradient(90deg, var(--amber-50), transparent);
+        color: var(--amber-600);
+        border-bottom-color: var(--amber-100);
+      }
+      .tbl-section-header--red td {
+        background: linear-gradient(90deg, var(--red-50), transparent);
+        color: var(--red-600);
+        border-bottom-color: var(--red-100);
+      }
+
+      /* Sub-total footer row */
+      .tbl-subtotal td {
+        background: var(--slate-50);
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--slate-700);
+        border-top: 1px solid var(--slate-200);
+      }
+      .tbl-grand-total td {
+        background: var(--purple-50);
+        font-weight: 900;
+        font-size: 0.88rem;
+        color: var(--purple-700);
+        border-top: 2px solid var(--purple-100);
+      }
+      .tbl-grand-total--amber td {
+        background: var(--amber-50);
+        color: var(--amber-600);
+        border-top-color: var(--amber-100);
+      }
+
+      /* Participation bar */
+      .pct-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 90px;
+      }
+      .pct-bar-bg {
+        flex: 1;
+        height: 6px;
+        background: var(--slate-200);
+        border-radius: 999px;
+        overflow: hidden;
+        min-width: 40px;
+      }
+      .pct-bar-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--purple-700), var(--purple-500));
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .pct-bar-fill--amber {
+        background: linear-gradient(90deg, var(--amber-600), var(--amber-500));
+      }
+      .pct-bar-fill--red {
+        background: linear-gradient(90deg, var(--red-600), var(--red-500));
+      }
+      .pct-text {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--slate-500);
+        white-space: nowrap;
+        min-width: 38px;
+        text-align: right;
+      }
+
+      /* Badge chips */
+      .chip {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 700;
+      }
+      .chip--unit {
+        background: var(--slate-100);
+        color: var(--slate-500);
+      }
+      .chip--fijo {
+        background: var(--amber-100);
+        color: var(--amber-600);
+      }
+      .chip--muerto {
+        background: var(--red-100);
+        color: var(--red-600);
+      }
+
+      /* Money format */
+      .money {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .money--green {
+        color: var(--green-700);
+      }
+      .money--amber {
+        color: var(--amber-600);
+      }
+      .money--red {
+        color: var(--red-600);
+      }
+      .money--purple {
+        color: var(--purple-700);
+      }
+
+      /* ── COSTOS SECTION ────────────────────────────── */
+      .costos-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--slate-100);
+        flex-wrap: wrap;
+      }
+      .costos-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .btn-add-costo {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 9px 18px;
+        background: var(--white);
+        border: 1.5px solid var(--purple-500);
+        color: var(--purple-700);
+        border-radius: var(--radius-md);
+        font-size: 0.82rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-add-costo:hover {
+        background: var(--purple-50);
+        box-shadow: 0 4px 12px -4px rgba(109, 40, 217, 0.25);
+        transform: translateY(-1px);
+      }
+
+      /* Action buttons inside table */
+      .btn-tbl {
+        border: none;
+        background: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 700;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .btn-tbl--edit {
+        color: var(--purple-500);
+      }
+      .btn-tbl--edit:hover {
+        background: var(--purple-100);
+      }
+      .btn-tbl--del {
+        color: var(--red-500);
+      }
+      .btn-tbl--del:hover {
+        background: var(--red-100);
+      }
+
+      /* ── MODAL ─────────────────────────────────────── */
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .modal-backdrop.is-open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .modal {
+        background: var(--white);
+        border-radius: 24px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 32px 64px -16px rgba(15, 23, 42, 0.28);
+        overflow: hidden;
+        transform: translateY(16px) scale(0.97);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .modal-backdrop.is-open .modal {
+        transform: translateY(0) scale(1);
+      }
+      .modal-head {
+        padding: 22px 26px;
+        border-bottom: 1px solid var(--slate-100);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--slate-900);
+      }
+      .btn-modal-close {
+        border: none;
+        background: var(--slate-100);
+        color: var(--slate-500);
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+        font-family: inherit;
+      }
+      .btn-modal-close:hover {
+        background: var(--slate-200);
+        color: var(--slate-700);
+      }
+      .modal-body {
+        padding: 22px 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .form-group label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--slate-500);
+      }
+      .form-group input,
+      .form-group select {
+        padding: 11px 14px;
+        border: 1.5px solid var(--slate-200);
+        border-radius: var(--radius-md);
+        font-size: 0.9rem;
+        font-family: inherit;
+        background: var(--slate-50);
+        color: var(--slate-900);
+        transition: all 0.2s;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: var(--purple-500);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+        background: var(--white);
+      }
+      .btn-modal-submit {
+        width: 100%;
+        padding: 13px;
+        background: linear-gradient(135deg, var(--purple-700), var(--purple-500));
+        color: var(--white);
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 800;
+        font-size: 0.95rem;
+        font-family: inherit;
+        cursor: pointer;
+        box-shadow: 0 8px 20px -6px rgba(109, 40, 217, 0.4);
+        transition: all 0.2s;
+        margin-top: 4px;
+      }
+      .btn-modal-submit:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+      }
+      .btn-modal-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+      #modal-error {
+        color: var(--red-600);
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-align: center;
+        min-height: 18px;
+      }
+
+      /* ── SUMMARY STATS STRIP ───────────────────────── */
+      .stats-strip {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+      }
+      .stat-pill {
+        flex: 1;
+        min-width: 160px;
+        background: var(--white);
+        border: 1px solid var(--slate-200);
+        border-radius: var(--radius-lg);
+        padding: 16px 20px;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .stat-pill__label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--slate-500);
+      }
+      .stat-pill__value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        color: var(--slate-900);
+        line-height: 1.2;
+      }
+      .stat-pill__sub {
+        font-size: 0.72rem;
+        color: var(--slate-500);
+        font-weight: 500;
+      }
+      .stat-pill--purple {
+        border-left: 4px solid var(--purple-500);
+      }
+      .stat-pill--green {
+        border-left: 4px solid var(--green-500);
+      }
+      .stat-pill--amber {
+        border-left: 4px solid var(--amber-500);
+      }
+      .stat-pill--red {
+        border-left: 4px solid var(--red-500);
+      }
+    </style>
+  </head>
+  <body>
+    <Navbar />
+
+    <div class="dash-container">
+      <!-- HERO -->
+      <header class="dash-hero">
+        <div class="dash-hero__inner">
+          <div class="dash-hero__left">
+            <span class="dash-hero__badge">Dashboard Financiero · Solo lectura + Costos</span>
+            <h1>Análisis de Costos e Inventario</h1>
+            <p>
+              Compras de materia prima, stock físico por categoría y costos operativos
+              (fijos y muertos) — todos los valores en pesos COP actualizados en tiempo real.
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <!-- FILTERS -->
+      <div class="filters-card">
+        <div class="filters-row">
+          <div class="filter-group">
+            <span class="filter-label">Sede / Negocio</span>
+            <select id="f-negocio" class="filter-select">
+              <option value="">Cargando sedes...</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <span class="filter-label">Mes / Periodo</span>
+            <input id="f-mes" type="month" class="filter-input" />
+          </div>
+          <button id="btn-generar" class="btn-gen">Generar Dashboard</button>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div id="empty-state" class="empty-msg">
+        Selecciona un negocio y un periodo para visualizar el análisis financiero.
+      </div>
+
+      <!-- MAIN CONTENT (hidden until data loads) -->
+      <div id="dash-content" style="display:none;">
+
+        <!-- KPI STRIP -->
+        <div class="stats-strip" id="stats-strip">
+          <div class="stat-pill stat-pill--purple">
+            <span class="stat-pill__label">Total Compras MP</span>
+            <span class="stat-pill__value" id="kpi-compras">$0</span>
+            <span class="stat-pill__sub" id="kpi-compras-sub">0 productos</span>
+          </div>
+          <div class="stat-pill stat-pill--green">
+            <span class="stat-pill__label">Unidades en Stock</span>
+            <span class="stat-pill__value" id="kpi-stock">0</span>
+            <span class="stat-pill__sub" id="kpi-stock-sub">0 referencias</span>
+          </div>
+          <div class="stat-pill stat-pill--amber">
+            <span class="stat-pill__label">Gastos Fijos</span>
+            <span class="stat-pill__value" id="kpi-fijos">$0</span>
+            <span class="stat-pill__sub" id="kpi-fijos-sub">0 ítems</span>
+          </div>
+          <div class="stat-pill stat-pill--red">
+            <span class="stat-pill__label">Gastos Muertos</span>
+            <span class="stat-pill__value" id="kpi-muertos">$0</span>
+            <span class="stat-pill__sub" id="kpi-muertos-sub">0 ítems</span>
+          </div>
+        </div>
+
+        <!-- TOP GRID: Compras | Inventario -->
+        <div class="top-grid">
+
+          <!-- ── COMPRAS DE MATERIA PRIMA ─────────────── -->
+          <div class="dash-card" id="card-compras">
+            <div class="dash-card__header">
+              <div class="card-icon card-icon--purple">📦</div>
+              <div class="card-header-text">
+                <h2>Compras de Materia Prima</h2>
+                <p>Valor comprado × precio unitario del período</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tbl-compras">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="right">Valor Comprado</th>
+                    <th>Participación</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-compras"></tbody>
+                <tfoot id="tfoot-compras"></tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- ── INVENTARIO FÍSICO ────────────────────── -->
+          <div class="dash-card" id="card-inventario">
+            <div class="dash-card__header">
+              <div class="card-icon card-icon--green">🏪</div>
+              <div class="card-header-text">
+                <h2>Inventario Físico</h2>
+                <p>Stock disponible actual agrupado por categoría</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <table id="tbl-inventario">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th class="right">Stock Disponible</th>
+                    <th>Unidad</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-inventario"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /top-grid -->
+
+        <!-- ── COSTOS OPERATIVOS ────────────────────── -->
+        <div class="dash-card" id="card-costos">
+          <div class="costos-header-row">
+            <div class="costos-header-left">
+              <div class="card-icon card-icon--amber">💸</div>
+              <div class="card-header-text">
+                <h2>Costos Operativos</h2>
+                <p>Gastos fijos y pérdidas por mermas / desperdicios del período</p>
+              </div>
+            </div>
+            <button class="btn-add-costo" id="btn-add-costo">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Agregar Costo
+            </button>
+          </div>
+          <div class="card-body">
+            <table id="tbl-costos">
+              <thead>
+                <tr>
+                  <th>Descripción</th>
+                  <th>Tipo</th>
+                  <th class="right">Valor</th>
+                  <th>Impacto s/ Compras</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tbody-costos"></tbody>
+              <tfoot id="tfoot-costos"></tfoot>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /dash-content -->
+    </div><!-- /dash-container -->
+
+    <!-- ── MODAL: AGREGAR / EDITAR COSTO ──────────── -->
+    <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal">
+        <div class="modal-head">
+          <h3 id="modal-title">Agregar Costo Operativo</h3>
+          <button class="btn-modal-close" id="btn-modal-close" aria-label="Cerrar modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modal-edit-id" value="" />
+          <div class="form-group">
+            <label for="m-tipo">Tipo de Gasto</label>
+            <select id="m-tipo">
+              <option value="FIJO">💼 Gasto Fijo (arriendo, contrato, servicio)</option>
+              <option value="MUERTO">☠️ Gasto Muerto (merma, daño, desperdicio)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="m-desc">Descripción</label>
+            <input type="text" id="m-desc" placeholder="Ej: Arriendo local principal" />
+          </div>
+          <div class="form-group">
+            <label for="m-valor">Valor (COP)</label>
+            <input type="number" id="m-valor" placeholder="0" min="0" step="100" />
+          </div>
+          <p id="modal-error"></p>
+          <button class="btn-modal-submit" id="btn-modal-submit">Guardar Costo</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      import { getSession, getUserRole } from "../lib/auth";
+      import { getMasterProductos, getStockFiltrado } from "../lib/inventory";
+      import { getNegocios } from "../lib/negocios";
+      import {
+        getCostosOperativos,
+        addCosto,
+        updateCosto,
+        deleteCosto,
+        type CostoOperativo,
+      } from "../lib/costos";
+
+      // ── STATE ──────────────────────────────────────────────────────────────
+      let masterCache: any[] = [];
+      let currentNegocio = "";
+      let currentMes = "";
+      let totalCompras = 0; // for % impact recalculation
+
+      // ── INIT ───────────────────────────────────────────────────────────────
+      async function init() {
+        const session = await getSession();
+        if (!session) {
+          window.location.replace("/");
+          return;
+        }
+        const role = await getUserRole(session.user.id);
+        if (role !== "admin" && role !== "superadmin") {
+          window.location.replace("/init");
+          return;
+        }
+
+        // Default month to current
+        const now = new Date();
+        const curM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        (document.getElementById("f-mes") as HTMLInputElement).value = curM;
+
+        try {
+          masterCache = await getMasterProductos();
+          const negocios = await getNegocios();
+          const sel = document.getElementById("f-negocio") as HTMLSelectElement;
+          sel.innerHTML =
+            `<option value="GLOBAL">Todos los Negocios (Global)</option>` +
+            negocios.map((n) => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
+        } catch (e) {
+          // console.warn("Error cargando negocios:", e);
+        }
+
+        // Wire up events
+        document.getElementById("btn-generar")?.addEventListener("click", runDashboard);
+        document.getElementById("btn-add-costo")?.addEventListener("click", () => openModal(null));
+        document.getElementById("btn-modal-close")?.addEventListener("click", closeModal);
+        document.getElementById("modal-backdrop")?.addEventListener("click", (e) => {
+          if (e.target === document.getElementById("modal-backdrop")) closeModal();
+        });
+        document.getElementById("btn-modal-submit")?.addEventListener("click", handleModalSubmit);
+      }
+
+      // ── MAIN RUNNER ────────────────────────────────────────────────────────
+      async function runDashboard() {
+        const negocio = (document.getElementById("f-negocio") as HTMLSelectElement).value;
+        const mes = (document.getElementById("f-mes") as HTMLInputElement).value;
+        if (!negocio || !mes) return;
+
+        currentNegocio = negocio;
+        currentMes = mes;
+
+        const emptyEl = document.getElementById("empty-state")!;
+        const contentEl = document.getElementById("dash-content")!;
+        emptyEl.textContent = "Cargando datos...";
+        contentEl.style.display = "none";
+
+        try {
+          const [stockData, costosData] = await Promise.all([
+            getStockFiltrado(negocio, mes),
+            getCostosOperativos(negocio, mes),
+          ]);
+
+          if (stockData.length === 0 && costosData.length === 0) {
+            emptyEl.innerHTML = `No se encontraron datos para <strong>${negocio}</strong> en <strong>${mes}</strong>.`;
+            return;
+          }
+
+          emptyEl.style.display = "none";
+          contentEl.style.display = "block";
+
+          // Build product map enriched with master data
+          const prodMap = buildProductMap(stockData);
+
+          renderCompras(prodMap);
+          renderInventario(prodMap);
+          renderCostos(costosData);
+          renderKPIs(prodMap, costosData);
+        } catch (err: any) {
+          emptyEl.textContent = "Error: " + err.message;
+          emptyEl.style.display = "block";
+          contentEl.style.display = "none";
+          // console.warn("Dashboard error:", err);
+        }
+      }
+
+      // ── DATA HELPERS ───────────────────────────────────────────────────────
+      function buildProductMap(stockData: any[]) {
+        const map = new Map<string, any>();
+        stockData.forEach((s) => {
+          const master = masterCache.find((m) => m.codigo === s.codigo);
+          const precio = master ? Number(master.precio) : 0;
+          const nombre = master?.nombre || s.nombre || s.codigo;
+          const categoria = master?.categoria || "Sin Categoría";
+          const cantidad = Number(s.cantidad) || 0;
+
+          if (map.has(s.codigo)) {
+            const ex = map.get(s.codigo)!;
+            ex.cantidad += cantidad;
+            ex.total += cantidad * precio;
+          } else {
+            map.set(s.codigo, {
+              codigo: s.codigo,
+              nombre,
+              categoria,
+              precio,
+              cantidad,
+              total: cantidad * precio,
+              unidad: master?.unidad || "und.",
+            });
+          }
+        });
+        return map;
+      }
+
+      function formatCOP(val: number): string {
+        return `$${Math.round(val).toLocaleString("es-CO")}`;
+      }
+
+      function pctBar(pct: number, colorClass = ""): string {
+        return `
+          <div class="pct-cell">
+            <div class="pct-bar-bg">
+              <div class="pct-bar-fill ${colorClass}" style="width:${Math.min(pct, 100).toFixed(1)}%"></div>
+            </div>
+            <span class="pct-text">${pct.toFixed(1)}%</span>
+          </div>`;
+      }
+
+      // ── RENDER: COMPRAS ────────────────────────────────────────────────────
+      function renderCompras(prodMap: Map<string, any>) {
+        const items = Array.from(prodMap.values()).sort((a, b) => b.total - a.total);
+        totalCompras = items.reduce((acc, i) => acc + i.total, 0);
+
+        const tbody = document.getElementById("tbody-compras")!;
+        const tfoot = document.getElementById("tfoot-compras")!;
+
+        if (items.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--slate-400);padding:32px;">Sin compras en este período</td></tr>`;
+          tfoot.innerHTML = "";
+          return;
+        }
+
+        tbody.innerHTML = items.map((i) => {
+          const pct = totalCompras > 0 ? (i.total / totalCompras) * 100 : 0;
+          return `
+            <tr>
+              <td><strong style="color:var(--slate-900);font-size:0.87rem;">${i.nombre}</strong>
+                  <br/><small style="color:var(--slate-400);font-size:0.7rem;">${i.codigo}</small></td>
+              <td class="right"><span class="money money--purple">${formatCOP(i.total)}</span></td>
+              <td>${pctBar(pct, "")}</td>
+            </tr>`;
+        }).join("");
+
+        tfoot.innerHTML = `
+          <tr class="tbl-grand-total">
+            <td><strong>TOTAL</strong></td>
+            <td class="right"><strong>${formatCOP(totalCompras)}</strong></td>
+            <td><span style="font-weight:700;color:var(--purple-700);">100%</span></td>
+          </tr>`;
+      }
+
+      // ── RENDER: INVENTARIO ─────────────────────────────────────────────────
+      function renderInventario(prodMap: Map<string, any>) {
+        const items = Array.from(prodMap.values());
+        const byCategory: Record<string, any[]> = {};
+        items.forEach((i) => {
+          if (!byCategory[i.categoria]) byCategory[i.categoria] = [];
+          byCategory[i.categoria].push(i);
+        });
+
+        const tbody = document.getElementById("tbody-inventario")!;
+        let html = "";
+
+        Object.entries(byCategory)
+          .sort(([a], [b]) => a.localeCompare(b))
+          .forEach(([cat, prods]) => {
+            const catTotal = prods.reduce((acc, p) => acc + p.cantidad, 0);
+            // Category header row
+            html += `<tr class="tbl-section-header">
+              <td colspan="3">
+                <span style="font-size:0.65rem;">▶</span>&ensp;${cat}
+                &ensp;<span style="font-weight:500;color:var(--purple-500);">(${prods.length} productos · ${catTotal.toLocaleString("es-CO")} und. total)</span>
+              </td>
+            </tr>`;
+            // Products
+            prods.sort((a, b) => b.cantidad - a.cantidad).forEach((p) => {
+              html += `
+                <tr>
+                  <td style="padding-left:28px;">${p.nombre}</td>
+                  <td class="right"><strong style="color:var(--slate-900);">${p.cantidad.toLocaleString("es-CO")}</strong></td>
+                  <td><span class="chip chip--unit">${p.unidad}</span></td>
+                </tr>`;
+            });
+          });
+
+        tbody.innerHTML = html || `<tr><td colspan="3" style="text-align:center;color:var(--slate-400);padding:32px;">Sin stock registrado</td></tr>`;
+      }
+
+      // ── RENDER: COSTOS ─────────────────────────────────────────────────────
+      function renderCostos(costos: CostoOperativo[]) {
+        const tbody = document.getElementById("tbody-costos")!;
+        const tfoot = document.getElementById("tfoot-costos")!;
+
+        const fijos = costos.filter((c) => c.tipo === "FIJO");
+        const muertos = costos.filter((c) => c.tipo === "MUERTO");
+        const sumFijos = fijos.reduce((a, c) => a + c.valor, 0);
+        const sumMuertos = muertos.reduce((a, c) => a + c.valor, 0);
+        const sumTotal = sumFijos + sumMuertos;
+
+        let html = "";
+
+        // ── SECTION: GASTOS FIJOS
+        html += `<tr class="tbl-section-header tbl-section-header--amber">
+          <td colspan="5">💼 Gastos Fijos — Arriendos, Contratos y Servicios</td>
+        </tr>`;
+        if (fijos.length === 0) {
+          html += `<tr><td colspan="5" style="text-align:center;color:var(--slate-400);padding:18px;font-style:italic;font-size:0.85rem;">Sin gastos fijos registrados en este período</td></tr>`;
+        } else {
+          fijos.forEach((c) => {
+            const pct = totalCompras > 0 ? (c.valor / totalCompras) * 100 : 0;
+            html += `
+              <tr data-id="${c.id}">
+                <td style="padding-left:24px;">${c.descripcion}</td>
+                <td><span class="chip chip--fijo">FIJO</span></td>
+                <td class="right"><span class="money money--amber">${formatCOP(c.valor)}</span></td>
+                <td>${pctBar(pct, "pct-bar-fill--amber")}</td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-tbl btn-tbl--edit" onclick="window._editCosto('${c.id}')">✏️ Editar</button>
+                  <button class="btn-tbl btn-tbl--del" onclick="window._deleteCosto('${c.id}')">🗑️</button>
+                </td>
+              </tr>`;
+          });
+        }
+        if (fijos.length > 0) {
+          html += `<tr class="tbl-subtotal">
+            <td colspan="2" style="padding-left:24px;"><em>Subtotal Fijos</em></td>
+            <td class="right">${formatCOP(sumFijos)}</td>
+            <td colspan="2"></td>
+          </tr>`;
+        }
+
+        // ── SECTION: GASTOS MUERTOS
+        html += `<tr class="tbl-section-header tbl-section-header--red">
+          <td colspan="5">☠️ Gastos Muertos — Mermas, Daños y Desperdicios</td>
+        </tr>`;
+        if (muertos.length === 0) {
+          html += `<tr><td colspan="5" style="text-align:center;color:var(--slate-400);padding:18px;font-style:italic;font-size:0.85rem;">Sin gastos muertos registrados en este período</td></tr>`;
+        } else {
+          muertos.forEach((c) => {
+            const pct = totalCompras > 0 ? (c.valor / totalCompras) * 100 : 0;
+            html += `
+              <tr data-id="${c.id}">
+                <td style="padding-left:24px;">${c.descripcion}</td>
+                <td><span class="chip chip--muerto">MUERTO</span></td>
+                <td class="right"><span class="money money--red">${formatCOP(c.valor)}</span></td>
+                <td>${pctBar(pct, "pct-bar-fill--red")}</td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-tbl btn-tbl--edit" onclick="window._editCosto('${c.id}')">✏️ Editar</button>
+                  <button class="btn-tbl btn-tbl--del" onclick="window._deleteCosto('${c.id}')">🗑️</button>
+                </td>
+              </tr>`;
+          });
+        }
+        if (muertos.length > 0) {
+          html += `<tr class="tbl-subtotal">
+            <td colspan="2" style="padding-left:24px;"><em>Subtotal Muertos</em></td>
+            <td class="right">${formatCOP(sumMuertos)}</td>
+            <td colspan="2"></td>
+          </tr>`;
+        }
+
+        tbody.innerHTML = html;
+
+        // Grand total footer
+        const totalPct = totalCompras > 0 ? (sumTotal / totalCompras) * 100 : 0;
+        tfoot.innerHTML = `
+          <tr class="tbl-grand-total tbl-grand-total--amber">
+            <td><strong>TOTAL COSTOS OPERATIVOS</strong></td>
+            <td></td>
+            <td class="right"><strong>${formatCOP(sumTotal)}</strong></td>
+            <td>${pctBar(totalPct, "pct-bar-fill--amber")}</td>
+            <td></td>
+          </tr>`;
+      }
+
+      // ── RENDER: KPIs ───────────────────────────────────────────────────────
+      function renderKPIs(prodMap: Map<string, any>, costos: CostoOperativo[]) {
+        const items = Array.from(prodMap.values());
+        const comprasTotal = items.reduce((a, i) => a + i.total, 0);
+        const stockTotal = items.reduce((a, i) => a + i.cantidad, 0);
+        const fijos = costos.filter((c) => c.tipo === "FIJO");
+        const muertos = costos.filter((c) => c.tipo === "MUERTO");
+        const sumFijos = fijos.reduce((a, c) => a + c.valor, 0);
+        const sumMuertos = muertos.reduce((a, c) => a + c.valor, 0);
+
+        document.getElementById("kpi-compras")!.textContent = formatCOP(comprasTotal);
+        document.getElementById("kpi-compras-sub")!.textContent = `${items.length} productos`;
+        document.getElementById("kpi-stock")!.textContent = stockTotal.toLocaleString("es-CO");
+        document.getElementById("kpi-stock-sub")!.textContent = `${prodMap.size} referencias`;
+        document.getElementById("kpi-fijos")!.textContent = formatCOP(sumFijos);
+        document.getElementById("kpi-fijos-sub")!.textContent = `${fijos.length} ítem${fijos.length !== 1 ? "s" : ""}`;
+        document.getElementById("kpi-muertos")!.textContent = formatCOP(sumMuertos);
+        document.getElementById("kpi-muertos-sub")!.textContent = `${muertos.length} ítem${muertos.length !== 1 ? "s" : ""}`;
+      }
+
+      // ── MODAL LOGIC ────────────────────────────────────────────────────────
+      let _allCostosCache: CostoOperativo[] = [];
+
+      function openModal(existing: CostoOperativo | null) {
+        const modal = document.getElementById("modal-backdrop")!;
+        const title = document.getElementById("modal-title")!;
+        const editId = document.getElementById("modal-edit-id") as HTMLInputElement;
+        const tipoSel = document.getElementById("m-tipo") as HTMLSelectElement;
+        const descInp = document.getElementById("m-desc") as HTMLInputElement;
+        const valInp = document.getElementById("m-valor") as HTMLInputElement;
+        const errEl = document.getElementById("modal-error")!;
+
+        errEl.textContent = "";
+        if (existing) {
+          title.textContent = "Editar Costo Operativo";
+          editId.value = existing.id ?? "";
+          tipoSel.value = existing.tipo;
+          descInp.value = existing.descripcion;
+          valInp.value = String(existing.valor);
+        } else {
+          title.textContent = "Agregar Costo Operativo";
+          editId.value = "";
+          tipoSel.value = "FIJO";
+          descInp.value = "";
+          valInp.value = "";
+        }
+        modal.classList.add("is-open");
+        setTimeout(() => descInp.focus(), 60);
+      }
+
+      function closeModal() {
+        document.getElementById("modal-backdrop")!.classList.remove("is-open");
+      }
+
+      async function handleModalSubmit() {
+        const editId = (document.getElementById("modal-edit-id") as HTMLInputElement).value;
+        const tipo = (document.getElementById("m-tipo") as HTMLSelectElement).value as "FIJO" | "MUERTO";
+        const desc = (document.getElementById("m-desc") as HTMLInputElement).value.trim();
+        const val = parseFloat((document.getElementById("m-valor") as HTMLInputElement).value);
+        const errEl = document.getElementById("modal-error")!;
+        const btn = document.getElementById("btn-modal-submit") as HTMLButtonElement;
+
+        errEl.textContent = "";
+        if (!desc) { errEl.textContent = "La descripción es obligatoria."; return; }
+        if (isNaN(val) || val < 0) { errEl.textContent = "Ingresa un valor válido mayor o igual a 0."; return; }
+        if (!currentNegocio || !currentMes) { errEl.textContent = "Primero genera el dashboard con un período."; return; }
+
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        try {
+          if (editId) {
+            await updateCosto(editId, { tipo, descripcion: desc, valor: val });
+          } else {
+            await addCosto({ negocio: currentNegocio, mes: currentMes, tipo, descripcion: desc, valor: val });
+          }
+          closeModal();
+          await runDashboard(); // refresh all
+        } catch (e: any) {
+          errEl.textContent = "Error: " + e.message;
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Guardar Costo";
+        }
+      }
+
+      // ── GLOBAL HANDLERS (for inline onclick in table) ──────────────────────
+      (window as any)._editCosto = async (id: string) => {
+        try {
+          const costos = await getCostosOperativos(currentNegocio, currentMes);
+          const found = costos.find((c) => c.id === id);
+          if (found) openModal(found);
+        } catch (e) {
+          // console.warn(e);
+        }
+      };
+
+      (window as any)._deleteCosto = async (id: string) => {
+        if (!confirm("¿Eliminar este costo operativo? Esta acción no se puede deshacer.")) return;
+        try {
+          await deleteCosto(id);
+          await runDashboard();
+        } catch (e: any) {
+          alert("Error al eliminar: " + e.message);
+        }
+      };
+
+      init();
+    </script>
+  </body>
+</html>

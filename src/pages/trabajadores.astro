@@ -593,7 +593,7 @@ import Navbar from "../components/navbar.astro";
           );
           renderList(filtrados);
         } catch (e) {
-            console.error(e);
+            // console.warn(e);
             document.getElementById("list-count")!.textContent = "Error";
         }
       }

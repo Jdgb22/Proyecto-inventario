@@ -142,7 +142,7 @@ import Navbar from "../components/navbar.astro";
             negSelect.innerHTML = negocios.map(n => `<option value="${n.nombre}">${n.nombre}</option>`).join("");
           }
         } catch (e) {
-          console.error(e);
+          // console.warn(e);
         }
       }
       init();
@@ -194,14 +194,14 @@ import Navbar from "../components/navbar.astro";
               const rawJson = XLSX_LIB.utils.sheet_to_json(sheet);
               displayPreview(rawJson);
             } catch (err: any) {
-              console.error(err);
+              // console.warn(err);
               alert("Error procesando Excel: " + (err.message || "Archivo corrupto o vacío."));
               loadingMsg!.style.display = "none";
             }
           };
           reader.readAsArrayBuffer(file);
         } catch (error) {
-          console.error(error);
+          // console.warn(error);
           alert("Error en validación.");
           loadingMsg!.style.display = "none";
         }
@@ -332,7 +332,7 @@ import Navbar from "../components/navbar.astro";
               
               count++;
             } catch (e: any) {
-              console.error("Error BD:", e);
+              // console.warn("Error BD:", e);
               dbErrores++;
               if (!dbErrorMsg) dbErrorMsg = e.message || "Error desconocido BD";
             }

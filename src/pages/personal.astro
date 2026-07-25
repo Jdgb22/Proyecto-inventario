@@ -1050,7 +1050,7 @@ import Navbar from "../components/navbar.astro";
           );
           renderList(filtrados);
         } catch (e: any) {
-          console.error("DEBUG LOAD ERROR:", e);
+          // console.warn("DEBUG LOAD ERROR:", e);
           alert("Error en loadData: " + (e?.message || JSON.stringify(e) || String(e)));
           count.textContent = "Error: " + (e?.message || "Desconocido");
         }
